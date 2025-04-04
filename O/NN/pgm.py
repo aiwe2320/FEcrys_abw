@@ -270,6 +270,13 @@ class CONFORMER_FLOW_LAYER(tf.keras.layers.Layer):
 ###########################
 
 class P3_version_SingleComponent_map_LITE(SingleComponent_map):
+
+    '''
+    Allows models from the paper to be loaded,
+    Only the ic_map = SingleComponent_map part of the model was changed slightly since the paper (P3)
+    To be able to load all of the saved models from before,
+    this class fixes the errors that would otherwise appear if loading those models with current code.
+    '''
     
     def __init__(self, 
                  ic_map_OLD_version,
@@ -282,8 +289,9 @@ class P3_version_SingleComponent_map_LITE(SingleComponent_map):
         
         super().__init__(self.PDB_single_mol) # some methods did not change
 
-        '''
+        ''' box ticking for what is different or same:
         all local method defintions are minimum necesary for forward_ and inverse_ to match the old behaviour
+        
         forward_ methods/object definition locations:
             permute_unitcell_tf_ : method defined here : depreciated in new v.
             _forward_ : method ok : SAME (no changes since previous v. ; both code and its location)
@@ -298,7 +306,7 @@ class P3_version_SingleComponent_map_LITE(SingleComponent_map):
             FocusedTorsions : method ok : forward_ and inverse_ match the old v.  (will work with the arrays)
             inverse_reshape_cells_tf_ : method defined here : depreciated in new v.
         inverse_ :
-            _inverse_ : method ok : SAM
+            _inverse_ : method ok : SAME
         '''
         ''' methods/arrays needed by the new v. of the model to work with old version of ic_map:
             periodic_mask : ok : SAME
@@ -319,7 +327,7 @@ class P3_version_SingleComponent_map_LITE(SingleComponent_map):
         self.ln_base_P = - np2tf_( 3*(self.n_mol-1)*np.log(2.0) )
         self.VERSION = 'P3' # paper 3 version (old)
 
-    ## old v. rehsaping
+    ## old v. reshaping
     def permute_unitcell_tf_(self,r):
         return reshape_to_atoms_tf_(    tf.gather(  reshape_to_molecules_tf_(r,
                                                     n_atoms_in_molecule=self.n_atoms_mol,
