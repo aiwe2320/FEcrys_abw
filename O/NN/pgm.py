@@ -270,14 +270,7 @@ class CONFORMER_FLOW_LAYER(tf.keras.layers.Layer):
 ###########################
 
 class P3_version_SingleComponent_map_LITE(SingleComponent_map):
-    '''
-    trying something here to make things backwards compatible, could even try the same for ice
-
-    here the ic_map is supposed to allow /mol, /2mol, and /multimap versions to work as one model,
-    where the tranable part is the same as the new version, rather than seperate large scripts that are all v. similar
-
-    '''
-
+    
     def __init__(self, 
                  ic_map_OLD_version,
                  ):
