@@ -833,7 +833,6 @@ class PGMcrys_v1(tf.keras.models.Model, model_helper_PGMcrys_v1, model_helper):
 # Aims:
 # smaller model that does comparably to PGMcrys_v1
 # make transferable between different sizes of a supercell : trying with C2P_connector_v2_PI (method not yet found)
-#   maybe something completely different from C2P_connector_v2_PI could work, maybe a graph neural net or better attention?
 
 ####################################################################################################
 
