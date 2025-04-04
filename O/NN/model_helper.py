@@ -159,6 +159,7 @@ class model_helper:
 
     def test_inverse_(self, r, graph=True):
         # test invertibility of the model in both directions
+        # TODO: maybe add more, useful, statistics in the output
 
         r = np2tf_(r) 
         m = r.shape[0]
@@ -168,9 +169,13 @@ class model_helper:
         ##
         z, ladJrz   = f_(r)
         _r, ladJzr = i_(z)
+        # absolute error in xyz coordinates when mapping validation batch forward and then back
         err_r_forward = np.abs(r - _r)
+        # average and maximum of the above error, over the batch
         err_r_forward = [err_r_forward.mean(), err_r_forward.max()]
+        # error in log volume when mapping validation batch forward and then back
         err_l_forward = np.array(ladJrz + ladJzr)
+        # average, minimum and maximum, of the above error, over the batch
         err_l_forward = [err_l_forward.mean(), err_l_forward.min(), err_l_forward.max()]
         ##
         z = self.sample_base_(m)
@@ -178,14 +183,17 @@ class model_helper:
         
         try: 
             _z, ladJrz = f_(_r)
-
+            # absolute error in the z coordinates, when mapping samples from the base distribution backward and then forward
             err_r_backward = [np.abs(x - _x) for x,_x in zip(z,_z)]
-
+            # average and maximum of the above error, over the batch
             err_r_backward = [[x.mean(), x.max()] for x in err_r_backward]
+            # error in log volume, when mapping samples from the base distribution backward and then forward
             err_l_backward = np.array(ladJrz + ladJzr)
+            # average, minimum and maximum, of the above error, over the batch
             err_l_backward = [err_l_backward.mean(), err_l_backward.min(), err_l_backward.max()]
 
         except:
+            # should not be reached here
             err_r_backward = [None]
             err_l_backward = [None]
 
