@@ -975,14 +975,14 @@ class OPLS(MM_system_helper):
                 self._permute_molecule_to_top_ permutes atoms in a molecule to work with openmm (i.e., mathcing the .itp topology)
                 self._unpermute_molecule_from_top_ converts atoms from openmm back to the initial permutaion (the one that also matches GAFF)
             
-            (4) checking that both of these (intramolecular) permuations match (are invertible):
+            (4) checking that both of these (intramolecular) permutations match (are invertible):
 
             '''
             assert np.abs(self._permute_molecule_to_top_[self._unpermute_molecule_from_top_] - np.arange(self.n_atoms_mol)).sum() == 0
 
             # r_pdb_from_gro = mdtraj.load(pdb_from_gro,pdb_from_gro).xyz[0] not useful conforamtion
-            print('forward permaution works:',np.abs(r_pdb[self._permute_molecule_to_top_] - r_gro).max())
-            print('inverse permaution works:',np.abs(r_pdb - r_gro[self._unpermute_molecule_from_top_]).max())
+            print('forward permutation works:',np.abs(r_pdb[self._permute_molecule_to_top_] - r_gro).max())
+            print('inverse permatation works:',np.abs(r_pdb - r_gro[self._unpermute_molecule_from_top_]).max())
 
             '''
             (5) saving the result for later use:
@@ -992,7 +992,7 @@ class OPLS(MM_system_helper):
             
         '''
         (6) finally, in a supercell, each molecule permuted in the way that was saved from step (5):
-                The following are the final arrays used to connect the two topologies (GAFF and OPLS)
+                The following are the final arrays used to reorder atoms when needed.
         '''
         self._permute_crystal_to_top_ = np.concatenate([self._permute_molecule_to_top_ + i*self.n_atoms_mol for i in range(self.n_mol)], axis=0)
         self._unpermute_crystal_from_top_ = np.concatenate([self._unpermute_molecule_from_top_ + i*self.n_atoms_mol for i in range(self.n_mol)], axis=0)
