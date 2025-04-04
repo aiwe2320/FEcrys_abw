@@ -746,7 +746,7 @@ class Static_Rotations_Layer:
             err_phi_(phi_rescaled)
                 optional, since a datapoint anywhere on [-1,1) is well defined
                 still used because phi_rescaled localised in a smaller interval than [-1,1) 
-                allows this marginal variable to be later treates as non-periodic inside the model
+                allows this marginal variable to be later treated as non-periodic inside the model
         '''
         # arbitrary heuristic choice of error functions that are higher in places that are worse
         # https://www.desmos.com/calculator/k351slu5g3
