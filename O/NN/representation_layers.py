@@ -18,14 +18,12 @@ from ..util_np import *
 from .representation_layers import *
 
 class SC_helper:
+    ''' 
+    This is longer than needed, mostly as a placholder method for other work.
+    '''
     def __init__(self,
-                 PDB_single_mol: str,   
+                 PDB_single_mol: str, # .pdb file of single molecule in vacuum
                 ):
-        
-        ''' 
-        This is longer than needed, mostly as a placholder method for other work.
-        '''
-
         self.PDB_single_mol = str(PDB_single_mol)
         self.mol = Chem.MolFromPDBFile(self.PDB_single_mol, removeHs = False)
         for i, a in enumerate(self.mol.GetAtoms()): a.SetAtomMapNum(i)
