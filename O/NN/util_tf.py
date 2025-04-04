@@ -1729,7 +1729,7 @@ def Hopf_inverse_(xq):
 
 def remove_self_coupling_Hopf_(list_cond_masks):
     '''
-    keeping for later when that code from P2 gets added back into the repo (TODO)
+    was not used
     '''
     # only for model H_H
     # specific for water by ic_map_for_H and model H and default masking method in it
