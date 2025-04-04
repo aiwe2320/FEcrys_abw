@@ -1,0 +1,10 @@
+
+        source leaprc.gaff
+        loadamberprep /mnt/c/Users/User/Desktop/FEcrys/O/MM/GAFF_sc/mivebresib/misc/mivebresib_single_mol.prepi
+        loadamberparams /mnt/c/Users/User/Desktop/FEcrys/O/MM/GAFF_sc/mivebresib/misc/mivebresib_single_mol.frcmod
+        mol = loadmol2 /mnt/c/Users/User/Desktop/FEcrys/O/MM/GAFF_sc/mivebresib/misc/mivebresib_single_mol.mol2
+        aggregate = combine {mol}
+        set aggregate box {100.0 100.0 100.0}
+        saveamberparm aggregate /mnt/c/Users/User/Desktop/FEcrys/O/MM/GAFF_sc/mivebresib/misc/mivebresib.prmtop /mnt/c/Users/User/Desktop/FEcrys/O/MM/GAFF_sc/mivebresib/misc/mivebresib.inpcrd
+        quit
+        
