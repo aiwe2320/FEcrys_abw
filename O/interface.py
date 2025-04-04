@@ -3,9 +3,7 @@ from .NN.pgm import *
 
 from pymbar import MBAR
 
-## ## ## ## 
-## TODO: test all functions here a final step, show in notebook
-##
+## ## 
 
 def plot_inv_test_res_(inv_test_result, mean_range=[True,True], forward_inverse=[True,True], plot_during_training=True):
     if mean_range[0]:
