@@ -23,12 +23,15 @@ class SC_helper:
                 ):
         
         ''' 
-        This is longer than needed, mostly as a placholder for the clustering work
+        This is longer than needed, mostly as a placholder helper class also for the clustering work.
             The clustering work handles gmx supercells sampling NPT ensembles in most cases.
             The molecules are not whole, and the molecule are 'jumping' in those datasets.
-            'Make-whole' method that is here requires Zmatrix of the molecule (called self.ABCD here).
-            There are also other similarities for what information needs to be chosen for both
-            clustering of finite temperature supercells and for SingleComponent_map.
+            'Make-whole' method that is here (called unwrap_np_ [ADD unwrap_tf_]),
+            requires Zmatrix of the molecule (called self.ABCD here).
+            There are also other similarities for what information needs to be chosen 
+            by user for both clustering of finite temperature supercells and for SingleComponent_map.
+            Specifically, the 'Cartesian block' needs to be chosen in both cases.
+                TODO: rethink about packing similarity metric in racemic crystals.
             This object (SC_helper) is useful for both topics.
                 Tensorflow, similar to torch, has a fast einsum function, compared to numpy.
                 Remembering that this was useful to speed up the clustering related loops.
