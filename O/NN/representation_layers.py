@@ -55,6 +55,21 @@ class SC_helper:
         print('molecule with', self.n_atoms_mol,'atoms, of which',self.n_heavy,'are heavy atoms, and the rest are', self.n_hydrogens,'hydrogens.')
 
     def set_ABCD_(self, ind_root_atom = 10, option:int=None):
+        '''
+        for a given molecule these inputs are chosen by the user:
+        Inputs:
+            ind_root_atom : int
+                index of atom in the molecule to be treated as the centre of the Cartesian block
+            option        : int
+                Specifies the other two atoms of the Cartesian block.
+                    the handy method ZMatrix (from wutobias/r2z) will generate a physical Zmatrix (self.ABCD)
+                    As any Zmatrix, this matrix starts with 3 atoms that are different from the rest.
+                    While the ind_root_atom is chosen above, the other two atoms need to be also chosen.
+                    Try different integeres 0,1,2,3,... for the option, until the option you prefer is printer.
+                    After trying, each time the text is printed below to explain what happened.
+                    When what happened looks good on self.mol image (atoms on the image are labeled with the indices),
+                    remember the option that was made for later work with this molecule.
+        '''
         if self.n_atoms_mol > 3:
 
             ''' ind_root_atom: first time molecule: adjust by looking at self.mol in notebook
@@ -101,7 +116,7 @@ class SC_helper:
             self.inds_unpermute_atoms = np.array([np.where(forward_atom_permuation == i)[0][0] for i in range(self.n_atoms_mol)]).tolist()
         else:
             
-            ''' ind_root_atom: ignored, water?, setting the first heavy atom (Oxygen) as the root_atom
+            ''' ind_root_atom: input ignored, water?, setting the first heavy atom (Oxygen) as the root_atom
             '''
             self.inds_unpermute_atoms = 'None'
             self.ABCD_IC_inverse = 'None'
