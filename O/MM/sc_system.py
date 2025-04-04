@@ -1050,14 +1050,7 @@ class OPLS(MM_system_helper):
             self._unpermute_crystal_from_top_ = np.arange(self.N)
             self._permute_   = lambda r, axis=None : r
             self._unpermute_ = lambda r, axis=None : r
-            ''' now check if self.PBD (initial PDB input needs to be changed), using the old method
-                    remember this needs to happen ~ straight away (before self.traj (and self.mol) are set)
-                    add back that method only if needed
-                    better to just permute the unitcells seperately (all to match the _single_mol_LigParGen_pdb_file_)
-                        after that is done, in SingleComponent.__init__, before self.initialise_FF_().
-                        add a way to say self.atom_order_PDB_match_itp := True. This will reach here:
-            '''
-            print('Note: using OPLS with permuation of atoms turned OFF')
+            print('Note: using OPLS with permutation of atoms turned OFF')
 
         if os.path.exists(self.top_file_gmx_adjusted_charges.absolute()): pass
         else: 
