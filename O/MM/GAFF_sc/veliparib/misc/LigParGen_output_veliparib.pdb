@@ -1,0 +1,39 @@
+TITLE     MDANALYSIS FRAMES FROM 0, STEP 1: Created by PDBWriter
+CRYST1   10.000   10.000   10.000  90.00  90.00  90.00 P 1           1
+MODEL        1
+ATOM      1  C00 UNK X   1       8.020   4.130   2.950  1.00  0.00      SYST    
+ATOM      2  C01 UNK X   1       8.360   2.770   3.490  1.00  0.00      SYST    
+ATOM      3  O02 UNK X   1       7.270   4.910   3.580  1.00  0.00      SYST    
+ATOM      4  N03 UNK X   1       8.570   4.460   1.770  1.00  0.00      SYST    
+ATOM      5  C04 UNK X   1       7.660   2.270   4.590  1.00  0.00      SYST    
+ATOM      6  C05 UNK X   1       9.380   1.940   2.940  1.00  0.00      SYST    
+ATOM      7  H06 UNK X   1       9.240   3.830   1.320  1.00  0.00      SYST    
+ATOM      8  H07 UNK X   1       8.520   5.450   1.490  1.00  0.00      SYST    
+ATOM      9  C08 UNK X   1       7.960   1.030   5.170  1.00  0.00      SYST    
+ATOM     10  H09 UNK X   1       6.850   2.880   4.990  1.00  0.00      SYST    
+ATOM     11  C0A UNK X   1       9.670   0.690   3.550  1.00  0.00      SYST    
+ATOM     12  N0B UNK X   1      10.230   2.160   1.870  1.00  0.00      SYST    
+ATOM     13  C0C UNK X   1       9.000   0.230   4.680  1.00  0.00      SYST    
+ATOM     14  H0D UNK X   1       7.390   0.690   6.030  1.00  0.00      SYST    
+ATOM     15  N0E UNK X   1      10.730   0.180   2.820  1.00  0.00      SYST    
+ATOM     16  C0F UNK X   1      11.020   1.090   1.830  1.00  0.00      SYST    
+ATOM     17  H0G UNK X   1       9.270  -0.710   5.150  1.00  0.00      SYST    
+ATOM     18  H0H UNK X   1      11.200  -0.740   3.020  1.00  0.00      SYST    
+ATOM     19  C0I UNK X   1      12.110   0.910   0.790  1.00  0.00      SYST    
+ATOM     20  C0J UNK X   1      12.960   2.200   0.700  1.00  0.00      SYST    
+ATOM     21  N0K UNK X   1      13.060  -0.120   1.270  1.00  0.00      SYST    
+ATOM     22  C0M UNK X   1      11.490   0.510  -0.560  1.00  0.00      SYST    
+ATOM     23  C0N UNK X   1      14.020   2.050   1.810  1.00  0.00      SYST    
+ATOM     24  H0O UNK X   1      12.350   3.100   0.810  1.00  0.00      SYST    
+ATOM     25  H0P UNK X   1      13.440   2.220  -0.290  1.00  0.00      SYST    
+ATOM     26  C0Q UNK X   1      13.920   0.570   2.260  1.00  0.00      SYST    
+ATOM     27  H0R UNK X   1      13.650  -0.360   0.460  1.00  0.00      SYST    
+ATOM     28  H0S UNK X   1      10.810   1.300  -0.900  1.00  0.00      SYST    
+ATOM     29  H0T UNK X   1      10.930  -0.430  -0.480  1.00  0.00      SYST    
+ATOM     30  H0U UNK X   1      12.290   0.390  -1.310  1.00  0.00      SYST    
+ATOM     31  H0V UNK X   1      13.840   2.730   2.650  1.00  0.00      SYST    
+ATOM     32  H0W UNK X   1      15.020   2.280   1.420  1.00  0.00      SYST    
+ATOM     33  H0X UNK X   1      13.460   0.490   3.250  1.00  0.00      SYST    
+ATOM     34  H0Y UNK X   1      14.900   0.060   2.300  1.00  0.00      SYST    
+ENDMDL
+END
