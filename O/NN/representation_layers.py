@@ -22,7 +22,16 @@ class SC_helper:
                  PDB_single_mol: str,   
                 ):
         
-        '''
+        ''' 
+        This is longer than needed, mostly as a placholder for the clustering work
+            The clustering work handles gmx supercells sampling NPT ensembles in most cases.
+            The molecules are not whole, and the molecule are 'jumping' in those datasets.
+            'Make-whole' method that is here requires Zmatrix of the molecule (called self.ABCD here).
+            There are also other similarities for what information needs to be chosen for both
+            clustering of finite temperature supercells and for SingleComponent_map.
+            This object (SC_helper) is useful for both topics.
+                Tensorflow, similar to torch, has a fast einsum function, compared to numpy.
+                Remembering that this was useful to speed up the clustering related loops.
         '''
 
         self.PDB_single_mol = str(PDB_single_mol)
