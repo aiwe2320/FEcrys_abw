@@ -256,6 +256,7 @@ def plot_vector_(v, r0, ax=None, color='black', **kwargs):
             ax.plot([r0[0][0],r1[i][0]],[r0[0][1],r1[i][1]],color=color, **kwargs)
 
 def plot_cell_(_traj, s=50, cmap='coolwarm', pad_ratio=0.3):
+    ''' not used anymore '''
     xyz = np.array(_traj.xyz[0])
     box = np.array(_traj.unitcell_vectors[0])
     Min, Max = xyz.min(0), xyz.max(0)
@@ -294,6 +295,7 @@ def plot_OH1H2_samples_2D_(samples, n_molecules:int, n_atoms_in_molecule:int,
                            checking_disorder = False,
                            centre = True,
                           ):
+    ''' not used anymore '''
     samples = np.array(samples)
     m = samples.shape[0]
     _samples = reshape_to_molecules_np_(samples,n_atoms_in_molecule=n_atoms_in_molecule,n_molecules=n_molecules)[...,:3,:]
@@ -377,7 +379,9 @@ def simple_smoothing_matrix_(S,N,c=1):
     return W/W.sum(1)[:,np.newaxis]
 
 def simple_smoother_(X,c=1.,S=None):
-    ''' ~ given running average from stochastic data X : used only for visualisation.
+    ''' 
+    not used
+    gives running average from stochastic data X : used only for visualisation.
     '''
     # for smoothing arrays(X) shaped as (N1,) or (N1,N2) or any (N1,N2,...,Nd) up to d=13.
     ' c: lim(c -> 0) -> ~ line of best fit '
@@ -407,7 +411,7 @@ def simple_smoother_(X,c=1.,S=None):
 
 def plot_as_ascii_(size = [300,900], c=1.2):
     ''' 
-    default setting are fine for quick look at a curve
+    default setting are fine for quickly  look at a curve
     
     example:
         plt.plot(x,y) ; plot_as_ascii_() # zoom out maximum amount before running this line
@@ -449,7 +453,20 @@ def plot_2D_histograms_of_box_(b,
                                s = 1,
                                move_it_left = 0.0,
                               ):
+    '''
+    plots 3 histograms of atomic positions, viewing at the three different faces of a supercell
 
+    Inputs:
+        b : (3,3)
+            supercell box
+        r0 : (n_samples, N_atoms, 3)
+            3 histograms from these coordiantes plotted on the left hand side
+        r1 : (n_samples, N_atoms, 3)
+            3 histograms from these coordiantes plotted on the right hand side
+        scatter : book
+            if False a contour plot version of the histograms are plotted
+            if True  a scatter plot version of the histograms are plotted
+    '''
     axes = [[0,1],[1,2],[0,2]]
     
     r0 = np.array(r0)[:m]
