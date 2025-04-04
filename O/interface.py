@@ -352,8 +352,8 @@ class NN_interface_sc(NN_interface_helper):
             b = self.simulation_data['MD dataset']['b'].astype(np.float32)
             self.b0 = b[-1]
             assert np.abs(b[0] - self.b0).max() < 0.0000001
-            self.Ts = self.simulation_data['MD dataset']['T']
-            self.u = self.simulation_data['MD dataset']['u']
+            self.Ts = self.simulation_data['MD dataset']['T'] # temperatures : not use anywhere later
+            self.u = self.simulation_data['MD dataset']['u']  # potential energies : need for FE estimates (except if using mBAR)
             self.u_mean = self.u.mean()
 
             assert len(self.r) == len(self.u)
@@ -471,7 +471,7 @@ class NN_interface_sc_multimap(NN_interface_helper):
             it is important to provide here a list (n_mol_unitcells) describing 
             the number of molecules in each underlying unitcell, respectively.
             '''
-            )
+            ) 
             n_mol_unitcells = [None]*self.n_crystals
         else:
             if type(n_mol_unitcells) is int and self.n_crystals == 1: n_mol_unitcells = [n_mol_unitcells]
@@ -546,43 +546,52 @@ class NN_interface_sc_multimap(NN_interface_helper):
         self.trainer.train(
                         n_batches = n_batches,
 
-                        # needed and always available:
+                        # needed, and always available: xyz coordinates of training and validation sets
                         list_r_training   = [nn.r_training for nn in self.nns],
                         list_r_validation = [nn.r_validation for nn in self.nns],
 
+                        # needed, and always available: potential energies of training and validation sets
                         list_u_training   = [nn.u_training for nn in self.nns],
                         list_u_validation = [nn.u_validation for nn in self.nns],
 
-                        # not needed if not relevant:
+                        # not needed if not relevant: [weights associated with training and validation sets]
                         list_w_training = None,
                         list_w_validation = None,
 
-                        # if the FF is cheap can use, BAR_V estiamtes during training will be saved.
+                        # if the FF is cheap can use, BAR_V estimates during training will be saved.
                         list_potential_energy_functions = [self.nns[k].u_ for k in range(self.n_crystals)],
 
-                        # evalaution cost vs statistical significance of gradient of the loss (fixing to 1000, but can change):
+                        # evalaution cost vs statistical significance of gradient of the loss (fixing to 1000, but can change)
                         training_batch_size = 1000,
-                        # evalaution cost vs variance of FE estimates (affects standard error from pymbar if save_BAR True):
+                        # evalaution cost vs variance of FE estimates (affects standard error from pymbar if save_BAR True)
                         evaluation_batch_size = self.evaluation_batch_size,
 
-                        # always True, unless just quickly checking if the training works at all:
+                        # always True, unless just quickly checking if the training works at all
                         evaluate_main = evaluate_main,
-                        # pymbar will run later, but need to save those inputs during training:
+                        # pymbar will run later, but need to save those inputs during training
                         name_save_BAR_inputs = name_save_BAR_inputs,
                         name_save_mBAR_inputs = name_save_mBAR_inputs,
 
-                        # statistical significance vs model quality:
+                        # statistical significance vs model quality. Dont need to suffle if the learned map is ideal, but it is not ideal.
                         shuffle = True,
-                        # verbose: y_axis width of running plot if not None, or running not in notebook : None.
+                        # verbose: when running in jupyter notebook y_axis width of running plot that are shown during training
                         f_halfwindow_visualisation = f_halfwindow_visualisation, # f_latt / kT if verbose_divided_by_n_mol, else f_crys / kT
-                        verbose = verbose,
-                        verbose_divided_by_n_mol = verbose_divided_by_n_mol,
+                        verbose = verbose, # whether to plot matplotlib plots during training
+                        verbose_divided_by_n_mol = verbose_divided_by_n_mol, # plot and report lattice FEs (True) or crystal FEs (False) [lattice_FE = crystal_FE/n_mol]
                         
                         # evalaution cost:
-                        evaluate_on_training_data = evaluate_on_training_data , # not needed.
-                        test_inverse = test_inverse, # not needed if model ok.
-                        # disk space:
-                        save_generated_configurations_anyway = False, # not tested yet but here in case the FF is expensive (self.u_ missing)
+                        evaluate_on_training_data = evaluate_on_training_data, # not needed.
+                        test_inverse = test_inverse, # not needed if model ok, but useful to check sometimes. 
+                            # Inversion errors must not be too biased (i.e., must include zero error). Some error is unavoidable due to model depth, and overfitting.
+                            # BAR rewighting is quite robust even in the presence of large inversion errors on some sample, but only if the error distribution includes zero.
+                            # If setting test_inverse True, this information is collected during training, but adds a lot of overhead cost during training.
+                            # TODO: statistics collected about the quality of the inverses (inv_test) may be adjusted from what they are currently (mean, max).
+                        # Disk space needed for this:
+                        save_generated_configurations_anyway = False, 
+                        # not tested yet but here in case the FF is expensive (self.u_ function missing, not defined, on purpose)
+                        # when FF expensive, yet model is always cheap to sample, so sample model on each batch and save this along with other BAR inputs that can be used later
+                        # use validation error to choose best model, and on those xyz samples from the model compute BAR (after evalauting the FF on the selected files)
+                        # dont know when the model minimises validation error, so saving each evaluation batch and choose the most promising pymbar inputs afterwards.
                     )
         print('training time so far:', np.round(self.trainer.training_time, 2), 'minutes')
 
