@@ -62,6 +62,7 @@ class NN_interface_helper:
         if VERSION == 'NEW':
             self.model = self.model_class.load_model(self.name_save_model)
         else:
+            # need this step to unpickle those files since working directory was moves up by one folder
             from . import NN
             sys.modules['NN'] = NN
             sys.modules['NN.util_tf'] = NN.util_tf
