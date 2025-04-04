@@ -13,7 +13,7 @@ edit the text files input for parmed.gromacs.GromacsTopologyFile:
     f : change_n_mol_top_
 
 misc:
-    f : TEST_OPLS_LJ_succinic_acid_ ; checking that OPLS imlemented correctly
+    f : TEST_OPLS_LJ_succinic_acid_ ; checking that OPLS set up correctly (on one example)
 
 '''
 
