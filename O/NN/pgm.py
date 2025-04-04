@@ -607,6 +607,7 @@ class model_helper_PGMcrys_v1:
 
     def test_inverse_(self, r, crystal_index=0, graph=True):
         # test invertibility of the model in both directions
+        ''' same as method with the same name in model_helper but has crystal_index as arg '''
 
         r = np2tf_(r) 
         m = r.shape[0]
