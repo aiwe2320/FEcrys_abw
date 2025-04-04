@@ -11,12 +11,3 @@ DIR_main can be renamed, but should contain:
 '''
 
 DIR_main = './O/' 
-
-'''
-
-into DIR_main can freely add more:
-    helper files (like interface.py) ; these can enable high-throghput
-        TODO: add single molecules 'interface' and ice 'interface'
-    folders for other methods (e.g., supercell clustering)
-
-'''
