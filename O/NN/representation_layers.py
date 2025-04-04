@@ -23,7 +23,7 @@ class SC_helper:
                 ):
         
         ''' 
-        This is longer than needed, mostly as a placholder helper class also for the clustering work.
+        This is longer than needed, mostly as a placholder helper class also for the clustering work.        
             The clustering work handles gmx supercells sampling NPT ensembles in most cases.
             The molecules are not whole, and the molecule are 'jumping' in those datasets.
             'Make-whole' method that is here (called unwrap_np_ [ADD unwrap_tf_]),
