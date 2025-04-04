@@ -142,7 +142,6 @@ class model_helper:
     def save_model(self, path_and_name : str):
         # saves initialisation variables for the model, and the model's weights
         # this includes a instance of ic_map (first initialisation argument)
-        #     for this reason ic_map is not ... : wait can change this actually
         save_pickle_([self.init_args, self.trainable_variables], path_and_name)
 
     @staticmethod
