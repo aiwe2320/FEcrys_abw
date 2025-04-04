@@ -158,8 +158,10 @@ class model_helper:
         return model
 
     def test_inverse_(self, r, graph=True):
-        # test invertibility of the model in both directions
-        # TODO: maybe add more, useful, statistics in the output
+        # r : Cartesian coordinates of a random validation batch
+        
+        # this function tests invertibility error of the model in both directions
+        # TODO: maybe add more useful statistics in the output
 
         r = np2tf_(r) 
         m = r.shape[0]
@@ -169,7 +171,7 @@ class model_helper:
         ##
         z, ladJrz   = f_(r)
         _r, ladJzr = i_(z)
-        # absolute error in xyz coordinates when mapping validation batch forward and then back
+        # absolute error in r coordinates when mapping validation batch forward and then back
         err_r_forward = np.abs(r - _r)
         # average and maximum of the above error, over the batch
         err_r_forward = [err_r_forward.mean(), err_r_forward.max()]
