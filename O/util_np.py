@@ -2,7 +2,7 @@ from . import DIR_main
 
 ''' util_np.py
 
-saving/loading anything:
+saving/loading python variables and objects:
     f : save_pickle_
     f : load_pickle_
 
@@ -95,7 +95,7 @@ def half_way_(a,c):
 
 def take_random_(x, m=20000):
     '''
-    output: uniformly takenn random m values from first axis of x (len(x) >= m)
+    output: uniformly taken random m values from first axis of x (len(x) >= m)
     '''
     return x[np.random.choice(x.shape[0],min([m,x.shape[0]]),replace=False)]
 
@@ -103,12 +103,12 @@ def joint_grid_from_marginal_grids_(*marginal_grids, flatten_output=True):
     
     ''' like np.meshgrid but easier to use 
     Inputs:
-        *marginal_grids : more than one flat arrays, these are usually grids made by np.linspace.
+        *marginal_grids : more than one flat arrays, these are usually grids made by np.linspace
             dim = number of input grids
         flatten_output : bool affecting shape of the output array
     Outputs:
         if flatten_output:
-            joint_grid : (N,dim) ; N = bins[1]*...*bins[dim]
+            joint_grid : (N, dim) ; N = bins[1]*...*bins[dim]
         else:
             joint_grid : (dim, bins[1], ..., bins[dim])
     '''
@@ -142,14 +142,25 @@ def joint_grid_from_marginal_grids_(*marginal_grids, flatten_output=True):
 
 def tidy_crystal_xyz_(r, b, n_atoms_mol, ind_rO, batch_size=1000):
     ''' makes molecules not jump in Cartesian space
-    !! does not work in unstable systems such as very small cells
 
-    In any case: outputs are expected to evaluate to the same energy as the inputs.
+    !! may not work well in unstable systems such as very small cells
 
-    molecules already whole (true in openmm trajectories)
-    steps 1 and 2 below deal only with the general positions of molecules in the lattice (nojump)
+    Inputs:
+        r : (n_frames, N_atoms, 3) 
+            array of coordinates (must be a single component system)
+            molecules must be already whole (true by default in any openmm trajectories)
+            (if molecules not whole see the method in SC_helper.unwrap_molecule, run that first)
 
-    ind_rO : index of any atom in a molecule that has slow dynamics relative to the cell
+        b : (n_frames, 3, 3)
+            array of simulation boxes
+        ind_rO : int
+            index of any atom in a molecule that has slow dynamics relative to the cell
+        batch_size : int
+            to reuduce memory cost when running on large trajectory
+    Outputs:
+        r : (n_frames, N_atoms, 3)
+            array of coordinates with PBC wrapping where molecules are not jumping
+            Importantly: outputs are expected to evaluate to the same energy as the inputs (same packing as input)
 
     '''
     def check_shape_(x):
@@ -192,8 +203,7 @@ def tidy_crystal_xyz_(r, b, n_atoms_mol, ind_rO, batch_size=1000):
     else: pass
     '''
     # step 2: bring any atoms with index rO that are still jumping to pre-jump position (and bring whole molecule with it)
-    using method copied from:
-    https://github.com/MDAnalysis/mdanalysis/blob/develop/package/MDAnalysis/transformations/nojump.py
+    using method copied from: https://github.com/MDAnalysis/mdanalysis/blob/develop/package/MDAnalysis/transformations/nojump.py
     this should give lattice looking like the first frame throughout a crystaline trajectory
     '''
     def dot_(Ri, mat):
