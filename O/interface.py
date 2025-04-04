@@ -5,66 +5,6 @@ from pymbar import MBAR
 
 ## ## 
 
-def plot_inv_test_res_(inv_test_result, mean_range=[True,True], forward_inverse=[True,True], plot_during_training=True):
-    if mean_range[0]:
-        if forward_inverse[0]:
-            # [2] results
-            # [0] forward (r->z->r)
-            # [1] ladJ
-            # [0] average
-            show = np.array([x[2][0][1][0] for x in inv_test_result])
-            if plot_during_training:
-                plt.plot(show, color='red')
-            print('F MEAN : forward (r->z->r) : mean ladJ error [averages of (first, last) 10 batches]:               ',show[:10].mean().round(3), show[-10:].mean().round(3))
-        else: pass
-
-        if forward_inverse[1]:
-            # [2] results
-            # [1] inverse (z->r->z)
-            # [1] ladJ
-            # [0] average
-            show = np.array([x[2][1][1][0] for x in inv_test_result])
-            print('        I MEAN : inverse (z->r->z) : mean ladJ error [averages of (first, last) 10 batches]:                    ',show[:10].mean().round(3), show[-10:].mean().round(3))
-            if plot_during_training:
-                plt.plot(show, color='black')
-        else: pass
-    else: pass
-
-    if mean_range[1]:
-        if forward_inverse[0]:
-            show = np.array([x[2][0][1][1] for x in inv_test_result])
-            # [2] results
-            # [0] forward (r->z->r)
-            # [1] ladJ
-            # [1] minimum
-            if plot_during_training:
-                plt.plot(show, linestyle='dotted', color='red')
-            print('F MIN  : forward (r->z->r) : minimum ladJ deviation [averages of (first, last) 10 batches]:       ',show[:10].mean().round(3), show[-10:].mean().round(3))
-
-            show = np.array([x[2][0][1][2] for x in inv_test_result])
-            if plot_during_training:
-                plt.plot(show, linestyle='dotted', color='red')
-            print('F MAX  : forward (r->z->r) : Maxiumum ladJ deviation [averages of (first, last) 10 batches]:       ',show[:10].mean().round(3), show[-10:].mean().round(3))
-            
-        else: pass
-        if forward_inverse[1]:
-            show = np.array([x[2][1][1][1] for x in inv_test_result])
-            # [2] results
-            # [1] inverse (z->r->z)
-            # [1] ladJ
-            # [1] minimum
-            if plot_during_training:
-                plt.plot(show, linestyle='dotted', color='black')
-            print('        I MIN  : inverse (z->r->z) : minimum ladJ deviation [averages of (first, last) 10 batches]:             ',show[:10].mean().round(3), show[-10:].mean().round(3))
-            
-            show = np.array([x[2][1][1][2] for x in inv_test_result])
-            if plot_during_training:
-                plt.plot(show, linestyle='dotted', color='black')
-            print('        I MAX  : inverse (z->r->z) : Maxiumum ladJ deviation [averages of (first, last) 10 batches]:             ',show[:10].mean().round(3), show[-10:].mean().round(3))
-            
-        else: pass
-    else: pass
-
 class NN_interface_helper:
     def __init__(self,):
         self.dir_results_BAR = DIR_main+'/NN/training_results/BAR/'
