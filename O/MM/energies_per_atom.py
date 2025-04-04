@@ -1,6 +1,5 @@
-''' not used so far
-    exprimental method
-    only for analysis, visualisation purposes 
+''' 
+    too slow and not finished
 '''
 
 from .sc_system import *
