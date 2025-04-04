@@ -696,15 +696,7 @@ class PGMcrys_v1(tf.keras.models.Model, model_helper_PGMcrys_v1, model_helper):
         self.n_att_heads = n_att_heads
 
         ##
-        if self.ic_maps[0].VERSION == 'P3': number_of_parallel_molecules = self.ic_maps[0].n_unitcells 
-        # that was the name given to it (this number = n_mol/2 < n_mol, only in /2mol version, otherwise == n_mol)
-        #       reason why /2mol no longer included properly as an option:
-        #           /mol was more general, and the new ic_map version has n_mol_unitcell to deal with crystallographically different torsions
-        #           all variations due to packing alone are focused when setting n_mol_unitcell that matches the data (black circles dissapear)
-        #           if later doing homogeneous multicomponent crystal, can have two different ic_maps (e.g., A and B)
-        #           adjust both of them to leave rO_A, rO_B unchanged and then remove COM from [rO_A, rO_B] seperately.
-        #           this approach leaves ic_map unchanged, but the inputs and outputs need additional steps
-        #           (in any casem ic_map for /2mol (version P3) was not compatible for two types of molecules in same crystal)
+        if self.ic_maps[0].VERSION == 'P3': number_of_parallel_molecules = self.ic_maps[0].n_unitcells
         else: number_of_parallel_molecules = self.n_mol
 
         self.DIM_P2C_connection = self.DIM_connection  
