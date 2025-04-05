@@ -992,6 +992,35 @@ def lengths_angles_to_box_(x):
     if len(x.shape) == 2: return np.stack([mdtraj.utils.lengths_and_angles_to_box_vectors(*_x) for _x in x])
     else:                 return           mdtraj.utils.lengths_and_angles_to_box_vectors(*x)
 
+def get_index_average_box_automatic_(boxes, n_bins=40):
+    ''' 
+    a simple way to find the most likely box is to just find peaks in histogram: this is automated here
+    Inputs:
+        boxes  : (n_frames, 3, 3) shaped array
+        n_bins : int 
+            number of bins for six 1D histograms that are involved
+    '''
+    assert len(boxes.shape) == 3
+    # x : (n_frames, 6) box lengths and angles
+    x = box_to_lengths_angles_(boxes)
+    def peak_finder_(x):
+        h,ax = np.histogram(x, bins=n_bins)
+        ax = ax[1:]-0.5*(ax[1]-ax[0])
+        return ax[np.argmax(h)]
+    # x_av : average according to peaks of the 6 marginals histograms, but does not exist in the data (boxes)
+    x_av = np.array([peak_finder_(x[...,i]) for i in range(6)])
+    # err : distance between x and x_av
+    err = np.abs(x_av - x)
+    # err : standardised distance (all 6 marginals equally important)
+    err /= err.max(0, keepdims=True)
+    # err : err for all 6 marginals
+    err = err.sum(-1)
+    # index : index of frame closes to average box according to this method
+    index = np.argmin(err)
+    return index
+
+## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
+
 def get_unitcell_stack_order_(b, n_mol_unitcell=1, top_n=None):
     """ 
     tells how many times to stack the unitcell in each of the three directions
