@@ -933,7 +933,7 @@ class OPLS(MM_system_helper):
             (1) convert the .gro LigParGen_output to a pdb file (gro -> pdb_from_gro):
             '''
             pdb_from_gro = str(self._single_mol_LigParGen_pdb_file_.absolute())
-            import MDAnalysis as mda # pip install --upgrade MDAnalysis # not conda
+            import MDAnalysis as mda # # conda install -c conda-forge mdanalysis
             import warnings
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
