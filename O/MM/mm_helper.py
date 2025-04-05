@@ -982,6 +982,16 @@ def PDB_to_xyz_(PDB:str):
 def PDB_to_box_(PDB:str):
     return mdtraj.load(PDB,PDB).unitcell_vectors[0]
 
+def box_to_lengths_angles_(b):
+    ''' b : (3,3) or (m,3,3) ; box or boxes '''
+    if len(b.shape) == 3: return np.stack([mdtraj.utils.box_vectors_to_lengths_and_angles(*_b) for _b in b])
+    else:                 return           mdtraj.utils.box_vectors_to_lengths_and_angles(*b)
+        
+def lengths_angles_to_box_(x):
+    ''' x : (6) or (m,6) ; lengths and angles of one or more boxes '''
+    if len(x.shape) == 2: return np.stack([mdtraj.utils.lengths_and_angles_to_box_vectors(*_x) for _x in x])
+    else:                 return           mdtraj.utils.lengths_and_angles_to_box_vectors(*x)
+
 def get_unitcell_stack_order_(b, n_mol_unitcell=1, top_n=None):
     """ 
     tells how many times to stack the unitcell in each of the three directions
