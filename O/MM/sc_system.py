@@ -76,9 +76,15 @@ class SingleComponent:
                 name,
                 FF_name = 'GAFF',
                 atom_order_PDB_match_itp = False,
+                FF_class = None,
                 ):
-        mixin = {'GAFF': GAFF, 'OPLS': OPLS, 'TIP4P':TIP4P}[FF_name]
-        cls.FF_name = FF_name
+        if FF_class is None: 
+            mixin = {'GAFF': GAFF, 'OPLS': OPLS, 'TIP4P':TIP4P}[FF_name]
+            cls.FF_name = FF_name
+        else: 
+            mixin = FF_class
+            cls.FF_name = FF_class.FF_name
+
         cls = type(cls.__name__ + '+' + mixin.__name__, (cls, mixin), {})
         return super(SingleComponent, cls).__new__(cls)
     
@@ -86,8 +92,9 @@ class SingleComponent:
                  PDB : str,                        # PDB of a crystal, or one molecule in vacuum, including all hydrogens
                  n_atoms_mol : int,                # number of atoms in one molecule (including hydrogens)
                  name : str,                       # name of the molecule (i.e., name of the single component)
-                 FF_name : str = 'GAFF',           # FF_name in ['GAFF', 'OPLS', 'TIP4P']
+                 FF_name : str = 'GAFF',           # FF_name in ['GAFF', 'OPLS', 'TIP4P'], ! this will be ignored if FF_class not None.
                  atom_order_PDB_match_itp = False, # used only in OPLS so far, explained in detail above.
+                 FF_class = None,                  # last minute update: a more general way of using any  simple class that has methods (initialise_FF_ and set_FF_)
                 ):
         super(SingleComponent, self).__init__()
         '''
@@ -105,7 +112,7 @@ class SingleComponent:
         self.n_atoms_mol = n_atoms_mol
         self.name = str(name)
 
-        self.print('# initialise_object (SingleComponent) with '+FF_name+' FF, from the input file (PDB):')
+        self.print('# initialise_object (SingleComponent) with '+self.FF_name+' FF, from the input file (PDB):')
 
         if self.FF_name == 'TIP4P': assert self.n_atoms_mol == 3
         else: pass
@@ -149,6 +156,7 @@ class SingleComponent:
                                        'name'        : self.name,
                                        'FF_name'     : self.FF_name,
                                        'atom_order_PDB_match_itp' : atom_order_PDB_match_itp,
+                                       'FF_class'    : FF_class, # will be used later.
                                        }
         self.print('')
 
@@ -413,10 +421,10 @@ class TIP4P(MM_system_helper):
     def __init__(self,):
         super().__init__()
 
-    #@classmethod
-    #@property
-    #def FF_name(self,):
-    #    return 'TIP4P'
+    @classmethod
+    @property
+    def FF_name(self,):
+        return 'TIP4P'
     
     @property
     def _single_mol_pdb_file_(self) -> Path:
@@ -670,10 +678,10 @@ class GAFF(MM_system_helper):
     def __init__(self,):
         super().__init__()
 
-    #@classmethod
-    #@property
-    #def FF_name(self,):
-    #    return 'GAFF'
+    @classmethod
+    @property
+    def FF_name(self,):
+        return 'GAFF'
     
     def initialise_FF_(self,):
         '''
@@ -890,10 +898,10 @@ class OPLS(MM_system_helper):
         self.using_gmx_loader = True
         self.atom_order_PDB_match_itp = False
         
-    #@classmethod
-    #@property
-    #def FF_name(self,):
-    #    return 'OPLS'
+    @classmethod
+    @property
+    def FF_name(self,):
+        return 'OPLS'
     
     ##
     @property
