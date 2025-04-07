@@ -413,6 +413,11 @@ class TIP4P(MM_system_helper):
     def __init__(self,):
         super().__init__()
 
+    @classmethod
+    @property
+    def name(self,):
+        return 'TIP4P'
+    
     @property
     def _single_mol_pdb_file_(self) -> Path:
         return self.misc_dir / f"{self.name}_single_mol.pdb" 
@@ -665,6 +670,11 @@ class GAFF(MM_system_helper):
     def __init__(self,):
         super().__init__()
 
+    @classmethod
+    @property
+    def name(self,):
+        return 'GAFF'
+        
     def initialise_FF_(self,):
         '''
         run this after (n_mol and n_atoms_mol) defined near the end of __init__ of SingleComponent
@@ -879,7 +889,11 @@ class OPLS(MM_system_helper):
 
         self.using_gmx_loader = True
         self.atom_order_PDB_match_itp = False
-
+        
+    @classmethod
+    @property
+    def name(self,):
+        return 'OPLS'
     ##
     @property
     def _single_mol_pdb_file_(self) -> Path:
