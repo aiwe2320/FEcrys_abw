@@ -408,7 +408,7 @@ class NN_interface_sc(NN_interface_helper):
             else: print(value)
         except:
             value = max([np.abs(np.array(_x)).max() for _x in x]) # 1.0000004 , 1.0000006
-            if value > 1.000001: print('!!')
+            if value > 1.000001: print('!!', value)
             else: print(value)
 
     # set_model not here and the rest not here.
