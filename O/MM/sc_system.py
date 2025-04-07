@@ -415,7 +415,7 @@ class TIP4P(MM_system_helper):
 
     #@classmethod
     #@property
-    #def FF_name():
+    #def FF_name(self,):
     #    return 'TIP4P'
     
     @property
@@ -672,7 +672,7 @@ class GAFF(MM_system_helper):
 
     #@classmethod
     #@property
-    #def FF_name():
+    #def FF_name(self,):
     #    return 'GAFF'
     
     def initialise_FF_(self,):
@@ -892,7 +892,7 @@ class OPLS(MM_system_helper):
         
     #@classmethod
     #@property
-    #def FF_name():
+    #def FF_name(self,):
     #    return 'OPLS'
     
     ##
