@@ -981,6 +981,21 @@ def cell_lengths_and_angles_(b, radians=False):
 
 ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
 
+def save_gro_as_pdb_(GRO:str, PDB:str=None):
+    path_and_file = GRO[:-4]
+    if PDB is None: PDB = path_and_file+'.pdb'
+    else: pass
+    try:
+        mdtraj.load(GRO).save_pdb(PDB)
+        used = 'mdtraj'
+    except:
+        import MDAnalysis as mda
+        universe = mda.Universe(GRO)
+        with mda.Writer(PDB) as pdb:
+            pdb.write(universe)
+        used = 'MDAnalysis'
+    print('saved',PDB,'using',used)
+
 def PDB_to_xyz_(PDB:str):
     return mdtraj.load(PDB,PDB).xyz[0]
 
