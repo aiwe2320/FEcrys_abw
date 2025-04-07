@@ -412,11 +412,12 @@ class TIP4P(MM_system_helper):
 
     def __init__(self,):
         super().__init__()
+        self.FF_name = 'TIP4P'
 
     @classmethod
     @property
     def name(self,):
-        return 'TIP4P'
+        return self.FF_name
     
     @property
     def _single_mol_pdb_file_(self) -> Path:
@@ -669,11 +670,12 @@ class GAFF(MM_system_helper):
     '''
     def __init__(self,):
         super().__init__()
+        self.FF_name = 'GAFF'
 
     @classmethod
     @property
     def name(self,):
-        return 'GAFF'
+        return self.FF_name
         
     def initialise_FF_(self,):
         '''
@@ -886,6 +888,7 @@ class OPLS(MM_system_helper):
     '''
     def __init__(self,):
         super().__init__()
+        self.FF_name = 'OPLS'
 
         self.using_gmx_loader = True
         self.atom_order_PDB_match_itp = False
@@ -893,7 +896,7 @@ class OPLS(MM_system_helper):
     @classmethod
     @property
     def name(self,):
-        return 'OPLS'
+        return self.FF_name
     ##
     @property
     def _single_mol_pdb_file_(self) -> Path:
