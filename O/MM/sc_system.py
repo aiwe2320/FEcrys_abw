@@ -1030,7 +1030,7 @@ class OPLS(MM_system_helper):
         #self._unpermute_ = lambda r, axis=-2 : np.take(r, self._unpermute_crystal_from_top_, axis=axis)
         
         if np.sum(self._permute_crystal_to_top_ - np.arange(self.N)) == 0:
-            print('permutation not needed')
+            print('permutation not used, because not needed')
             self._permute_   = lambda r, axis=None : r
             self._unpermute_ = lambda r, axis=None : r
         else:
