@@ -1012,7 +1012,7 @@ def lengths_angles_to_box_(x):
     if len(x.shape) == 2: return np.stack([mdtraj.utils.lengths_and_angles_to_box_vectors(*_x) for _x in x])
     else:                 return           mdtraj.utils.lengths_and_angles_to_box_vectors(*x)
 
-def get_index_average_box_automatic_(boxes, n_bins=40):
+def get_index_average_box_automatic_(boxes, n_bins=30):
     ''' 
     a simple way to find the most likely box is to just find peaks in histogram: this is automated here
     Inputs:
