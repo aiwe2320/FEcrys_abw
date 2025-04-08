@@ -909,8 +909,8 @@ class OPLS(MM_system_helper):
         return self.misc_dir / f"{self.name}_single_mol.pdb" 
     
     @property
-    def _single_mol_pdb_file_permuated_(self) -> Path:
-        return self.misc_dir / f"{self.name}_single_mol_permuated_to_match_LigParGen_output.pdb" 
+    def _single_mol_pdb_file_permuted_(self) -> Path:
+        return self.misc_dir / f"{self.name}_single_mol_permuted_to_match_LigParGen_output.pdb" 
     
     @property
     def _single_mol_LigParGen_gro_file_(self) -> Path:
@@ -967,7 +967,7 @@ class OPLS(MM_system_helper):
             (2) find the permutation that LigParGen used, by creating a reodered version of the pdb (pdb_reordered)
                 pdb_reordered has the same confromation of the molecule as in pdb, thus can be compared safely in step (3)
             '''
-            pdb_reordered = str(self._single_mol_pdb_file_permuated_.absolute())
+            pdb_reordered = str(self._single_mol_pdb_file_permuted_.absolute())
             reorder_atoms_mol_(mol_pdb_fname=pdb,
                                template_pdb_fname=pdb_from_gro,
                                output_pdb_fname=pdb_reordered) # this is more robust
@@ -1026,8 +1026,16 @@ class OPLS(MM_system_helper):
         # at the place where this whole current function was chosen not to run.
 
         # Input (for both) : r or v or F : (...,N,3) (i.e., input already 'reshaped as atoms'!)
-        self._permute_   = lambda r, axis=-2 : np.take(r, self._permute_crystal_to_top_, axis=axis)
-        self._unpermute_ = lambda r, axis=-2 : np.take(r, self._unpermute_crystal_from_top_, axis=axis)
+        #self._permute_   = lambda r, axis=-2 : np.take(r, self._permute_crystal_to_top_, axis=axis)
+        #self._unpermute_ = lambda r, axis=-2 : np.take(r, self._unpermute_crystal_from_top_, axis=axis)
+        
+        if np.sum(self._permute_crystal_to_top_ - np.arange(self.N)) == 0:
+            print('permutation not needed')
+            self._permute_   = lambda r, axis=None : r
+            self._unpermute_ = lambda r, axis=None : r
+        else:
+            self._permute_   = lambda r, axis=-2 : np.take(r, self._permute_crystal_to_top_, axis=axis)
+            self._unpermute_ = lambda r, axis=-2 : np.take(r, self._unpermute_crystal_from_top_, axis=axis)
 
     ##
 
