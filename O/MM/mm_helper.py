@@ -1034,6 +1034,7 @@ def get_index_average_box_automatic_(boxes,
     assert len(boxes.shape) == 3
     # x : (n_frames, 6) box lengths and angles
     x = box_to_lengths_angles_(boxes)
+    
     def peak_finder_(x, i):
         h,ax = np.histogram(x, bins=n_bins, density=True)
         h /= h.sum()
@@ -1084,7 +1085,9 @@ def get_index_average_box_automatic_(boxes,
         plt.tight_layout()
         plt.show()
 
-    if verbose: plot_box_lengths_angles_histograms_(boxes, b0 = boxes[0], b1=boxes[index])
+    if verbose:
+        print('output = index =', index)
+        plot_box_lengths_angles_histograms_(boxes, b0 = boxes[0], b1=boxes[index])
     else: pass
     
     return index
