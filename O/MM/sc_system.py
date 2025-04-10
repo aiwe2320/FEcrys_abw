@@ -1312,14 +1312,16 @@ class itp2FF(OPLS):
 
             pdb_from_gro = str(self.pdb_mol.absolute())
             pdb_reordered = str(self.single_mol_pdb_permuted.absolute())
-            
-            import MDAnalysis as mda # # conda install -c conda-forge mdanalysis
-            import warnings
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                universe = mda.Universe(gro)
-                with mda.Writer(pdb_from_gro) as x:
-                    x.write(universe)
+
+            if os.path.exists(self.pdb_mol.absolute()): pass 
+            else:
+                import MDAnalysis as mda # # conda install -c conda-forge mdanalysis
+                import warnings
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    universe = mda.Universe(gro)
+                    with mda.Writer(pdb_from_gro) as x:
+                        x.write(universe)
 
             reorder_atoms_mol_(mol_pdb_fname=pdb, template_pdb_fname=pdb_from_gro, output_pdb_fname=pdb_reordered)
 
