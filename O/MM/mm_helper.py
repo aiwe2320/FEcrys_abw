@@ -1012,23 +1012,35 @@ def lengths_angles_to_box_(x):
     if len(x.shape) == 2: return np.stack([mdtraj.utils.lengths_and_angles_to_box_vectors(*_x) for _x in x])
     else:                 return           mdtraj.utils.lengths_and_angles_to_box_vectors(*x)
 
-def get_index_average_box_automatic_(boxes, n_bins=30):
+def get_index_average_box_automatic_(boxes,
+                                     n_bins=30,
+                                     rules = ['av']*6,
+                                     verbose = False,
+                                    ):
+
+    set_of_rules = {'max_prob': lambda h, ax : ax[np.argmax(h)],            # not the best incase n_bins not best
+                    'av'   : lambda h, ax : (ax*h).sum(),                   # the most correct
+                    'min'  : lambda h, ax : np.min(ax[np.where(h>0.0)[0]]), # can use 'min' for one of the box lengths to maybe prevent rare events that later hamper ergodicity in nvt
+                   }
+    rules = [set_of_rules[x] for x in rules]
+    
     ''' 
     a simple way to find the most likely box is to just find peaks in histogram: this is automated here
     Inputs:
-        boxes  : (n_frames, 3, 3) shaped array
+        boxes  : (n_frames, 3, 3) shaped array of boxes during a simulation, or any npt data
         n_bins : int 
             number of bins for six 1D histograms that are involved
     '''
     assert len(boxes.shape) == 3
     # x : (n_frames, 6) box lengths and angles
     x = box_to_lengths_angles_(boxes)
-    def peak_finder_(x):
-        h,ax = np.histogram(x, bins=n_bins)
+    def peak_finder_(x, i):
+        h,ax = np.histogram(x, bins=n_bins, density=True)
+        h /= h.sum()
         ax = ax[1:]-0.5*(ax[1]-ax[0])
-        return ax[np.argmax(h)]
+        return rules[i](h, ax) #ax[np.argmax(h)]
     # x_av : average according to peaks of the 6 marginals histograms, but does not exist in the data (boxes)
-    x_av = np.array([peak_finder_(x[...,i]) for i in range(6)])
+    x_av = np.array([peak_finder_(x[...,i], i) for i in range(6)])
     # err : distance between x and x_av
     err = np.abs(x_av - x)
     # err : standardised distance (all 6 marginals equally important)
@@ -1037,6 +1049,44 @@ def get_index_average_box_automatic_(boxes, n_bins=30):
     err = err.sum(-1)
     # index : index of frame closes to average box according to this method
     index = np.argmin(err)
+    
+    def plot_box_lengths_angles_histograms_(boxes, b0 = None, b1=None):
+        cell_NPT = cell_lengths_and_angles_(boxes)
+        if b0 is None: b0 = np.array(boxes[0])
+        else: b0 = np.array(b0).reshape([3,3])
+        if b1 is None: b1 = np.array(b0)
+        else: b1 = np.array(b1).reshape([3,3])
+    
+        cell_in = cell_lengths_and_angles_(b0)
+        cell_out = cell_lengths_and_angles_(b1)
+        
+        fig, ax = plt.subplots(1,2, figsize=(8,2), dpi=100)
+        Max0 = max([
+            plot_1D_histogram_(cell_NPT[:,0], bins=30, ax=ax[0], return_max_y=True, color='C0'),
+            plot_1D_histogram_(cell_NPT[:,1], bins=30, ax=ax[0], return_max_y=True, color='C1'),
+            plot_1D_histogram_(cell_NPT[:,2], bins=30, ax=ax[0], return_max_y=True, color='C2'),
+            ])
+        for i in range(0,3):
+            ax[0].plot([cell_in[i]]*2, [0,Max0], color='C'+str(i), linestyle='dotted', linewidth=1.5)
+            ax[0].plot([cell_out[i]]*2, [0, Max0], color='C'+str(i), linewidth=1.5)
+        Max1 = max([
+            plot_1D_histogram_(cell_NPT[:,3], bins=30, ax=ax[1], return_max_y=True, color='C0'),
+            plot_1D_histogram_(cell_NPT[:,4], bins=30, ax=ax[1], return_max_y=True, color='C1'),
+            plot_1D_histogram_(cell_NPT[:,5], bins=30, ax=ax[1], return_max_y=True, color='C2'),
+            ])
+        for i in range(3,6):
+            ax[1].plot([cell_in[i]]*2, [0,Max1], color='C'+str(i-3), linestyle='dotted', linewidth=1.5)
+            ax[1].plot([cell_out[i]]*2, [0,Max1], color='C'+str(i-3), linewidth=1.5)
+    
+        ax[0].set_xlabel('box vector lengths / nm')
+        ax[1].set_xlabel('box vector angles / degrees')
+        
+        plt.tight_layout()
+        plt.show()
+
+    if verbose: plot_box_lengths_angles_histograms_(boxes, b0 = boxes[0], b1=boxes[index])
+    else: pass
+    
     return index
 
 ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
