@@ -417,6 +417,36 @@ class SingleComponent:
         sc.stride_save_frame = dataset['MD dataset']['stride_save_frame']
         return sc
 
+def concatenate_datasets_(paths_datasets : list):
+    dataset_concat = {}
+    a = 0
+    keys = ['xyz', 'COMs', 'b', 'u', 'T', 'rbv']
+    for path in paths_datasets:
+        dataset = load_pickle_(path)
+        if a > 0:
+            assert dataset['args_initialise_object'] == dataset_concat['args_initialise_object']
+            assert dataset['args_initialise_system'] == dataset_concat['args_initialise_system']
+            assert dataset['args_initialise_simulation'] == dataset_concat['args_initialise_simulation']
+            assert dataset['MD dataset']['stride_save_frame'] == dataset_concat['MD dataset']['stride_save_frame']
+
+            for key in keys:
+                dataset_concat['MD dataset'][key] = np.concatenate([dataset_concat['MD dataset'][key],dataset['MD dataset'][key]],axis=0)
+            
+        else:
+            dataset_concat['args_initialise_object'] = dataset['args_initialise_object']
+            dataset_concat['args_initialise_system'] = dataset['args_initialise_system']
+            dataset_concat['args_initialise_simulation'] = dataset['args_initialise_simulation']
+            dataset_concat['MD dataset'] = {'xyz':dataset['MD dataset']['xyz'],
+                                            'COMs':dataset['MD dataset']['COMs'],
+                                            'b':dataset['MD dataset']['b'],
+                                            'u':dataset['MD dataset']['u'],
+                                            'T':dataset['MD dataset']['T'],
+                                            'rbv':dataset['MD dataset']['rbv'],
+                                            'stride_save_frame':dataset['MD dataset']['stride_save_frame'],
+                                            }
+        a += 1
+    return dataset_concat
+
 ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
 ## ADD openmm FFs below ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
 ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
