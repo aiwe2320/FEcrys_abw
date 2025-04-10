@@ -1013,8 +1013,8 @@ def lengths_angles_to_box_(x):
     else:                 return           mdtraj.utils.lengths_and_angles_to_box_vectors(*x)
 
 def get_index_average_box_automatic_(boxes,
-                                     n_bins=30,
-                                     rules = ['av']*6,
+                                     n_bins = 30,
+                                     rules =  ['av']*3 + ['max_prob']*3, # 'max_prob' for angles incase that type of disconnection present
                                      verbose = False,
                                     ):
 
