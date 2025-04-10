@@ -1357,7 +1357,7 @@ class itp2FF(OPLS):
     def set_FF_(self,):
         ''' run this just before self.system initialisation  '''
         self.reset_n_mol_top_()
-        self.ff = parmed.gromacs.GromacsTopologyFile(str(self.top_file_gmx_crys.absolute()))
+        self.ff = parmed.gromacs.GromacsTopologyFile(str(self.top_crys.absolute()))
 
     def reset_n_mol_top_(self,):
 
