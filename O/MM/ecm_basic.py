@@ -164,7 +164,7 @@ class LAMBDA_SYSTEM:
         self.sc.define_mu_(self.ind_atom_fixed)
         self.mu = np.array(self.sc._mu_[np.newaxis,...]) # (1,N,1)
         ' minimise the system first (starts with args_initialise_object[PDB] and will minimise the same way every time) '
-        self.sc.minimise_()
+        # self.sc.minimise_() ! maybe generally not good
         ' recenter the system using self.sc._mu_ defined earlier '
         self.sc._recenter_simulation_()
         ' this is now the centroid of the EC system with COM missing (the same no matter which lambda state this is)'
@@ -205,7 +205,9 @@ class LAMBDA_SYSTEM:
                                      #fixed_atom = self.fixed_atom)
         else: pass
         # assert LAMBDA_SYSTEM(lam=0).__call__(r) == LAMBDA_SYSTEM(lam=0).lambda_0.energy0_(r) agree for any r.
-
+        
+        self.sc.minimise_()
+                     
         print('ready to run_simulation_(n_saves) at lam =',
                 '{:5.5s}'.format(str(self.lam)),'T =',
                 self.sc.T,'K, of',
@@ -1036,7 +1038,7 @@ def succinic_acid_ARGS_oss(form, cell, key='_'):
     }
     args_initialise_simulation = {
         'rbv': None,
-        'minimise': True,
+        'minimise': False,
         'T': 300,
         'timestep_ps': 0.002,
         'collision_rate': 1,
@@ -1064,7 +1066,7 @@ def veliparib_ARGS_oss(form, cell, key='_'):
     }
     args_initialise_simulation = {
         'rbv': None,
-        'minimise': True,
+        'minimise': False,
         'T': 300,
         'timestep_ps': 0.0005, # !
         'collision_rate': 1,
@@ -1092,7 +1094,7 @@ def mivebresib_ARGS_oss(form, cell, key='_'):
     }
     args_initialise_simulation = {
         'rbv': None,
-        'minimise': True,
+        'minimise': False,
         'T': 300,
         'timestep_ps': 0.0005, # !
         'collision_rate': 1,
