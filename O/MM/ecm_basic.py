@@ -122,6 +122,9 @@ class LAMBDA_SYSTEM:
                  stride_save_frame = 50,
                  remove_warmup = 200,
                  ):
+
+        args_initialise_simulation['minimise'] = False
+            
         self.args_initialise_object = args_initialise_object
         self.args_initialise_system = args_initialise_system
         self.args_initialise_simulation = args_initialise_simulation
@@ -1105,3 +1108,19 @@ def mivebresib_ARGS_oss(form, cell, key='_'):
     }
     ARGS_oss = [args_initialise_object, args_initialise_system, args_initialise_simulation]
     return ARGS_oss
+
+## ##
+
+def remove_lambda_from_lambda_evaluations_(name_old:str, lam, name_new=None):
+    ' 1/2 parts of patch breakage '
+    old_dict = load_pickle_(name_old)
+    new_dict = dict(old_dict)
+    if name_new is None: name_new = name_old
+    else: pass
+    for key in old_dict.keys():
+        if lam in key:
+            del new_dict[key]
+        else: pass
+    save_pickle_(new_dict, name_new)
+
+
