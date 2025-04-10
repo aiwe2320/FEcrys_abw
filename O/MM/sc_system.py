@@ -1074,7 +1074,8 @@ class OPLS(MM_system_helper):
             self._permute_   = lambda r, axis=-2 : np.take(r, self._permute_crystal_to_top_, axis=axis)
             self._unpermute_ = lambda r, axis=-2 : np.take(r, self._unpermute_crystal_from_top_, axis=axis)
             print('! using OPLS with permuation of atoms turned ON. This reduces efficiency.')
-    ##
+            if self.n_mol > 1: print('this assumes all molecule in the input PDB have the same permutaion as the first molecule')
+            else: pass
 
     def initialise_FF_(self,):
         # self.atom_order_PDB_match_itp = atom_order_PDB_match_itp
@@ -1343,6 +1344,8 @@ class itp2FF(OPLS):
             self._permute_   = lambda r, axis=-2 : np.take(r, self._permute_crystal_to_top_, axis=axis)
             self._unpermute_ = lambda r, axis=-2 : np.take(r, self._unpermute_crystal_from_top_, axis=axis)
             print(f'! using {self._FF_name_}_general with permuation of atoms turned ON. This reduces efficiency.')
+            if self.n_mol > 1: print('this assumes all molecule in the input PDB have the same permutaion as the first molecule')
+            else: pass
 
     def initialise_FF_(self,):
         ''' run this only after (n_mol and n_atoms_mol) defined in __init__ of SingleComponent '''
