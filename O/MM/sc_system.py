@@ -1362,7 +1362,7 @@ class itp2FF(OPLS):
     def reset_n_mol_top_(self,):
 
         lines_to_add = [
-            f'include "{self._FF_name_}_{self.name}.itp"',
+            f'#include "{self._FF_name_}_{self.name}.itp"',
             '\n',
             '[ defaults ]',
             '; nbfunc        comb-rule       gen-pairs       fudgeLJ      fudgeQQ',
