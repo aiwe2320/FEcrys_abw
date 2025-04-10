@@ -993,6 +993,8 @@ class OPLS(MM_system_helper):
             (1) convert the .gro LigParGen_output to a pdb file (gro -> pdb_from_gro):
             '''
             pdb_from_gro = str(self._single_mol_LigParGen_pdb_file_.absolute())
+            pdb_reordered = str(self._single_mol_pdb_file_permuted_.absolute())
+            
             import MDAnalysis as mda # # conda install -c conda-forge mdanalysis
             import warnings
             with warnings.catch_warnings():
@@ -1000,11 +1002,15 @@ class OPLS(MM_system_helper):
                 universe = mda.Universe(gro)
                 with mda.Writer(pdb_from_gro) as x:
                     x.write(universe)
+            
+            # shorter:       
+            #mdtraj.load(gro).save_pdb(pdb_from_gro)
+            #reorder_atoms_mol_(mol_pdb_fname=pdb, template_pdb_fname=pdb_from_gro, output_pdb_fname=pdb_reordered)
+            
             '''
             (2) find the permutation that LigParGen used, by creating a reodered version of the pdb (pdb_reordered)
                 pdb_reordered has the same confromation of the molecule as in pdb, thus can be compared safely in step (3)
             '''
-            pdb_reordered = str(self._single_mol_pdb_file_permuted_.absolute())
             reorder_atoms_mol_(mol_pdb_fname=pdb,
                                template_pdb_fname=pdb_from_gro,
                                output_pdb_fname=pdb_reordered) # this is more robust
@@ -1305,6 +1311,8 @@ class itp2FF(OPLS):
             gro = str(self.gro_mol.absolute())
 
             pdb_from_gro = str(self.pdb_mol.absolute())
+            pdb_reordered = str(self.single_mol_pdb_permuted.absolute())
+            
             import MDAnalysis as mda # # conda install -c conda-forge mdanalysis
             import warnings
             with warnings.catch_warnings():
@@ -1313,9 +1321,6 @@ class itp2FF(OPLS):
                 with mda.Writer(pdb_from_gro) as x:
                     x.write(universe)
 
-            pdb_reordered = str(self.single_mol_pdb_permuted.absolute())
-            print(pdb)
-            print(pdb_from_gro)
             reorder_atoms_mol_(mol_pdb_fname=pdb, template_pdb_fname=pdb_from_gro, output_pdb_fname=pdb_reordered)
 
             r_gro = mdtraj.load(pdb_reordered, pdb_reordered).xyz[0]
