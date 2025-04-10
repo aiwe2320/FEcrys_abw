@@ -409,10 +409,10 @@ class SingleComponent:
         else: pass
         sc.initialise_simulation_(**dataset['args_initialise_simulation'])
         sc._xyz = [x for x in dataset['MD dataset']['xyz']]
+        sc._COMs = [x for x in dataset['MD dataset']['COMs']]
+        sc._boxes = [x for x in dataset['MD dataset']['b']]
         sc._u = [x for x in dataset['MD dataset']['u'][:,0]]
         sc._temperature = [x for x in dataset['MD dataset']['T']]
-        sc._boxes = [x for x in dataset['MD dataset']['b']]
-        sc._COMs = [x for x in dataset['MD dataset']['COMs']]
         sc.n_frames_saved = len(dataset['MD dataset']['u'])
         sc.stride_save_frame = dataset['MD dataset']['stride_save_frame']
         return sc
