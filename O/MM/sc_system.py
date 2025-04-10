@@ -493,7 +493,7 @@ class TIP4P(MM_system_helper):
                      '',
                      '[system]',
                      'ICE',
-                     ''
+                     '',
                      '[molecules]',
                      'water  ' + str(self.n_mol),
                      ]
