@@ -16,8 +16,15 @@ edit the text files input for parmed.gromacs.GromacsTopologyFile:
 
 from .mm_helper import *
 
-'''
-atom_order_PDB_match_itp : [True is chepaer]
+''' TODO: tidy up ecm_basic and sc_system.
+
+## ##
+! UPDATE: the arg 'atom_order_PDB_match_itp' no longer active, now kept as a dummy variable
+Each crystal PDB assumed to have the same permuation. This was also true previously.
+## ##
+
+OLD:
+atom_order_PDB_match_itp : [True is chepaer] 
 
     When starting a new landscape, cheaper to set things up such that atom_order_PDB_match_itp = True.
 
@@ -93,7 +100,7 @@ class SingleComponent:
                  n_atoms_mol : int,                # number of atoms in one molecule (including hydrogens)
                  name : str,                       # name of the molecule (i.e., name of the single component)
                  FF_name : str = 'GAFF',           # FF_name in ['GAFF', 'OPLS', 'TIP4P'], ! this will be ignored if FF_class not None.
-                 atom_order_PDB_match_itp = False, # used only in OPLS so far, explained in detail above.
+                 atom_order_PDB_match_itp = False, # not used, assumed False and if True that is detected later.
                  FF_class = None,                  # last minute update: a more general way of using any  simple class that has methods (initialise_FF_ and set_FF_)
                 ):
         super(SingleComponent, self).__init__()
@@ -116,11 +123,11 @@ class SingleComponent:
 
         if self.FF_name == 'TIP4P': assert self.n_atoms_mol == 3
         else: pass
-        if self.FF_name == 'OPLS': self.atom_order_PDB_match_itp = atom_order_PDB_match_itp
-        else: 
-            # if not self.atom_order_PDB_match_itp: self.print('! not implemented warnining : atom_order_PDB_match_itp parameter has no effect in this FF')
-            # else: pass
-            pass
+        #if self.FF_name == 'OPLS': self.atom_order_PDB_match_itp = atom_order_PDB_match_itp
+        #else: 
+        #    # if not self.atom_order_PDB_match_itp: self.print('! not implemented warnining : atom_order_PDB_match_itp parameter has no effect in this FF')
+        #    # else: pass
+        #    pass
 
         self.traj = mdtraj.load(self.PDB,self.PDB) # box info needed for mdtraj to read a file in this way
         self.r0 = self.traj.xyz[0]
@@ -930,7 +937,7 @@ class OPLS(MM_system_helper):
                 str(self._single_mol_permutation_.absolute())
                 )
         except:
-            print('first time OPLS for this moelcule? setting permuation')
+            print('first time OPLS for this moelcule? setting permuation in case needed:')
 
             pdb = str(self._single_mol_pdb_file_.absolute())
             gro = str(self._single_mol_LigParGen_gro_file_.absolute())
@@ -1036,7 +1043,7 @@ class OPLS(MM_system_helper):
         else:
             self._permute_   = lambda r, axis=-2 : np.take(r, self._permute_crystal_to_top_, axis=axis)
             self._unpermute_ = lambda r, axis=-2 : np.take(r, self._unpermute_crystal_from_top_, axis=axis)
-
+            print('! using OPLS with permuation of atoms turned ON. This reduces efficiency.')
     ##
 
     def initialise_FF_(self,):
@@ -1068,9 +1075,10 @@ class OPLS(MM_system_helper):
             print(str(self._single_mol_LigParGen_gro_file_.absolute()))
             print(']')
 
+        self.set_pemutation_to_match_LigParGen_topology_()
+        '''
         if not self.atom_order_PDB_match_itp:
             self.set_pemutation_to_match_LigParGen_topology_()
-            print('Note: using OPLS with permuation of atoms turned ON')
         else:
             self._permute_molecule_to_top_ = np.arange(self.n_atoms_mol)
             self._unpermute_molecule_from_top_ = np.arange(self.n_atoms_mol)
@@ -1079,7 +1087,8 @@ class OPLS(MM_system_helper):
             self._permute_   = lambda r, axis=None : r
             self._unpermute_ = lambda r, axis=None : r
             print('Note: using OPLS with permutation of atoms turned OFF')
-
+        '''
+        
         if os.path.exists(self.top_file_gmx_adjusted_charges.absolute()): pass
         else: 
             change_charges_itp_top_(path_top_or_itp_file_in = str(self.top_file_gmx.absolute()),
@@ -1216,3 +1225,158 @@ class OPLS(MM_system_helper):
         return self._permute_crystal_to_top_[inds]
 
 ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
+
+# FF_class argument can now be filled with: OPLS_general or GAFF_general
+
+class itp2FF(OPLS):
+    def __init__(self,):
+        super().__init__()
+
+    @property
+    def itp_mol(self) -> Path:
+        return self.misc_dir / f"{self._FF_name_}_{self.name}.itp"
+    
+    @property
+    def top_crys(self) -> Path:
+        return self.misc_dir / f"x_x_{self._FF_name_}_{self.name}.top"
+
+    @property
+    def gro_mol(self) -> Path:
+        return self.misc_dir / f"{self._FF_name_}_{self.name}.gro"
+
+    @property
+    def pdb_mol(self) -> Path:
+        return self.misc_dir / f"{self._FF_name_}_{self.name}.pdb"
+
+    @property
+    def single_mol_pdb(self) -> Path:
+        return self.misc_dir / f"{self._FF_name_}_single_mol_{self.name}.pdb" 
+    @property
+    def _single_mol_pdb_file_(self):
+        return self.misc_dir / f"{self._FF_name_}_single_mol_{self.name}.pdb" 
+    
+    @property
+    def single_mol_pdb_permuted(self) -> Path:
+        return self.misc_dir / f"{self._FF_name_}_single_mol_permuted_{self.name}.pdb" # to match itp
+    
+    @property
+    def single_mol_permutations(self,) -> Path:
+        return self.misc_dir / f"{self._FF_name_}_single_mol_permutations_{self.name}"
+
+    def set_pemutation_to_match_topology_(self,):
+        try: 
+            self._permute_molecule_to_top_, self._unpermute_molecule_from_top_ = load_pickle_(str(self.single_mol_permutations.absolute()))
+        except:
+            ' explained in detail in OPLS class with same method '
+            print(f'first time running {self._FF_name_}_general for this moelcule? setting permuation in case needed:')
+
+            pdb = str(self.single_mol_pdb.absolute())
+            gro = str(self.gro_mol.absolute())
+
+            pdb_from_gro = str(self.pdb_mol.absolute())
+            import MDAnalysis as mda # # conda install -c conda-forge mdanalysis
+            import warnings
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                universe = mda.Universe(gro)
+                with mda.Writer(pdb_from_gro) as x:
+                    x.write(universe)
+
+            pdb_reordered = str(self.single_mol_pdb_permuted.absolute())
+            print(pdb)
+            print(pdb_from_gro)
+            reorder_atoms_mol_(mol_pdb_fname=pdb, template_pdb_fname=pdb_from_gro, output_pdb_fname=pdb_reordered)
+
+            r_gro = mdtraj.load(pdb_reordered, pdb_reordered).xyz[0]
+            r_pdb = mdtraj.load(pdb, pdb).xyz[0]
+
+            D = cdist_(r_pdb, r_gro, metric='euclidean') # (n_atoms_mol,n_atoms_mol)
+            self._permute_molecule_to_top_     = D.argmin(0) # (n_atoms_mol,1)
+            self._unpermute_molecule_from_top_ = D.argmin(1) # (n_atoms_mol,1)
+
+            assert np.abs(self._permute_molecule_to_top_[self._unpermute_molecule_from_top_] - np.arange(self.n_atoms_mol)).sum() == 0
+
+            print('forward permutation works:',np.abs(r_pdb[self._permute_molecule_to_top_] - r_gro).max())
+            print('inverse permatation works:',np.abs(r_pdb - r_gro[self._unpermute_molecule_from_top_]).max())
+
+            save_pickle_([self._permute_molecule_to_top_, self._unpermute_molecule_from_top_], str(self.single_mol_permutations.absolute()))
+            
+        self._permute_crystal_to_top_ = np.concatenate([self._permute_molecule_to_top_ + i*self.n_atoms_mol for i in range(self.n_mol)], axis=0)
+        self._unpermute_crystal_from_top_ = np.concatenate([self._unpermute_molecule_from_top_ + i*self.n_atoms_mol for i in range(self.n_mol)], axis=0)
+        assert np.abs(self._permute_crystal_to_top_[self._unpermute_crystal_from_top_] - np.arange(self.N)).sum() == 0
+
+        if np.sum(np.abs(self._permute_crystal_to_top_ - np.arange(self.N))) == 0:
+            print('permutation not used, because not needed')
+            self._permute_   = lambda r, axis=None : r
+            self._unpermute_ = lambda r, axis=None : r
+        else:
+            self._permute_   = lambda r, axis=-2 : np.take(r, self._permute_crystal_to_top_, axis=axis)
+            self._unpermute_ = lambda r, axis=-2 : np.take(r, self._unpermute_crystal_from_top_, axis=axis)
+            print(f'! using {self._FF_name_}_general with permuation of atoms turned ON. This reduces efficiency.')
+
+    def initialise_FF_(self,):
+        ''' run this only after (n_mol and n_atoms_mol) defined in __init__ of SingleComponent '''
+        if os.path.exists(self.single_mol_pdb.absolute()): pass
+        else: process_mercury_output_(self.PDB, self.n_atoms_mol, single_mol = True, custom_path_name=str(self.single_mol_pdb.absolute()))
+            
+        if os.path.exists(self.itp_mol.absolute()): pass
+        else: print('!! expected file not found:',self.itp_mol.absolute(),)
+
+        self.set_pemutation_to_match_topology_()
+
+    def set_FF_(self,):
+        ''' run this just before self.system initialisation  '''
+        self.reset_n_mol_top_()
+        self.ff = parmed.gromacs.GromacsTopologyFile(str(self.top_file_gmx_crys.absolute()))
+
+    def reset_n_mol_top_(self,):
+
+        lines_to_add = [
+            f'include "{self._FF_name_}_{self.name}.itp"',
+            '\n',
+            '[ defaults ]',
+            '; nbfunc        comb-rule       gen-pairs       fudgeLJ      fudgeQQ',
+            self._FF_name_defaults_line_,
+            '\n',
+            '[ system ]',
+            '; Name',
+            'Generic title',
+            '\n',
+            '[ molecules ]',
+            '; Compound          #mols',
+            f'UNK               {self.n_mol}',
+            '\n',
+            ]
+        file_top = open(str(self.top_crys.absolute()), 'w')
+        for line in lines_to_add:
+            file_top.write(line + "\n")
+        file_top.close()
+
+
+class OPLS_general(itp2FF):
+    def __init__(self,):
+        super().__init__()
+        self._FF_name_ = 'OPLS'
+        #                           '; nbfunc        comb-rule       gen-pairs       fudgeLJ      fudgeQQ',
+        self._FF_name_defaults_line_ = '1               3               yes             0.5          0.5  '
+
+    @classmethod
+    @property
+    def FF_name(self,):
+        return 'OPLS'
+
+class GAFF_general(itp2FF):
+    def __init__(self,):
+        super().__init__()
+        self._FF_name_ = 'GAFF'
+        #                           '; nbfunc        comb-rule       gen-pairs       fudgeLJ      fudgeQQ',
+        self._FF_name_defaults_line_ = '1               2               yes             0.5          0.83333333  '
+
+    @classmethod
+    @property
+    def FF_name(self,):
+        return 'GAFF'
+    
+## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
+
+
