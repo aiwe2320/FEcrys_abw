@@ -210,6 +210,7 @@ class LAMBDA_SYSTEM:
         # assert LAMBDA_SYSTEM(lam=0).__call__(r) == LAMBDA_SYSTEM(lam=0).lambda_0.energy0_(r) agree for any r.
         
         self.sc.minimise_()
+        self.sc._recenter_simulation_()
                      
         print('ready to run_simulation_(n_saves) at lam =',
                 '{:5.5s}'.format(str(self.lam)),'T =',
