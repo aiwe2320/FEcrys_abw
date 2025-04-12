@@ -394,7 +394,7 @@ class FocusedBonds:
         self.axis = tuple(axis)
 
         self.min_bond_length = 0.05 # (units: nm)
-        self.max_bond_length = 0.2  # (units: nm)
+        self.max_bond_length = 0.22  # (units: nm)
         #self.percentage_pad = percentage_pad 
         self.range_limits = [self.min_bond_length,self.max_bond_length]
         self.focused = focused
