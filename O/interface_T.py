@@ -14,10 +14,7 @@ from .NN.pgm import *
         All data available can be used for training and evalaution where descrete T is sufficent.
         
     ! thermal expansion effects neglected (box fixed):
-        - TODO: add functionality to a single ic_map to toggle between discrete boxes
-            * discrete boxes (one per temperature)
-            * a continous interpolation between tempatures with thermal expansion taken into account = phase-diagram-flow : not yet implemented.
-
+        - TODO: add functionality to a single ic_map to toggle between discrete boxes (one per temperature)
 '''
 
 ## ## 
