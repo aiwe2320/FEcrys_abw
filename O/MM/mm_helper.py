@@ -239,7 +239,7 @@ class MM_system_helper:
         self.reduce_drift = False
         self.NPT = False # switches to permanently True when barostat added, stays true if barostat removed.
 
-    def inject_methods_from_onother_class_(self,
+    def inject_methods_from_another_class_(self,
                                            class_to_inject_methods_from # e.g. class_to_inject_methods_from = WALLS
                                         ):
         ''' can run this after the worker class like SingleComponent is initialised
