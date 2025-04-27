@@ -1521,8 +1521,10 @@ class WALLS:
         # if want to constrain >1 torsions : not yet implemented
         #   Might be just a matter of removing/replacing the above assertion
 
-        grid = np.linspace(-np.pi, np.pi, n_bins) ; height = 200 ; var_name = 'theta'
+        height = 200 ; var_name = 'theta'
         if not faster:
+            n_bins = 100
+            grid = np.linspace(-np.pi, np.pi, n_bins)
             ''' V1 '''
             for i in range(self.n_mol):
                 cv_i = mm.CustomTorsionForce(var_name)
