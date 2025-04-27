@@ -239,6 +239,22 @@ class MM_system_helper:
         self.reduce_drift = False
         self.NPT = False # switches to permanently True when barostat added, stays true if barostat removed.
 
+    def inject_methods_from_onother_class_(self,
+                                           class_to_inject_methods_from # e.g. class_to_inject_methods_from = WALLS
+                                        ):
+        ''' can run this after the worker class like SingleComponent is initialised
+
+            methods specific to a certain scenario can be taken from another class only when needed
+
+            In terms of biased sim. the current method allows to add in methods to do with biasing only when needed.
+                each type of biasing approach can have its own class (currently only WALLS was added)
+                with methods that are compatible with the give worker class
+        '''
+        import types
+        for name, method in class_to_inject_methods_from.__dict__.items():
+            if callable(method) and not name.startswith("__"):
+                setattr(self, name, types.MethodType(method, self))
+
     @property
     def _system_mass_(self,):
         return np.array([self.system.getParticleMass(i)._value for i in range(self.system.getNumParticles())])
