@@ -1580,7 +1580,7 @@ class WALLS:
         '''
        # potential(all ForceGroups) = U + V ; V only in ForceGroup 15
         all_groups = [force.getForceGroup() for force in self.system.getForces()]
-        groups_V = all_groups[CUT:]
+        groups_V = all_groups[-CUT:]
         groups_U = all_groups[:-CUT]
         assert all([x==15 for x in groups_V])
         assert all([x!=15 for x in groups_U])
