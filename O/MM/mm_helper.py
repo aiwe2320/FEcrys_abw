@@ -552,6 +552,13 @@ class MM_system_helper:
         else: pass
 
     def minimise_xyz_(self, r, b=None, verbose=False):
+        ''' energy minimising only the coordinates (r), box (b) is fixed
+        Inputs:
+            r : single frame (N,3) or trajectory (m,N,3)
+            b : single frame (3,3) or trajectory (m,3,3)
+        Output:
+            r : single frame (N,3) or trajectory (m,N,3) after minimising in fixed box(es)
+        '''
         def check_shape_(x):
             x = np.array(x)
             shape = len(x.shape)
