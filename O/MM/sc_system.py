@@ -1427,7 +1427,7 @@ class WALLS:
 
     example for n_mol=16:
 
-        sc.inject_methods_from_onother_class_(WALLS)
+        sc.inject_methods_from_another_class_(WALLS)
         av_value = 1.88 # minimiser of unbiased marginal FES that would be sampled in the absence of the rate event.
         sc.add_walls_(inds_torsion=[18, 15, 10,  8], means=[-av_value,av_value], n_bins=50)
         Verbose output:
