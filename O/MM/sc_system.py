@@ -1419,84 +1419,60 @@ class GAFF_general(itp2FF):
     
 ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
 
-
 class WALLS:
-    ''' idea 1 (currently being actively tested but this version seems ok so far, so adding it here already)
-
-    a 'WALL' = smooth square well with completely flat bottom but very steep walls
-
-    example for n_mol=16:
+    '''
+    example for case of n_mol=16:
 
         sc.inject_methods_from_another_class_(WALLS)
-        av_value = 1.88 # minimiser of unbiased marginal FES that would be sampled in the absence of the rate event.
-        sc.add_walls_(inds_torsion=[18, 15, 10,  8], means=[-av_value,av_value], n_bins=50)
+        av_value = 1.88 # minimiser of unbiased marginal FES that would be sampled in the absence of the rate event
+        sc.add_walls_(inds_torsion=[18, 15, 10,  8], means=[-av_value,av_value])
         Verbose output:
             inds_torsion provided: [18 15 10  8]
-            inds_torsion for self.topology: [5, 4, 15, 13] # because permutation different
+            inds_torsion for self.topology: [5, 4, 15, 13] # because permutation different was in this case
             16 means: [-1.6  1.6 -1.6  1.6 -1.6  1.6 -1.6  1.6 -1.6  1.6 -1.6  1.6 -1.6  1.6
             -1.6  1.6]
             bias: system was updated to include bias, run initialise_simulation_ to apply this change to simulation
-                    
-    Discussion:
-            
-    Possible problem at high temperatures in crystals of flexible molecules:
-        unbiased simulation + rate event -> non-ergodic sampling
-        Example: 
-            a torsional angle rotates in 1 or 2 molecules to explore a different basin.
-            the configuration does not return to original, or has very few transitions.
-            different molecules do this at different times, with negligible probability of all molecules
-            exploring all of the basins in ergodic manner (because 2**n_mol basins when each mol as 2 basins)
+    
+    Reason for using (problem):
 
-    Solution 1 (idea 2):
-        simulation + bias to encourage the given rate event recrossing -> ergodic sampling that needs reweighting
-            i.e., all molecules are expected to explore all basins when biased with n_mol 1D CVs
-        Pros:
-            + everything accessible at the given temperature is sampled in ergodic manner
-        Cons:
-            - the static bias needs to be carefully defined (use bias surface from WTmetaD at the right moment)
-                with n_mol 1D surfaces (i.e., concurrent MetaD), automating this; more code needed!
-            - need to keep track of the bias alongside the saved data at every later step
-                not implemented in ECM (more code needed to put weights into BAR/MBAR)
-                more challenging to train and reweight for PGM (was only tested in single molecules)
-                    [current functionality of PGM for biased data most kept for FEs of isolated molecule]
-            - expensive to have n_mol 1D biases that are based on mm.Continuous1DFunction (using accurate/hight number of bins)
-
-    Solution 2 (idea 1):
-        simulation + flat bias unless to discourage the given rate event happening -> 
-            keep only frames where bias == 0 -> ergodic sampling without rare event happening even once
-            i.e., all molecules only explore the original basins when biased with n_mol 1D CVs ('WALLS')
-        Pros:
-            + rapid convergence without a prior WTmetaD simulation being needed
-        Cons:
-            - some supervision needed in the current version (where to put the WALLS in each molecule)
-            - not all data is kept at the end of the simulation 
-                (i.e., any molecule attempting to climb the 'wall' is associated with a frame that is not saved)
-            - expensive mm.Continuous1DFunction same as in Solution 1,
-                TODO: find a way to implement a similar wall without a grid.
+        Possible problem at high temperatures in crystals of flexible molecules:
+            unbiased simulation + rate event -> non-ergodic (incomplete) sampling
+            Example: 
+                a torsional angle rotates in 1 or 2 molecules to explore a different basin.
+                the configuration does not return to original, or has very few transitions.
+                different molecules do this at different times, with negligible probability of all molecules
+                exploring all of the basins in ergodic manner (because 2**n_mol basins when each mol as 2 basins)
+        
+    Using WALLS (a simple solution):
+        simulation + flat bias (unless to discourage the given rate event happening) -> 
+        keep only frames where bias == 0 -> *(ergodic, unbiased) sampling without rare event happening even once
+        *(ergodic because rare event prevented, unbiased because only frames with bias == 0.0 are kept)
 
     '''
     def add_walls_(self,
                    inds_torsion:list, means:list,
                    width_percentage = 68.17,
-                   n_bins = 100,
+
+                   faster = True, # True ~~ 7.5 times faster!
                    ):
-        ''' 
-        torsion related rare event prevention (sampling only in region of interest)
+        '''
+            currently only allows 1 torsion / mol to be constrained (TODO: generalise to any number)
+
             need to run unbiased sim first, check if unwanted rare event is rare and which torsion is involved
+            find the average value of torsion in each molecules which are desirable (= means)
             constrain a specific torsional angle in all molecules
-            at the end of simulation only frames where the bias is zero are saved
+            at the end of simulation only frames where the bias is zero are saved *(~99% acceptance expected)
         '''
 
         '''
         Inputs: 
         inds_torsion : indices of 4 atoms inside the molecule specifying the torsional angle (phi)
         means : list or float ; when molecules have different average torsion due to unitcell packing
-            if list : shape (n_mol_unitcell, ) or (n_mol, )
+            if list : shape (n_mol_unitcell, ) or (n_mol, ) [or (n_unique,) where n_unique repeat throughout the lattice]
             if float : all molecules get the same position of the centre of the well (all molecules similar for this torsion)
-        width_percentage : (2.0*np.pi) * (width_percentage / 100.0) -> width (of the smooth square well)
-            phi < mean - width/2 and phi > mean + width/2 will be inacessible dy trajectories
-        name : in case more than one torsion constrained
+        width_percentage : % of 2*pi interval where CV energy to be zero (area surrounding the mean[i])
         '''
+
         inds_torsion = np.array(inds_torsion).flatten()
         assert len(inds_torsion) == 4
         assert max(inds_torsion) < self.n_atoms_mol
@@ -1504,7 +1480,7 @@ class WALLS:
         inds_torsion = [self.forward_atom_index_(i) for i in inds_torsion]
         print('inds_torsion for self.topology:', inds_torsion)
         inds_torsion = np.array(inds_torsion)
-        inds_torsion_molecules = np.array([inds_torsion + i*self.n_atoms_mol for i in range(self.n_mol)])
+        self.inds_torsion_molecules = np.array([inds_torsion + i*self.n_atoms_mol for i in range(self.n_mol)])
         # inds_torsion_molecules : (n_mol, 4)
 
         if type(means) in [int, float]:
@@ -1518,8 +1494,8 @@ class WALLS:
         # means : (n_mol, )
 
         ##
-
         def smooth_periodic_square_well_(phi, centre, percent_width=68.17, height = 100):
+            ''' ok '''
             # https://www.desmos.com/calculator/olpfhe5azr
             phi = np.array(phi)
             w = np.pi*(100-percent_width)/100
@@ -1527,6 +1503,16 @@ class WALLS:
             z = (np.mod((phi - centre - np.pi)/w + np.pi, 2*np.pi/w) - np.pi)**2
             return np.where(z<1.0, (height/0.36788)*np.exp(1/(z-1)), 0.0)
         
+        def smooth_periodic_square_well_v2_(phi, centre, percent_width=68.17, height = 100):
+            ''' good : simple '''
+            # https://www.desmos.com/calculator/bmswl7qqo6
+            phi = np.array(phi)
+            d0 = np.abs(phi-centre+np.pi)
+            d1 = np.minimum(d0, 2*np.pi-d0)
+            rr = (np.pi*(100-percent_width)/100)**2
+            z = np.maximum(0, rr - d1**2) / rr
+            return height * (z**2)
+
         # potential(all ForceGroups) = U
         all_groups = [force.getForceGroup() for force in self.system.getForces()]
         # prevents add_walls_ being ran more than once on the same self.system
@@ -1535,33 +1521,65 @@ class WALLS:
         # if want to constrain >1 torsions : not yet implemented
         #   Might be just a matter of removing/replacing the above assertion
 
-        grid = np.linspace(-np.pi, np.pi, n_bins) ; height = 200
-        for i in range(self.n_mol):
-            var_name = 'theta'
-            cv_i = mm.CustomTorsionForce(var_name)
-            cv_i.addTorsion(*inds_torsion_molecules[i])
-            force_i = mm.CustomCVForce('table(%s)' % var_name)
-            force_i.addCollectiveVariable(var_name, cv_i)
-            bias = smooth_periodic_square_well_(grid, means[i], width_percentage, height = height)
+        grid = np.linspace(-np.pi, np.pi, n_bins) ; height = 200 ; var_name = 'theta'
+        if not faster:
+            ''' V1 '''
+            for i in range(self.n_mol):
+                cv_i = mm.CustomTorsionForce(var_name)
+                cv_i.addTorsion(*self.inds_torsion_molecules[i])
+                force_i = mm.CustomCVForce('table(%s)' % var_name)
+                force_i.addCollectiveVariable(var_name, cv_i)
+                bias = smooth_periodic_square_well_(grid, means[i], width_percentage, height = height)
 
-            # mm version 8.0
-            #tab_i = mm.Continuous1DFunction(values = bias, min = -np.pi, max = np.pi, periodic = True)
-            # mm version 8.1.1
-            tab_i = mm.Continuous1DFunction(bias, -np.pi, np.pi, True) 
+                # mm version 8.0
+                #tab_i = mm.Continuous1DFunction(values = bias, min = -np.pi, max = np.pi, periodic = True)
+                # mm version 8.1.1
+                tab_i = mm.Continuous1DFunction(bias, -np.pi, np.pi, True) 
+                
+                force_i.addTabulatedFunction('table', tab_i)
+                force_i.setForceGroup(15)
+                self.system.addForce(force_i)
+            
+            CUT = self.n_mol
+            define_current_CV_attribute_anyway = True # might as well
+        else:
+            ''' V2 '''
+            # can put back as arg if debugging, but looks like there shouldn't be any bugs (V2 was tested well)
+            define_current_CV_attribute_anyway = False # no, because it is much slower even with a blank CustomCVForce
 
-            force_i.addTabulatedFunction('table', tab_i)
-            force_i.setForceGroup(15)
-            self.system.addForce(force_i)
+            # just for CV value (no energy):
+            if define_current_CV_attribute_anyway:
+                for i in range(self.n_mol):
+                    cv_i = mm.CustomTorsionForce(var_name)
+                    cv_i.addTorsion(*self.inds_torsion_molecules[i])
+                    force_i = mm.CustomCVForce('0') # energy function = 0(theta)
+                    force_i.addCollectiveVariable(var_name, cv_i)
+                    force_i.setForceGroup(15)
+                    self.system.addForce(force_i)
+                CUT = self.n_mol + 1
+            else:
+                CUT = 1
 
-        '''
+            # v2 (more efficent and more tidy):
+            force = mm.CustomTorsionForce('height*(z^2); z=max(0,rr-d1^2)/rr; d1=min(d0,2*pi-d0); d0=abs(theta-theta0+pi)')
+            force.addGlobalParameter('pi', np.pi)
+            force.addGlobalParameter('rr', (np.pi*(100-width_percentage)/100)**2)
+            force.addGlobalParameter('height', height * unit.kilojoules_per_mole)
+            force.addPerTorsionParameter('theta0')
+            for i in range(self.n_mol):
+                force.addTorsion(*self.inds_torsion_molecules[i], [means[i]])
+            force.setForceGroup(15)
+            self.system.addForce(force)
+
+        ''' Yes, above now (V2)
         optional: find way to put all 1D functions into a single force object?
             this is because self.system.getForces() currently has a seperate force for each molecule
             this is fine because these forces are in the same ForceGroup {15}
         '''
        # potential(all ForceGroups) = U + V ; V only in ForceGroup 15
         all_groups = [force.getForceGroup() for force in self.system.getForces()]
-        groups_V = all_groups[-self.n_mol:]
-        groups_U = all_groups[:-self.n_mol]
+        groups_V = all_groups[CUT:]
+        groups_U = all_groups[:-CUT]
         assert [x==15 for x in groups_V]
         assert [x!=15 for x in groups_U]
 
@@ -1597,12 +1615,17 @@ class WALLS:
         '''
         # current CV value
         self._inds_CV_forces_system_ = np.where(np.array(all_groups)==15)[0]
-        this_class._current_CV_ = property(
-        lambda self : np.array([
-            self.system.getForces()[i].getCollectiveVariableValues(self.simulation.context)[0] # (scalar) -> scalar 
-            for i in self._inds_CV_forces_system_
-            ]) # (n_mol,) ; one 1D CV in each molecule
-        )
+        if define_current_CV_attribute_anyway:
+            this_class._current_CV_ = property(
+            lambda self : np.array([
+                self.system.getForces()[i].getCollectiveVariableValues(self.simulation.context)[0] # (scalar) -> scalar 
+                for i in self._inds_CV_forces_system_
+                if self.system.getForces()[i].getName() != 'CustomTorsionForce'
+                ]) # (n_mol,) ; one 1D CV in each molecule
+            )
+        else:
+            print('self._current_CV_ not avilable, use check_plot_torsion_ instead')
+
         ''' 
         initialise_simulation_ always follows add_walls_ 
             all the property above become active correctly once self.simulation is (re)initialised,
@@ -1614,6 +1637,7 @@ class WALLS:
         #except:
         print('bias: system was updated to include bias, run initialise_simulation_ to apply this change to simulation')
         self.bias = None
+        self.means_WALLS = np.array(means)
     
     def bias_(self, r, b=None):
         ''' like self.u_ but for the static bias '''
@@ -1736,5 +1760,8 @@ class WALLS:
         else: pass
 
         return phi
+
+## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
+
 
 
