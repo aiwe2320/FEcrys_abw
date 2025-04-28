@@ -152,7 +152,7 @@ class model_helper:
             return class_of_the_model.load_model_(path_and_name, class_of_the_model)
         '''
         init_args, ws = load_pickle_(path_and_name)
-        model = (lambda f, args : f(*args))(class_of_the_model, init_args)
+        model = (lambda f, args : f(**args))(class_of_the_model, init_args)
         for i in range(len(ws)):
             model.trainable_variables[i].assign(ws[i])
         return model
