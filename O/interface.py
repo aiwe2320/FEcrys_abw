@@ -141,8 +141,10 @@ class NN_interface_helper:
         state = 0
         density = False
         if _range is None:
-            a = min([self.MD_energies_T.min(),self.MD_energies_V.min()])
-            b = max([self.MD_energies_T.max(),self.MD_energies_V.max()]) 
+            a = self.MD_energies_V.min()
+            b = self.MD_energies_V.max()
+            #a = #min([self.MD_energies_T.min(),self.MD_energies_V.min()])
+            #b = #max([self.MD_energies_T.max(),self.MD_energies_V.max()])
             b += (b-a)
         else:
             a,b = _range
