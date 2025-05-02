@@ -1083,7 +1083,29 @@ class OPLS(MM_system_helper):
             self._permute_   = lambda r, axis=-2 : np.take(r, self._permute_crystal_to_top_, axis=axis)
             self._unpermute_ = lambda r, axis=-2 : np.take(r, self._unpermute_crystal_from_top_, axis=axis)
 
-            # for LigParGen chages that can be unsable.
+            '''
+            # for LigParGen chages that can be unstable.
+            How to change charges in file self.top_file_gmx_adjusted_charges:
+                1) 
+                get (n_atom_mol,) shaped array of good_charges that might be better than default in file self.itp_file_mol:
+                    For example if want to use GAFF charges (from antechamber) for OPLS also:
+                        sc = SingleComponent(...,GAFF)
+                        sc.initialise_system_(...) 
+                        sc.initialise_simulation_(...)
+                        gaff_q = np.array(sc.partial_charges_mol) # (n_atom_mol,) 
+                        good_charges = gaff_q                     # (n_atom_mol,) 
+                2)             
+                initiliase sc = SingleComponent(...,OPLS) with OPLS, but not initialise system and simulation.
+                3)
+                sc.initialise_FF_(sc._permute_single_molecule_(good_charges,axis=0))
+                4)
+                Thats it, the file self.top_file_gmx_adjusted_charges is saved with new charges and will be used unless missing.
+                5)
+                to check, the arrays should match for all atoms in the molecule (x-axis : atoms index)
+                    plt.plot(good_charges) # intended
+                    plt.plot(sc._unpermute_single_molecule_(sc.partial_charges_mol,axis=0)) # good_charges now in OPLS
+            '''
+
             self._permute_single_molecule_   = lambda r, axis=-2 : np.take(r, self._permute_molecule_to_top_, axis=axis)
             self._unpermute_single_molecule_ = lambda r, axis=-2 : np.take(r, self._unpermute_molecule_from_top_, axis=axis)
 
