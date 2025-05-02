@@ -56,7 +56,6 @@ methods:
     f : hemisphere_ 
     f : hemisphere_forward_
     f : hemisphere_inverse_
-    f : remove_self_coupling_Hopf_ # OLD, not used
     f : sample_q_
     f : quat_metrix_
     f : quat_product_, quat_inverse_ # not used
