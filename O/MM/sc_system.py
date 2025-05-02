@@ -1086,6 +1086,9 @@ class OPLS(MM_system_helper):
             '''
             # to replace LigParGen charges (e.g., in case they are unstable):
             How to change charges in file self.top_file_gmx_adjusted_charges:
+                0)
+                delete the current file self.top_file_gmx_adjusted_charges (located in self.name/misc folder)
+                just in case, also delete file self.self.top_file_gmx_crys (in the same folder as above)
                 1) 
                 get (n_atom_mol,) shaped array of good_charges that might be better than default in file self.itp_file_mol:
                     For example if want to use GAFF charges (from antechamber) for OPLS also:
