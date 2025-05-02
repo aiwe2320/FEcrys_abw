@@ -54,11 +54,8 @@ methods:
     f : CB_single_molecule_forward_
     f : CB_single_molecule_inverse_
     f : hemisphere_ 
-    f : hemisphere_H_ # OLD, not used
     f : hemisphere_forward_
     f : hemisphere_inverse_
-    f : Hopf_forward_ # OLD, not used
-    f : Hopf_inverse_ # OLD, not used
     f : remove_self_coupling_Hopf_ # OLD, not used
     f : sample_q_
     f : quat_metrix_
@@ -394,11 +391,12 @@ class FocusedBonds:
         self.axis = tuple(axis)
 
         self.min_bond_length = 0.05 # (units: nm)
-        self.max_bond_length = 0.22  # (units: nm)
+        self.max_bond_length = 0.22 # (units: nm)
         #self.percentage_pad = percentage_pad 
         self.range_limits = [self.min_bond_length,self.max_bond_length]
         self.focused = focused
 
+        #print('bonds min, max:', np.min(X), np.max(X))
         assert np.min(X) >= self.min_bond_length
         assert np.max(X) <= self.max_bond_length
 
@@ -441,6 +439,7 @@ class FocusedAngles:
 
         self.min_angle = range_limits[0]
         self.max_angle = range_limits[1]
+
         assert np.min(X) >= self.min_angle
         assert np.max(X) <= self.max_angle
 
@@ -1587,7 +1586,6 @@ def CB_single_molecule_inverse_(X):
 ## hemisphere:
 
 hemisphere_ = lambda x : x * tf.where(x[...,:1]<0.0, -1.0, 1.0)
-hemisphere_H_ = lambda x : x * tf.where(x[...,2:3]<0.0, -1.0, 1.0)
 
 def hemisphere_forward_(q, rescale_marginals=True):
     '''
@@ -1672,84 +1670,6 @@ def hemisphere_inverse_(xq, rescale_marginals=True):
     ##
     qh = c
     return qh, ladJ #, Js # (...,4), (...,1), (...,4,4)
-
-def Hopf_forward_(q):
-    '''
-    was not used.
-    '''
-    c = hemisphere_H_(q) # (...,4)
-
-    q0 = c[...,0]
-    q1 = c[...,1]
-    q2 = c[...,2]
-    q3 = c[...,3]
-
-    psi   = 2.0 * tf.atan2(q2,q3) - PI
-    theta = 2.0 * tf.atan2((q0**2 + q1**2)**0.5,(q2**2 + q3**2)**0.5)
-    phi   = tf.atan2(q1*q2 - q0*q3, q1*q3 + q0*q2)
-    H = tf.stack([psi,theta,phi],axis=-1)
-
-    ladJ = - tf.expand_dims(tf.math.log( clip_positive_(tf.sin(theta)*0.125) ),axis=-1)
-
-    ##
-    
-    xq, ladj_rescale = scale_shift_x_(H,
-                                      physical_ranges_x = [PI*2.0, PI, PI*2.0],
-                                      physical_centres_x = [0.0, PI*0.5, 0.0],
-                                      forward = True) # (m,n,3) -> (m,n,3)
-    ladJ += ladj_rescale
-
-    return xq, ladJ
-
-def Hopf_inverse_(xq):
-    '''
-    was not used.
-    '''
-    H, ladj_rescale = scale_shift_x_(xq,
-                                     physical_ranges_x = [PI*2.0, PI, PI*2.0],
-                                     physical_centres_x = [0.0, PI*0.5, 0.0],
-                                     forward = False) # (m,n,3) -> (m,n,3)
-    
-    ##
-
-    psi   = H[...,0] ; half_psi_add_pi = 0.5 * (psi + PI)
-    theta = H[...,1] ; half_theta = 0.5 * theta
-    phi   = H[...,2] 
-
-    q0 = tf.sin(half_theta) * tf.sin(half_psi_add_pi - phi)
-    q1 = tf.sin(half_theta) * tf.cos(half_psi_add_pi - phi)
-    q2 = tf.cos(half_theta) * tf.sin(half_psi_add_pi)
-    q3 = tf.cos(half_theta) * tf.cos(half_psi_add_pi)
-    q = tf.stack([q0,q1,q2,q3],axis=-1)
-
-    ladJ = tf.expand_dims(tf.math.log( clip_positive_(tf.sin(theta)*0.125) ),axis=-1)
-    ladJ += ladj_rescale # adding a scalar
-
-    return q, ladJ
-
-def remove_self_coupling_Hopf_(list_cond_masks):
-    '''
-    was not used
-    '''
-    # only for model H_H
-    # specific for water by ic_map_for_H and model H and default masking method in it
-    mask = np.array(list_cond_masks)
-    n_mol = (len(mask[0])+3)//9
-    n_dof_rot = n_mol*3
-    n_dof_non_rot = (n_mol*6 - 3)
-    # similar to periodic_mask but in the case of Hopf they are coupled in each molecule (numbered below)
-    correction_mask = np.array(np.concatenate([[i+1,0,i+1] for i in range(n_dof_rot//3)],axis=0).tolist() + [0] * n_dof_non_rot)
-    # the following correction prevents them conditioning on each-other inside any given mol, just in case.
-    a = [0,1]*len(mask)
-    for j in range(len(mask)):
-        for i in range(1,n_mol+1):
-            region = np.where(correction_mask==i,1,0)
-            others = np.where(correction_mask==i,0,1)
-            inds_region = np.where(correction_mask==i)[0]
-            fill_value = mask[j][inds_region][a[j]]
-            fill = np.array(region*fill_value)
-            mask[j] = fill + mask[j]*others
-    return mask
 
 ##
 
