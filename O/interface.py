@@ -279,35 +279,36 @@ class NN_interface_helper:
         self.BAR_V_SEs = np.max([self.BAR_V_SEs, self.BAR_V_SDs], axis=0)
         self.BAR_V_SE  = self.BAR_V_SEs[-1]
 
-    def plot_result_(self, window=1, entropy_only=False, plot_red=True):
+    def plot_result_(self, window=1, entropy_only=False, plot_red=True, n_mol=1):
+        assert type(n_mol) is int and n_mol >= 1
 
-        BAR_V = np.array(self.estimates_BAR[2,:,0])
-        BAR_V_SEs = np.array(self.estimates_BAR[3,:,0])
-        FEs = np.array(self.FEs)
+        BAR_V = np.array(self.estimates_BAR[2,:,0])/n_mol
+        BAR_V_SEs = np.array(self.estimates_BAR[3,:,0])/n_mol
+        FEs = np.array(self.FEs)/n_mol
 
         if entropy_only:
-            BAR_V = - (BAR_V - self.u_mean)
-            FEs = - (FEs - self.u_mean)
+            BAR_V = - (BAR_V - self.u_mean/n_mol)
+            FEs = - (FEs - self.u_mean/n_mol)
         else: pass
         FE = FEs[-1]
 
         plt.plot(self.evaluation_grid, BAR_V, color='green')
-        plt.plot(self.evaluation_grid, self.estimates[0,:,7], color='blue', linewidth=0.3, linestyle='--')
+        plt.plot(self.evaluation_grid, self.estimates[0,:,7]/n_mol, color='blue', linewidth=0.3, linestyle='--')
         plt.fill_between(self.evaluation_grid, BAR_V-BAR_V_SEs, BAR_V+BAR_V_SEs, alpha=0.4, color='green')
 
         if plot_red:
             #plt.plot([self.evaluation_grid[0],self.evaluation_grid[-1]], [FEs[-1]]*2, color='red')
             plt.plot(self.evaluation_grid, FEs, color='m')
-            plt.plot(self.evaluation_grid, FEs-self.SDs, color='m', linestyle='dotted')
-            plt.plot(self.evaluation_grid, FEs+self.SDs, color='m', linestyle='dotted')
-            plt.plot(self.evaluation_grid, self.BAR_V_FEs-self.BAR_V_SEs, color='red', linestyle='dotted', linewidth=2)
-            plt.plot(self.evaluation_grid, self.BAR_V_FEs+self.BAR_V_SEs, color='red', linestyle='dotted', linewidth=2)
-            plt.plot(self.evaluation_grid, self.BAR_V_FEs,                color='red', linewidth=2)
+            plt.plot(self.evaluation_grid, FEs-self.SDs/n_mol, color='m', linestyle='dotted')
+            plt.plot(self.evaluation_grid, FEs+self.SDs/n_mol, color='m', linestyle='dotted')
+            plt.plot(self.evaluation_grid, self.BAR_V_FEs/n_mol-self.BAR_V_SEs/n_mol, color='red', linestyle='dotted', linewidth=2)
+            plt.plot(self.evaluation_grid, self.BAR_V_FEs/n_mol+self.BAR_V_SEs/n_mol, color='red', linestyle='dotted', linewidth=2)
+            plt.plot(self.evaluation_grid, self.BAR_V_FEs/n_mol,                      color='red', linewidth=2)
 
         else: pass
 
-        plt.ylim(FE-window, FE+window)
-        print(FE,'+/-', self.SDs[-1], 'final:', self.BAR_V_FE, '+/-', self.BAR_V_SE)
+        plt.ylim(FE-window/n_mol, FE+window/n_mol)
+        print(FE,'+/-', self.SDs[-1]/n_mol, 'final:', self.BAR_V_FE/n_mol, '+/-', self.BAR_V_SE/n_mol)
 
 class NN_interface_sc(NN_interface_helper):
     '''
