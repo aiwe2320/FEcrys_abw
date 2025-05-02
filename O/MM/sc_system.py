@@ -1076,14 +1076,22 @@ class OPLS(MM_system_helper):
             print('permutation not used, because not needed')
             self._permute_   = lambda r, axis=None : r
             self._unpermute_ = lambda r, axis=None : r
+
+            self._permute_single_molecule_   = lambda r, axis=None : r
+            self._unpermute_single_molecule_ = lambda r, axis=None : r
         else:
             self._permute_   = lambda r, axis=-2 : np.take(r, self._permute_crystal_to_top_, axis=axis)
             self._unpermute_ = lambda r, axis=-2 : np.take(r, self._unpermute_crystal_from_top_, axis=axis)
+
+            # for LigParGen chages that can be unsable.
+            self._permute_single_molecule_   = lambda r, axis=-2 : np.take(r, self._permute_molecule_to_top_, axis=axis)
+            self._unpermute_single_molecule_ = lambda r, axis=-2 : np.take(r, self._unpermute_molecule_from_top_, axis=axis)
+
             print('! using OPLS with permuation of atoms turned ON. This reduces efficiency.')
             if self.n_mol > 1: print('this assumes all molecules in the input PDB have the same permutation as the first molecule')
             else: pass
 
-    def initialise_FF_(self,):
+    def initialise_FF_(self, replacement_charges=None):
         # self.atom_order_PDB_match_itp = atom_order_PDB_match_itp
         '''
         run this after (n_mol and n_atoms_mol) defined in __init__ of SingleComponent
@@ -1131,7 +1139,7 @@ class OPLS(MM_system_helper):
             change_charges_itp_top_(path_top_or_itp_file_in = str(self.top_file_gmx.absolute()),
                                     path_top_or_itp_file_out = str(self.top_file_gmx_adjusted_charges.absolute()),
                                     n_atoms_mol= self.n_atoms_mol,
-                                    replacement_charges = None,
+                                    replacement_charges = replacement_charges,
                                     neutralise_charge = True,
                                     )
 
