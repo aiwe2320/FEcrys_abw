@@ -1084,7 +1084,7 @@ class OPLS(MM_system_helper):
             self._unpermute_ = lambda r, axis=-2 : np.take(r, self._unpermute_crystal_from_top_, axis=axis)
 
             '''
-            # for LigParGen chages that can be unstable.
+            # to replace LigParGen charges (e.g., in case they are unstable):
             How to change charges in file self.top_file_gmx_adjusted_charges:
                 1) 
                 get (n_atom_mol,) shaped array of good_charges that might be better than default in file self.itp_file_mol:
