@@ -1090,8 +1090,6 @@ class OPLS(MM_system_helper):
                 get (n_atom_mol,) shaped array of good_charges that might be better than default in file self.itp_file_mol:
                     For example if want to use GAFF charges (from antechamber) for OPLS also:
                         sc = SingleComponent(...,GAFF)
-                        sc.initialise_system_(...) 
-                        sc.initialise_simulation_(...)
                         gaff_q = np.array(sc.partial_charges_mol) # (n_atom_mol,) 
                         good_charges = gaff_q                     # (n_atom_mol,) 
                 2)             
