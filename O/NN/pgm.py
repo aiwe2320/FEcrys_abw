@@ -669,6 +669,10 @@ class PGMcrys_v1(tf.keras.models.Model, model_helper_PGMcrys_v1, model_helper):
         if str(type(ic_maps)) not in ["<class 'list'>","<class 'tensorflow.python.training.tracking.data_structures.ListWrapper'>"]: 
             ic_maps = [ic_maps]
         else: pass
+        for ic_map in ic_maps:
+            if hasattr(ic_map, 'single_box_in_dataset'): assert ic_map.single_box_in_dataset == True
+            else: ic_map.single_box_in_dataset = True
+        
         self.ic_maps = ic_maps
         self.n_mol = int(self.ic_maps[0].n_mol)
         assert all([ic_map.n_mol == self.n_mol for ic_map  in self.ic_maps])
