@@ -1110,9 +1110,11 @@ class OPLS(MM_system_helper):
             self._permute_single_molecule_   = lambda r, axis=-2 : np.take(r, self._permute_molecule_to_top_, axis=axis)
             self._unpermute_single_molecule_ = lambda r, axis=-2 : np.take(r, self._unpermute_molecule_from_top_, axis=axis)
 
-            print('! using OPLS with permuation of atoms turned ON. This reduces efficiency.')
+            print('! using OPLS with permuation of atoms turned ON.')
             if self.n_mol > 1: print('this assumes all molecules in the input PDB have the same permutation as the first molecule')
             else: pass
+            print("'permuation of atoms turned ON' -> to reduce cost during run_simulation_ the method for saving xyz frames is slightly adjusted")
+            self.inject_methods_from_another_class_(COST_FIX_permute_xyz_after_a_trajectory)
 
     def initialise_FF_(self, replacement_charges=None):
         # self.atom_order_PDB_match_itp = atom_order_PDB_match_itp
@@ -1381,9 +1383,11 @@ class itp2FF(OPLS):
         else:
             self._permute_   = lambda r, axis=-2 : np.take(r, self._permute_crystal_to_top_, axis=axis)
             self._unpermute_ = lambda r, axis=-2 : np.take(r, self._unpermute_crystal_from_top_, axis=axis)
-            print(f'! using {self._FF_name_}_general with permuation of atoms turned ON. This reduces efficiency.')
+            print(f'! using {self._FF_name_}_general with permuation of atoms turned ON.')
             if self.n_mol > 1: print('this assumes all molecules in the input PDB have the same permutation as the first molecule')
             else: pass
+            print("'permuation of atoms turned ON' -> to reduce cost during run_simulation_ the method for saving xyz frames is slightly adjusted")
+            self.inject_methods_from_another_class_(COST_FIX_permute_xyz_after_a_trajectory)
 
     def initialise_FF_(self,):
         ''' run this only after (n_mol and n_atoms_mol) defined in __init__ of SingleComponent '''
@@ -1796,5 +1800,49 @@ class WALLS:
 
 ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
 
+class COST_FIX_permute_xyz_after_a_trajectory:
+
+    ''' such that self._unpermute_ (if used) does not change computational cost during simulation
+    
+        dont permute each frame 1 by 1 while saving frames from an active trajectory
+        (saving them in the current way is relatively expensive anyway, without an additional cost of array manipulation)
+
+    '''
+
+    def set_arrays_blank_(self,):
+        self._xyz_top_ = []
+        self._xyz = []
+        self._u = []
+        self._temperature = []
+        self._boxes = []
+        self._COMs = []
+        self.n_frames_saved = 0
+        # self._Ps = []
+        # self._v = []
+
+    def save_frame_(self,):
+        self._xyz_top_.append( self.simulation.context.getState(getPositions=True).getPositions(asNumpy=True)._value ) # nm
+        self._u.append( self._current_u_ )            #  kT
+        self._temperature.append( self._current_T_  ) # K
+        self._boxes.append( self._current_b_ )        # nm
+        self._COMs.append( self._current_COM_ )       # nm
+        self.n_frames_saved += 1                      # frames
+        # self._Ps.append( self._current_P_ )
+        # self._v.append(self._current_v_)
+
+    def run_simulation_(self, n_saves, stride_save_frame:int=100, verbose_info : str = ''):
+        self.stride_save_frame = stride_save_frame
+        for i in range(n_saves):
+            self.simulation.step(stride_save_frame)
+            self.save_frame_()
+            info = 'frame: '+str(self.n_frames_saved)+' T sampled:'+str(self.temperature.mean().round(3))+' T expected:'+str(self.T)+verbose_info
+            print(info, end='\r')
+
+        self._xyz += [x for x in self._unpermute_(np.array(self._xyz_top_),axis=-2)]
+        # (+) self._xyz and self.xyz behave as if each frame was permuted before saving, but that cost was avoided
+        # (-) interupting run_simulation_ will not save any xyz data. 
+
+
+## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
 
 
