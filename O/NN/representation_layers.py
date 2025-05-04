@@ -413,8 +413,7 @@ class SingleComponent_map(SC_helper):
                    focused = True,
                    ):
         # r_dataset : (m,N,3)
-        # b0        : (3,3)
-        assert b0.shape == (3,3)
+        # b0        : (3,3) or (m,3,3)
 
         X_IC, X_CB = self._forward_init_(r_dataset, batch_size=batch_size)[:2]
         X_IC = X_IC.numpy()
@@ -425,12 +424,22 @@ class SingleComponent_map(SC_helper):
         self.n_mol_unitcell = n_mol_unitcell
         self.n_unitcells = self.n_mol_supercell // self.n_mol_unitcell
 
-        self.b0_constant = np2tf_(np.array(b0).astype(np.float32)) # reshape just to catch error
-        self.supercell_Volume = det_3x3_(self.b0_constant, keepdims=True)
-        self.ladJ_unit_box_forward = - tf.math.log(self.supercell_Volume)*(self.n_mol-1.0)
-        self.b0_inv_constant  = np2tf_(np.linalg.inv(b0).astype(np.float32)) 
-        self.h0_constant = box_forward_(self.b0_constant[tf.newaxis,...])[0][0]
-        rO = np.einsum('...i,ij->...j', rO, self.b0_inv_constant.numpy())
+        if b0.shape == (3,3):
+            self.single_box_in_dataset = True
+            print('SCmap.initalise_ : a single box provided -> Cartesian transformed by SCmap.')
+            self.b0_constant = np2tf_(np.array(b0).astype(np.float32)) # reshape just to catch error
+            self.supercell_Volume = det_3x3_(self.b0_constant, keepdims=True)
+            self.ladJ_unit_box_forward = - tf.math.log(self.supercell_Volume)*(self.n_mol-1.0)
+            self.b0_inv_constant  = np2tf_(np.linalg.inv(b0).astype(np.float32)) 
+            self.h0_constant = box_forward_(self.b0_constant[tf.newaxis,...])[0][0]
+            rO = np.einsum('...i,ij->...j', rO, self.b0_inv_constant.numpy())
+        else:
+            assert b0.shape == (rO.shape[0], 3,3)
+            self.single_box_in_dataset = False
+            print('SCmap.initalise_ : >1 boxes provided -> Transform Cartesian outside SCmap.')
+            # (m,N,3) -> (m,n_mol,n_atoms_mol,3) -> (m,n_mol,3,3) -> (m,n_mol,3)
+            rO = np.einsum('omi,oij->omj', rO, np.linalg.inv(b0))
+
         rO_flat = reshape_to_flat_np_(rO, self.n_mol, 1) # (m, 3*n_mol)
 
         'checking for molecules not to be jumping more than half box length'
@@ -544,21 +553,27 @@ class SingleComponent_map(SC_helper):
         ladJ += tf.reduce_sum(ladJ_IC + ladJ_CB, axis=-2) # (m,1)
         rO, q, a, d0, d1 = X_CB # rO : (m, n_mol, 3)
 
-
         #### EXTERNAL : ####
-        rO = tf.einsum('...i,ij->...j', rO, self.b0_inv_constant)
-        ladJ += self.ladJ_unit_box_forward
 
-        xO, ladJ_whiten = self.WF.forward(reshape_to_flat_tf_(rO, n_molecules=self.n_mol, n_atoms_in_molecule=1))
-        # xO                  : (m, 3*(n_mol-1))
-        # ladJ_whiten         : (m,1)
-        ladJ += ladJ_whiten 
+        if self.single_box_in_dataset:
+            ''' Cartesian forward '''
+            rO = tf.einsum('...i,ij->...j', rO, self.b0_inv_constant)
+            ladJ += self.ladJ_unit_box_forward
+            # rO                  : (m, n_mol, 3)
+            # self.ladJ_box       : (1,1)
 
-        xO, ladJ_scale_xO = scale_shift_x_(xO, physical_ranges_x = self.ranges_xO, physical_centres_x = self.centres_xO, forward = True)
-        # xO                  : (m, 3*(n_mol-1))
-        # ladJ_scale_xO       : (,)
-        ladJ += ladJ_scale_xO
-        
+            xO, ladJ_whiten = self.WF.forward(reshape_to_flat_tf_(rO, n_molecules=self.n_mol, n_atoms_in_molecule=1))
+            ladJ += ladJ_whiten 
+            # xO                  : (m, 3*(n_mol-1))
+            # ladJ_whiten         : (m,1)
+
+            xO, ladJ_scale_xO = scale_shift_x_(xO, physical_ranges_x = self.ranges_xO, physical_centres_x = self.centres_xO, forward = True)
+            ladJ += ladJ_scale_xO
+            # xO                  : (m, 3*(n_mol-1))
+            # ladJ_scale_xO       : (,)
+        else: 
+            xO = rO # (m, n_mol, 3)
+
         #### INTERNAL : ####
 
         bonds = X_IC[...,0]  ; bonds  = tf.concat([d0,d1,bonds],axis=-1)
@@ -675,13 +690,17 @@ class SingleComponent_map(SC_helper):
 
         ######################################################
 
-        xO, ladJ_scale_xO = scale_shift_x_(xO, physical_ranges_x = self.ranges_xO, physical_centres_x = self.centres_xO, forward = False)
-        ladJ += ladJ_scale_xO
-        rO, ladJ_whiten = self.WF.inverse(xO)
-        ladJ += ladJ_whiten 
-        rO = reshape_to_atoms_tf_(rO, n_atoms_in_molecule=1, n_molecules=self.n_mol)
-        rO = tf.einsum('...i,ij->...j', rO, self.b0_constant)
-        ladJ -= self.ladJ_unit_box_forward
+        if self.single_box_in_dataset:
+            ''' Cartesian inverse '''
+            xO, ladJ_scale_xO = scale_shift_x_(xO, physical_ranges_x = self.ranges_xO, physical_centres_x = self.centres_xO, forward = False)
+            ladJ += ladJ_scale_xO
+            rO, ladJ_whiten = self.WF.inverse(xO)
+            ladJ += ladJ_whiten 
+            rO = reshape_to_atoms_tf_(rO, n_atoms_in_molecule=1, n_molecules=self.n_mol)
+            rO = tf.einsum('...i,ij->...j', rO, self.b0_constant)
+            ladJ -= self.ladJ_unit_box_forward
+        else:
+            rO = xO # (m, n_mol, 3)
 
         X_CB = [rO, q, a, d0, d1]
 
