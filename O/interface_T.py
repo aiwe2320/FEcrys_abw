@@ -48,6 +48,10 @@ class PGMcrys_v1_T(tf.keras.models.Model, model_helper_PGMcrys_v1, model_helper)
                             'DIM_connection' : DIM_connection,
                             'n_att_heads' : n_att_heads}
         ####
+        
+        if hasattr(ic_map, 'single_box_in_dataset'): assert ic_map.single_box_in_dataset == True
+        else: ic_map.single_box_in_dataset = True
+        
         self.ic_map = ic_map
         self.n_maps = n_temperatures
         self.n_mol = int(self.ic_map.n_mol)
