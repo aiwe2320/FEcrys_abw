@@ -1459,7 +1459,7 @@ class WALLS:
     example for case of n_mol=16:
 
         sc.inject_methods_from_another_class_(WALLS)
-        av_value = 1.88 # minimiser of unbiased marginal FES that would be sampled in the absence of the rate event
+        av_value = 1.88 # minimiser of unbiased marginal FES that would be sampled in the absence of the rare event
         sc.add_walls_(inds_torsion=[18, 15, 10,  8], means=[-av_value,av_value])
         Verbose output:
             inds_torsion provided: [18 15 10  8]
@@ -1471,7 +1471,7 @@ class WALLS:
     Reason for using (problem):
 
         Possible problem at high temperatures in crystals of flexible molecules:
-            unbiased simulation + rate event -> non-ergodic (incomplete) sampling
+            unbiased simulation + rare event -> non-ergodic (incomplete) sampling
             Example: 
                 a torsional angle rotates in 1 or 2 molecules to explore a different basin.
                 the configuration does not return to original, or has very few transitions.
@@ -1479,7 +1479,7 @@ class WALLS:
                 exploring all of the basins in ergodic manner (because 2**n_mol basins when each mol as 2 basins)
         
     Using WALLS (a simple solution):
-        simulation + flat bias (unless to discourage the given rate event happening) -> 
+        simulation + flat bias (unless to discourage the given rare event happening) -> 
         keep only frames where bias == 0 -> *(ergodic, unbiased) sampling without rare event happening even once
         *(ergodic because rare event prevented, unbiased because only frames with bias == 0.0 are kept)
 
