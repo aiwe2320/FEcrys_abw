@@ -229,3 +229,46 @@ def tidy_crystal_xyz_(r, b, n_atoms_mol, ind_rO, batch_size=1000):
     return r
 
 ## ## 
+
+def get_torsion_np_(r, inds_4_atoms):
+    ''' REF: https://github.com/noegroup/bgflow '''
+    # r            : (..., # atoms, 3)
+    # inds_4_atoms : (4,)
+    
+    A,B,C,D = inds_4_atoms
+    rA = r[...,A,:] # (...,3)
+    rB = r[...,B,:] # (...,3)
+    rC = r[...,C,:] # (...,3)
+    rD = r[...,D,:] # (...,3)
+    
+    vBA = rA - rB   # (...,3)
+    vBC = rC - rB   # (...,3)
+    vCD = rD - rC   # (...,3)
+
+    _clip_low_at_ = 1e-8
+    _clip_high_at_ = 1e+18
+    clip_positive_ = lambda x : np.clip(x, _clip_low_at_, _clip_high_at_) 
+    norm_clipped_ = lambda x : clip_positive_(np.linalg.norm(x,axis=-1,keepdims=True))
+    unit_clipped_ = lambda x : x / norm_clipped_(x)
+    uBC = unit_clipped_(vBC) # (...,3)
+
+    w = vCD - np.sum(vCD*uBC, axis=-1, keepdims=True)*uBC # (...,3)
+    v = vBA - np.sum(vBA*uBC, axis=-1, keepdims=True)*uBC # (...,3)
+    
+    uBC1 = uBC[...,0] # (...,)
+    uBC2 = uBC[...,1] # (...,)
+    uBC3 = uBC[...,2] # (...,)
+    
+    zero = np.zeros_like(uBC1) # (...,)
+    S = np.stack([np.stack([ zero, uBC3,-uBC2],axis=-1),
+                np.stack([-uBC3, zero, uBC1],axis=-1),
+                np.stack([ uBC2,-uBC1, zero],axis=-1)],axis=-1) # (...,3,3)
+    
+    y = np.expand_dims(np.einsum('...j,...jk,...k->...',w,S,v), axis=-1) # (...,1)
+    x = np.expand_dims(np.einsum('...j,...j->...',w,v), axis=-1)         # (...,1)
+    
+    phi = np.arctan2(y,x) # (...,1)
+
+    return phi # (...,1)
+
+## ## 
