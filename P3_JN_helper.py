@@ -154,7 +154,7 @@ class P3_JN_helper:
         else: rerun = ''
 
         py_script = f'''
-        from .{DIR_main.split('/')[-2]}.MM.sc_system import *
+        from {DIR_main.split('/')[-2]}.MM.sc_system import *
 
         # NPT script (equilibrating the ideal supercell to the forcefield):
         # this is part of a loop, but more clear to write here as a single example
@@ -189,7 +189,7 @@ class P3_JN_helper:
         else: rerun = ''
 
         py_script = f'''
-        from .{DIR_main.split('/')[-2]}.MM.sc_system import *
+        from {DIR_main.split('/')[-2]}.MM.sc_system import *
 
         # NVT script (running one long NVT trajectory sampling the metastable state of interest; locally ergodic MD samples):
         # this is part of a loop, but more clear to write here as a single example
@@ -233,7 +233,7 @@ class P3_JN_helper:
         else: key = str(self.ecm_key)
 
         py_script = f'''
-        from .{DIR_main.split('/')[-2]}.MM.ecm_basic import *
+        from {DIR_main.split('/')[-2]}.MM.ecm_basic import *
 
         # ECM script (getting ground truth FE estimate for the metastable state of interest):
         # this is part of a loop, but more clear to write here as a single example
@@ -242,7 +242,7 @@ class P3_JN_helper:
             ecm = ECM_basic(
                     name = '{rerun}ecm_{self.name}_{_form}_{cell}_300K_unsupervised_FA{self.fa_index}_{self.ecm_key}',
                     working_dir_folder_name = '{DIR_main}MM/GAFF_sc/ecm_runs/',
-                    ARGS_oss = {self.name}_ARGS_oss(form={_form}, cell={cell}, key='{key}_'),
+                    ARGS_oss = {self.name}_ARGS_oss(form='{_form}', cell='{cell}', key='{key}_'),
                     k_EC = 6000.0,
                     COM_removal_by_fixing_one_atom_index_of_this_atom = {self.fa_index},
                     overwrite = False,
@@ -260,7 +260,7 @@ class P3_JN_helper:
             # this is important in a loop here because perterbed simulation can break due timestep 
             # for this reason ecm timestep was four times lower in VEL and MIV (0.0005ps < 0.002ps)
             # Note: all MD frames were saved with the same stride (stride_save_frame = 0.1 / timestep)
-            print('!! problem in:', {_form}, {cell})
+            print('!! problem in:', '{_form}', {cell})
         '''
         return py_script # print(py_script) to visualise in JN
 
@@ -273,7 +273,7 @@ class P3_JN_helper:
         else: rerun = ''
 
         py_script = f'''
-            from .{DIR_main.split('/')[-2]}.interface import *
+            from {DIR_main.split('/')[-2]}.interface import *
             
             # PGM script (training a model on the MD data from the long, locally ergodic, NVT trajectory):
             # this is part of a loop, but more clear to write here as a single example
