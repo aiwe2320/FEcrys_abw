@@ -426,6 +426,55 @@ class ECM_basic:
                 print(self.lambdas)
             else: pass
 
+    def remove_lambda_(self, lam, verbose=True):
+        lam = float(lam)
+        if lam in self._lambdas:
+
+            self._lambdas = [ _lam for _lam in self._lambdas if _lam != lam ]
+            del self.lambda_coordinates[lam]
+            del self.simulation_info_u[lam]
+            del self.simulation_info_T[lam]
+            del self.lambda_colors[lam]
+
+            x = self.generic_name[:3]+'_'+self.generic_name[3:]
+            name_lambda_evaluations = self.working_dir_folder_name+'/'+x+'_lambda_evaluations'
+            try:
+                remove_lambda_from_lambda_evaluations_(name_lambda_evaluations, lam)
+                self.import_lambda_evaluations_()
+            except:
+                print(f'could not delete evaluations involving lambda {lam} from {name_lambda_evaluations}')
+
+        else:
+            if verbose:
+                print(f'the lambda state {lam} is already absent from the current list of systems')
+                print('the current systems have the following lambdas:')
+                print(self.lambdas)
+            else: pass
+
+    def is_converged_else_remove_all_unconverged_datasets_(self, remove=True):
+        converged = []
+        for lam in self.lambdas:
+            uii = self.lambda_evaluations[(lam, lam)]
+            converged.append(TestConverged_1D(uii, verbose=False)())
+        inds_remove = np.where(np.array(converged) == False)[0]
+        if len(inds_remove) > 0:
+            lambdas_remove = np.array(self.lambdas)[inds_remove].tolist()
+
+            if remove:
+                if self.path_lambda_1_dataset is not None: assert 1.0 not in lambdas_remove 
+                    # the samples of the physical state provided must be converged.
+                else: pass
+                print(f'lambdas {lambdas_remove} are being removed !')
+                for lam in lambdas_remove:
+                    self.remove_lambda_(lam)
+            else: pass 
+
+            return False
+        else:
+            return True
+
+    ##
+    
     def run_(self, lam : float, n_saves : int):
         lam = float(lam)
         if lam not in self._lambdas: self.add_lambda_(lam)
@@ -521,6 +570,7 @@ class ECM_basic:
                         max_n_lambdas = 30,
                         SE_tol_per_molecule=0.03125,
                         re_evaluate = False,
+                        rerun_questionable_data = False,
                         ):
         ################ BAR
 
@@ -545,32 +595,55 @@ class ECM_basic:
             
         SE_tol = self.lambda_systems[0.0].sc.n_mol*SE_tol_per_molecule
 
-        FE_method_(re_evaluate=re_evaluate)
-
-        while self.n_lambdas < max_n_lambdas:
-            self.run_to_get_m_coverged_(self.which_lambda_to_add_next_(max_dataset_size_per_lambda)[0][0],
-                                        m=batch_size_increments)
+        def main_():
+            
             FE_method_(re_evaluate=re_evaluate)
 
-       # improving existing lambdas
+            while self.n_lambdas < max_n_lambdas and current_error_() > SE_tol:
+                self.run_to_get_m_coverged_(self.which_lambda_to_add_next_(max_dataset_size_per_lambda)[0][0],
+                                            m=batch_size_increments)
+                FE_method_(re_evaluate=re_evaluate)
 
-        self.stat_amount_of_data(verbose=False)
-        sample_sizes = dict(self.lambda_numbers_of_samples)
-
-        while current_error_() > SE_tol:
+            # improving existing data
 
             self.stat_amount_of_data(verbose=False)
-            if np.mean([x for x in self.lambda_numbers_of_samples.values()]) >= max_dataset_size_per_lambda:
-                print('!! the process was complete but FE did not yet converge within tolerance')
-                break
-            else: pass
-            lambdas_priority = self.which_lambda_to_add_next_(max_dataset_size_per_lambda)[-1]
-            print('lambdas_priority:', lambdas_priority)
-            lambda_run_next = lambdas_priority[0]
-            sample_sizes[lambda_run_next] = sample_sizes[lambda_run_next] + batch_size_increments
-            self.run_to_get_m_coverged_(lambda_run_next,
-                                        m=sample_sizes[lambda_run_next])
-            FE_method_(re_evaluate=re_evaluate)
+            sample_sizes = dict(self.lambda_numbers_of_samples)
+
+            while current_error_() > SE_tol:
+                
+                self.stat_amount_of_data(verbose=False)
+                
+                if np.mean([x for x in self.lambda_numbers_of_samples.values()]) >= max_dataset_size_per_lambda:
+                    print('!! the process was complete but FE did not yet converge within tolerance')
+                    break
+                else: pass
+
+                lambdas_priority = self.which_lambda_to_add_next_(max_dataset_size_per_lambda)[-1]
+                print('lambdas_priority:', lambdas_priority)
+                lambda_run_next = lambdas_priority[0]
+                sample_sizes[lambda_run_next] = sample_sizes[lambda_run_next] + batch_size_increments
+                
+                self.run_to_get_m_coverged_(lambda_run_next, m=sample_sizes[lambda_run_next])
+                
+                FE_method_(re_evaluate=re_evaluate)
+        
+        main_()
+
+        if rerun_questionable_data:
+            fail = 0
+            while not self.is_converged_else_remove_all_unconverged_datasets_(remove=True):
+                print('some datasets were not converged in terms of average potential energy, trying agian:')
+                batch_size_increments = max_dataset_size_per_lambda # only a few involved, can sample properly
+                main_()
+                fail += 1
+                if fail == 3: 
+                    print('\n!!! the system in too unstable with this FF, that may not work with the current version of ECM\n')
+                    break
+                else: pass
+        else: 
+            if not self.is_converged_else_remove_all_unconverged_datasets_(remove=False):
+                print('! double check sampled data is converged in terms of average potential energy')
+            else: print('good, add data seems converged')
 
     def save_simulations_(self, which_lambdas : list = None):
         if which_lambdas is None: which_lambdas = self.lambdas
@@ -1124,4 +1197,4 @@ def remove_lambda_from_lambda_evaluations_(name_old:str, lam, name_new=None):
         else: pass
     save_pickle_(new_dict, name_new)
 
-
+## ##
