@@ -632,7 +632,7 @@ class ECM_basic:
         if rerun_questionable_data:
             fail = 0
             while not self.is_converged_else_remove_all_unconverged_datasets_(remove=True):
-                print('some datasets were not converged in terms of average potential energy, trying agian:')
+                print('some datasets were not converged in terms of average potential energy, trying to sample them again:')
                 batch_size_increments = max_dataset_size_per_lambda # only a few involved, can sample properly
                 main_()
                 fail += 1
