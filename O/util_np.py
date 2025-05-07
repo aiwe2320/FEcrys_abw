@@ -272,3 +272,30 @@ def get_torsion_np_(r, inds_4_atoms):
     return phi # (...,1)
 
 ## ## 
+
+class TestConverged_1D:
+    def __init__(self,
+                 x,
+                 tol = 0.2,
+                 verbose = True,
+                ):
+        self.tol = tol
+        
+        x = np.array(x).flatten()
+        MU = cumulative_average_(x)
+        VAR = cumulative_average_((x-MU)**2)
+        err = np.abs(MU - cumulative_average_(MU))**2
+        err = np.ma.divide(err,VAR)**0.5
+        err *= 10.0
+        self.err = np.array(err)
+        if verbose: print(f'with tol = {self.tol}, is converged:',self.__call__())
+        else: pass
+
+    def __call__(self):
+        return self.err[-1] <= self.tol
+
+    @property
+    def where(self):
+        return np.where(self.err <= self.tol)[0]
+
+## ## 
