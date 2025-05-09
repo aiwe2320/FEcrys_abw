@@ -499,6 +499,17 @@ class SingleComponent_map(SC_helper):
                             ], axis=-1).reshape([self.n_DOF_mol]) # reshape just to check.
 
     @property
+    def flexible_torsions(self,):
+        flexible_torsions = self.ABCD_IC[np.where(self.Focused_Torsions.mask_periodic.flatten()>0.5)[0]]
+        if flexible_torsions.shape[0] > 0:
+            print('fully flexible torsions in the initialisation dataset are:')
+            print(flexible_torsions)
+            print('[these indices refer to atom indices labeled on self.mol]')
+        else:
+            print('there were no fully flexible torsions in the initialisation dataset')
+        return flexible_torsions
+    
+    @property
     def current_masks_periodic_torsions_and_Phi(self,):
         '''
         for match_topology_ when different instances of this obj are used for the same set of coupling layers (multimap)
