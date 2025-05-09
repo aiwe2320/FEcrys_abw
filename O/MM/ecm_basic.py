@@ -459,12 +459,12 @@ class ECM_basic:
         inds_remove = np.where(np.array(converged) == False)[0]
         if len(inds_remove) > 0:
             lambdas_remove = np.array(self.lambdas)[inds_remove].tolist()
-
+            print(f'lambda states {lambdas_remove} may not be well converged')
             if remove:
                 if self.path_lambda_1_dataset is not None: assert 1.0 not in lambdas_remove 
                     # the samples of the physical state provided must be converged.
                 else: pass
-                print(f'lambdas {lambdas_remove} are being removed !')
+                print(f'lambda states {lambdas_remove} are being removed !')
                 for lam in lambdas_remove:
                     self.remove_lambda_(lam)
             else: pass 
