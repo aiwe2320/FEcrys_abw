@@ -227,33 +227,29 @@ def put_lambda_into_system_(system,
         print('\n','forces of the input system:','\n')
         [print(x.getName()) for x in old_forces]
 
-        print('\n','forces in system being returned:','\n')
-        [print(x.getName()) for x in system.getForces()]
-        print('\n')
+        #print('\n','forces in system being returned:','\n')
+        #[print(x.getName()) for x in system.getForces()]
+        #print('\n')
     else: pass
 
 ## ## 
+
+def inject_methods_from_another_class_(self, class_to_inject_methods_from):
+    import types
+    for name, method in class_to_inject_methods_from.__dict__.items():
+        if callable(method) and not name.startswith("__"):
+            setattr(self, name, types.MethodType(method, self))
 
 class MM_system_helper:
     def __init__(self,):
         self.reduce_drift = False
         self.NPT = False # switches to permanently True when barostat added, stays true if barostat removed.
 
-    def inject_methods_from_another_class_(self,
-                                           class_to_inject_methods_from # e.g. class_to_inject_methods_from = WALLS
-                                        ):
-        ''' can run this after the worker class like SingleComponent is initialised
-
-            methods specific to a certain scenario can be taken from another class only when needed
-
-            In terms of biased sim. the current method allows to add in methods to do with biasing only when needed.
-                each type of biasing approach can have its own class (currently only WALLS was added)
-                with methods that are compatible with the give worker class
+    def inject_methods_from_another_class_(self, class_to_inject_methods_from):
         '''
-        import types
-        for name, method in class_to_inject_methods_from.__dict__.items():
-            if callable(method) and not name.startswith("__"):
-                setattr(self, name, types.MethodType(method, self))
+        for superficial use only: careful not to override methods back to default that were already overridden
+        '''
+        inject_methods_from_another_class_(self, class_to_inject_methods_from)
 
     @property
     def _system_mass_(self,):
