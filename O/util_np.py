@@ -299,6 +299,22 @@ def get_angle_np_(R, inds_3_atoms):
  
     return theta # (...,1)
 
+def get_distance_np_(R, inds_2_atoms):
+    ''' bond distance '''
+    # R            : (..., # atoms, 3)
+    # inds_2_atoms : (2,)
+    A,B = inds_2_atoms
+    rA = R[...,A,:]  # (...,3)
+    rB = R[...,B,:]  # (...,3)
+    vBA = rA - rB    # (...,3)
+
+    _clip_low_at_ = 1e-8
+    _clip_high_at_ = 1e+18
+    clip_positive_ = lambda x : np.clip(x, _clip_low_at_, _clip_high_at_) 
+    norm_clipped_ = lambda x : clip_positive_(np.linalg.norm(x,axis=-1,keepdims=True))
+
+    return norm_clipped_(vBA) # (...,1)
+
 ## ## 
 
 class TestConverged_1D:
