@@ -24,7 +24,7 @@ load_pickle_('check')['MD dataset']['xyz'].shape # = (% unbiased) * n_frames ; b
 
 ## ## ## ## ## ## ## ## ## ## ## ##
 
-''' static bias example: FLOOR (encourage transitions)
+''' static bias example: FLOOR (may or may not encourage transitions)
 
 # raise the floor of specific torsional energy well for a given torsion such that transitions are sampled ergodically
 
@@ -36,19 +36,23 @@ load_pickle_('check')['MD dataset']['xyz'].shape # = (% unbiased) * n_frames ; b
 dataset = load_pickle_(path_dataset)
 sc = SingleComponent(**dataset['args_initialise_object'])
 sc.initialise_system_(**dataset['args_initialise_system'])
+
 bias = BIAS(sc)
+bias.add_bias_(FLOOR, name='floor0', inds_torsion=[26, 20, 18, 15], percentage_raise=50, specific_AD =False)
+bias.add_bias_(FLOOR, name='floor1', inds_torsion=[18, 20, 25, 22], percentage_raise=60, specific_AD =True)
+bias.add_bias_(FLOOR, name='floor2', inds_torsion=[20, 25, 22, 19], percentage_raise=60, specific_AD =True)
+bias.add_bias_(FLOOR, name='floor3', inds_torsion=[25, 22, 19, 18], percentage_raise=60, specific_AD =True)
+bias.add_bias_(FLOOR, name='floor4', inds_torsion=[22, 19, 18, 20], percentage_raise=60, specific_AD =True)
+bias.add_bias_(FLOOR, name='floor5', inds_torsion=[19, 18, 20, 25], percentage_raise=60, specific_AD =True)
 
-# TODO: add FLOOR in this .py file:
-bias.add_bias_(FLOOR, name='floor1', inds_torsion=[26, 20, 18, 15], percentage_raise = 50.0) 
-# one parameter possible because minimima always at 0.0, and height of barrier known from the FF.
+sc.initialise_simulation_(**dataset['args_initialise_simulation'])
+n_frames = 5000 # should cross, else adjust setting or use another method.
+sc.run_simulation_(n_frames, 50)
+v = sc.potential_energy_(sc.xyz, which='v')
+bias.biasing_instances['floor0'].check_plot_torsion_(sc.xyz, weights=np.exp(v))
 
-TODO: test, add
-
-bias.save_biased_simulation_data_(dont_save_just_stat=True) # show if reweighting works well (effective sample size) 
-
-TODO: test, add
-
-TODO: allow leading from save to get back the same instance as for trajectory, because potential_energy_ is needed (unlike in WALLS)
+# TODO ADD: bias.save_biased_simulation_data_(dont_save_just_stat=True) to show if reweighting works well (effective sample size) 
+# TODO ADD: allow leading from save to get back the same instance as for trajectory, because potential_energy_ is needed (unlike in WALLS)
 
 '''
 ## ## ## ## ## ## ## ## ## ## ## ##
