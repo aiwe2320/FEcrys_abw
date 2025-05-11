@@ -433,5 +433,161 @@ class WALLS:
 ## ## ## ## 
 
 class FLOOR:
-    'ADD'
+    '''
+    TODO: test effectiveness in practice
+    '''
+    
+    '''
+    https://www.desmos.com/calculator/vkfvabggss
+    '''
+
+    def __init__(self,
+                 sc,
+                 inds_torsion : list,
+                 percentage_raise : float = 50.0,
+                 specific_AD = True, # If False may need a lower timestep
+                 ):
+        self.sc = sc
+        self.inds_torsion, self.inds_torsion_molecules = _set_inds_torsion_for_bias_(self.sc, inds_torsion)
+        self.percentage_raise = percentage_raise
+        self.specific_AD = specific_AD
+
+        #############################################################
+
+        ''' 
+        letting A-B-C-D represent four neighbouring bonded atoms
+
+        specific_AD = False -> all torsional energy terms in system related to rotation around B-C get biased
+        specific_AD = True  -> torsional energy terms in system related specifically to A-B-C-D or D-C-B-A get biased
+        '''
+        # specific_AD
+        ABCD_molecule = [x for x in self.inds_torsion_molecules]
+        ABCD_molecule += [np.flip(x) for x in ABCD_molecule]
+        ABCD_molecule = np.stack(ABCD_molecule, axis=0)
+        # just to check these exact four indices from the FF are also in the list ABCD_molecule (direction does not matter)
+        a1_a2_a3_a4_in_ABCD_molecule_ = lambda a1, a2, a3, a4 : np.abs(np.array([a1, a2, a3, a4])[np.newaxis,:] - ABCD_molecule).sum(1).min() == 0 
+        
+        # not specific_AD 
+        BC_molecule = [set(x[1:3]) for x in self.inds_torsion_molecules]
+
+        def ADD_(a1, a2, a3, a4) -> bool:
+            if set([a2,a3]) in BC_molecule:
+                if self.specific_AD:
+                    if a1_a2_a3_a4_in_ABCD_molecule_(a1, a2, a3, a4):
+                        return True
+                    else: 
+                        return False
+                else: 
+                    return True
+            else:
+                return False
+
+        #############################################################
+
+        alpha = 1.0
+        bias_expression = 'step(d) * d * d / (alpha + d) ; d = E - U '
+
+        n_added_1 = 0
+        n_added_2 = 0
+        self.bias_related_forces = []
+        for force in self.sc.system.getForces():
+
+            if isinstance(force, mm.PeriodicTorsionForce):
+                const_1 = 2.0*(self.percentage_raise/100.0)
+
+                bias_1 = mm.CustomTorsionForce(bias_expression + '; U = k * (1 + cos(n * theta - theta0))')
+                bias_1.addGlobalParameter("alpha", alpha)
+
+                bias_1.addPerTorsionParameter("k")
+                bias_1.addPerTorsionParameter("n")
+                bias_1.addPerTorsionParameter("theta0")
+
+                bias_1.addPerTorsionParameter("E")
+
+                for i in range(force.getNumTorsions()):
+                    a1, a2, a3, a4, n, theta0, k = force.getTorsionParameters(i)
+
+                    if ADD_(a1, a2, a3, a4):
+                        E = const_1 * k # kJ/mol
+                        bias_1.addTorsion(a1, a2, a3, a4, [k, n, theta0, E])
+                        n_added_1 += 1
+                    else: pass
+
+                bias_1.setForceGroup(15)
+                self.bias_1 = bias_1
+
+                if n_added_1 > 0:
+                    self.bias_related_forces.append(self.bias_1)
+                    print('FLOOR : number of 1D biases added (per molecule) in relation to PeriodicTorsionForce:', n_added_1/self.sc.n_mol )
+                else:
+                    print('FLOOR : PeriodicTorsionForce:', 'no bias was added' )
+                            
+            else: pass
+
+            if isinstance(force, mm.RBTorsionForce):
+
+                def find_min_max_RBTorsionForce_(c0,c1,c2,c3,c4,c5):
+                    ct = - np.cos(np.linspace(-np.pi, np.pi, 2000))
+                    U = c0 + c1*ct + c2*(ct**2) + c3*(ct**3) + c4*(ct**4) + c5*(ct**5)
+                    return np.min(U), np.max(U)
+                
+                bias_2 = mm.CustomTorsionForce(bias_expression + '; U = c0 + c1*ct + c2*(ct^2) + c3*(ct^3) + c4*(ct^4) + c5*(ct^5) ; ct = - cos(theta)')
+                bias_2.addGlobalParameter("alpha", alpha)
+
+                bias_2.addPerTorsionParameter("c0")
+                bias_2.addPerTorsionParameter("c1")
+                bias_2.addPerTorsionParameter("c2")
+                bias_2.addPerTorsionParameter("c3")
+                bias_2.addPerTorsionParameter("c4")
+                bias_2.addPerTorsionParameter("c5")
+
+                bias_2.addPerTorsionParameter("E")
+
+                for i in range(force.getNumTorsions()):
+                    a1, a2, a3, a4, c0, c1, c2, c3, c4, c5 = force.getTorsionParameters(i)
+
+                    if ADD_(a1, a2, a3, a4):
+                        Min, Max = find_min_max_RBTorsionForce_(c0, c1, c2, c3, c4, c5)
+                        E = (self.percentage_raise/100.0)*(Max - Min) + Min
+                        bias_2.addTorsion(a1, a2, a3, a4, [c0, c1, c2, c3, c4, c5, E])
+                        n_added_2 += 1
+                    else:
+                        pass
+
+                bias_2.setForceGroup(15)
+                self.bias_2 = bias_2
+
+                if n_added_2 > 0:
+                    self.bias_related_forces.append(self.bias_2)
+                    print('FLOOR : number of 1D biases added (per molecule) in relation to RBTorsionForce:', n_added_2/self.sc.n_mol )
+                else:
+                    print('FLOOR : RBTorsionForce:', 'no bias was added' )
+
+            else: pass
+
+        if n_added_2 == 0 and n_added_1 == 0:
+            print('!! FLOOR : NO BIAS added. Double check why this happened. ')
+        else: pass
+
+    def check_plot_torsion_(self, r, plot=True, weights=None):
+        
+        r = reshape_to_molecules_np_(r, n_atoms_in_molecule=self.sc.n_atoms_mol, n_molecules=self.sc.n_mol)
+        phi = get_torsion_np_(r, self.inds_torsion)[...,0] # (m, n_mol)
+
+        ws = np.array(weights).flatten()
+        if plot:
+            phi_grid = np.linspace(-np.pi, np.pi, 500)
+            for i in range(self.sc.n_mol):
+                fig = plt.figure(figsize=(2,1))
+                phi_mol = phi[:,i]
+                plot_1D_histogram_(phi_mol, range=[-np.pi,np.pi], color='red')
+                plt.scatter(phi_mol,[-1]*len(phi_mol), s=1, color='black')
+                plot_1D_histogram_(phi_mol, range=[-np.pi,np.pi], color='black', kwargs_for_histogram={'weights':ws})
+
+                # the self.force plotted: 
+                plt.show()
+        else: pass
+
+        return phi
+    
 
