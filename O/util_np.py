@@ -250,6 +250,7 @@ def get_torsion_np_(r, inds_4_atoms):
     clip_positive_ = lambda x : np.clip(x, _clip_low_at_, _clip_high_at_) 
     norm_clipped_ = lambda x : clip_positive_(np.linalg.norm(x,axis=-1,keepdims=True))
     unit_clipped_ = lambda x : x / norm_clipped_(x)
+    
     uBC = unit_clipped_(vBC) # (...,3)
 
     w = vCD - np.sum(vCD*uBC, axis=-1, keepdims=True)*uBC # (...,3)
@@ -270,6 +271,33 @@ def get_torsion_np_(r, inds_4_atoms):
     phi = np.arctan2(y,x) # (...,1)
 
     return phi # (...,1)
+
+def get_angle_np_(R, inds_3_atoms):
+    ''' bond angle '''
+    # R            : (..., # atoms, 3)
+    # inds_3_atoms : (3,)
+
+    A,B,C = inds_3_atoms
+    rA = R[...,A,:] # (...,3)
+    rB = R[...,B,:] # (...,3)
+    rC = R[...,C,:] # (...,3)
+
+    _clip_low_at_ = 1e-8
+    _clip_high_at_ = 1e+18
+    clip_positive_ = lambda x : np.clip(x, _clip_low_at_, _clip_high_at_) 
+    norm_clipped_ = lambda x : clip_positive_(np.linalg.norm(x,axis=-1,keepdims=True))
+    unit_clipped_ = lambda x : x / norm_clipped_(x)
+
+    uBA = unit_clipped_(rA - rB) # (...,3)
+    uBC = unit_clipped_(rC - rB) # (...,3)
+
+    dot = np.sum(uBA*uBC, axis=-1, keepdims=True)             # (...,1)
+    dot = np.clip(dot, -1.0, 1.0)                           # (...,1)
+    
+    theta = np.arccos(dot) # (...,1)
+    theta = np.clip(theta, _clip_low_at_, np.pi-_clip_low_at_) # (...,1)
+ 
+    return theta # (...,1)
 
 ## ## 
 
