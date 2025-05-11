@@ -3,7 +3,7 @@ from .mm_helper import *
 ## ## ## ## ## ## ## ## ## ## ## ##
 
 
-''' static bias example: WALLS
+''' static bias example: WALLS (prevent transitions)
 
 # prevent rare events using static bias that allows enough unbiased data
 
@@ -24,9 +24,9 @@ load_pickle_('check')['MD dataset']['xyz'].shape # = (% unbiased) * n_frames ; b
 
 ## ## ## ## ## ## ## ## ## ## ## ##
 
-''' static bias example: FLOOR
+''' static bias example: FLOOR (encourage transitions)
 
-# raise the floor of specific torsional energy well for a given torsion such that transitions are samples ergodically
+# raise the floor of specific torsional energy well for a given torsion such that transitions are sampled ergodically
 
 # same function as http://docs.openmm.org/7.3.0/api-python/generated/simtk.openmm.amd.AMDIntegrator.html
 # but applied only to the specific torsional angle energy, allowing to keep the same thermostat as default.
