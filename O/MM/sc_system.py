@@ -100,6 +100,7 @@ class SingleComponent:
         self.mol = Chem.MolFromPDBFile(str(self._single_mol_pdb_file_.absolute()),
                                        removeHs = False)
         for i, a in enumerate(self.mol.GetAtoms()): a.SetAtomMapNum(i)
+        self.mol.RemoveConformer(0)
 
     def print(self, *text, verbose=False):
         if self.verbose: print(*text)
