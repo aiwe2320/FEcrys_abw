@@ -1,80 +1,8 @@
-''' sc_system.py
-
-for any simulations of a system containing only one type of molecule (single component):
-    c : SingleComponent
-
-FF choice:
-    c : TIP4P
-    c : GAFF
-    c : OPLS
-
-edit the text files input for parmed.gromacs.GromacsTopologyFile:
-    f : change_charges_itp_top_
-    f : change_n_mol_top_
-
-'''
-
 from .mm_helper import *
 
-''' TODO: tidy up ecm_basic and sc_system.
+## ## ## ## ## ## ## ## ## ## ## ##
 
-## ##
-! UPDATE: the arg 'atom_order_PDB_match_itp' no longer active, now kept as a dummy variable
-Each crystal PDB assumed to have the same permuation. This was also true previously.
-## ##
-
-OLD:
-atom_order_PDB_match_itp : [True is chepaer] 
-
-    When starting a new landscape, cheaper to set things up such that atom_order_PDB_match_itp = True.
-
-    if True  : requires all PDB files (all unit cells and supercells) to have order of atoms in a molecule
-    matching with OPLS.itp / OPLS.top files (in the /misc folder; e.g., after running LigParGen server)
-
-    if False : still requires all PDB files (all unit cells and supercells) to have order of atoms in a molecule
-    matching between each-other. This ordering can be a different to the ordering in OPLS.itp / OPLS.top file.
-
-    Note:   Any other FF_name choice also assumes that all PDBs have the same ordering. 
-            In order words, all PDB files are assumed to have the same ordering.
-            This aspect is not checked later, and no warning are printed (except for strange energies, or simulations not working).
-            NB: 'class GAFF' does not currently have an option to say atom_order_PDB_match_itp = False; this parameter has no effect.
-
-        TODO: when starting a new molecule use a method to standardise all unitcells;
-                use self._single_mol_LigParGen_pdb_file_ (in misc folder after running once), as the
-                reference for all unitcells to match.
-                Once all unitcells have the same ordering that matches _single_mol_LigParGen_pdb_file_,
-                set atom_order_PDB_match_itp = True.
-
-                Template for matching all PDBs is _single_mol_LigParGen_pdb_file_:
-
-            def reorder_to_match_LigParGen_(mol_name, PDB_to_reorder, path_mol_dir, n_atoms_mol):
-            
-                # NB: to use reorder_atoms_unitcell_, need to have /temp folder next to the /misc folder
-                # the output will be in the main folder with name PDB_to_reorder+'_reordered'.pdb
-                # remove the '_reordered' part by hand if needed? TODO
-
-                name_structure_file = 'LigParGen_output_'+mol_name
-                try:
-                    reordered_PDB = reorder_atoms_unitcell_(PDB_to_reorder,
-                                                            path_mol_dir+name_structure_file+'.pdb', # reference ordering
-                                                            n_atoms_mol=n_atoms_mol)
-                except:
-                    import MDAnalysis as mda
-                    universe = mda.Universe(path_mol_dir+'/misc/'+name_structure_file+'.gro')
-                    with mda.Writer(path_mol_dir+name_structure_file+'.pdb') as pdb:
-                        pdb.write(universe)
-                    print('saved:',path_mol_dir+name_structure_file+'.pdb')
-                    reordered_PDB = reorder_atoms_unitcell_(PDB_to_reorder,
-                                                            path_mol_dir+name_structure_file+'.pdb', # reference ordering
-                                                            n_atoms_mol=n_atoms_mol)
-                return reordered_PDB
-
-        TODO: add a high-throughput method for sorting .cif into .pdb via Mercury, and then reordering as above.
-            These steps are external to SingleComponent, with atom_order_PDB_match_itp as the only consideration.
-                The only time when atom_order_PDB_match_itp = False is useful, is when moving to OPLS 
-                after everything was already set up and ran correctly previously with GAFF. 
-    
-'''
+''' TODO: explain how to use in a notebook '''
 
 class SingleComponent:
     def __new__(cls,
@@ -82,7 +10,7 @@ class SingleComponent:
                 n_atoms_mol,
                 name,
                 FF_name = 'GAFF',
-                atom_order_PDB_match_itp = False,
+                atom_order_PDB_match_itp = False, # depreceated
                 FF_class = None,
                 ):
         if FF_class is None: 
@@ -100,7 +28,7 @@ class SingleComponent:
                  n_atoms_mol : int,                # number of atoms in one molecule (including hydrogens)
                  name : str,                       # name of the molecule (i.e., name of the single component)
                  FF_name : str = 'GAFF',           # FF_name in ['GAFF', 'OPLS', 'TIP4P'], ! this will be ignored if FF_class not None.
-                 atom_order_PDB_match_itp = False, # not used, assumed False and if True that is detected later.
+                 atom_order_PDB_match_itp = False, # not used, assumed False and if True that is detected later
                  FF_class = None,                  # last minute update: a more general way of using any  simple class that has methods (initialise_FF_ and set_FF_)
                 ):
         super(SingleComponent, self).__init__()
