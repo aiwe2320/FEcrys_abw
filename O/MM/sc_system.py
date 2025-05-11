@@ -1418,7 +1418,7 @@ class COST_FIX_permute_xyz_after_a_trajectory:
             info = 'frame: '+str(self.n_frames_saved)+' T sampled:'+str(self.temperature.mean().round(3))+' T expected:'+str(self.T)+verbose_info
             print(info, end='\r')
 
-        self._xyz += [x for x in self._unpermute_(np.array(self._xyz_top_),axis=-2)]
+        self._xyz += [x for x in self._unpermute_(np.array(self._xyz_top_), axis=-2)]
         # (+) self._xyz and self.xyz behave as if each frame was permuted before saving, but that cost was avoided
         # (-) interupting run_simulation_ will not save any xyz data. 
 
