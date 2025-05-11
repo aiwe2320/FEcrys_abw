@@ -445,7 +445,7 @@ class FLOOR:
                  sc,
                  inds_torsion : list,
                  percentage_raise : float = 50.0,
-                 specific_AD = True, # If False may need a lower timestep
+                 specific_AD = True,
                  ):
         self.sc = sc
         self.inds_torsion, self.inds_torsion_molecules = _set_inds_torsion_for_bias_(self.sc, inds_torsion)
@@ -493,7 +493,6 @@ class FLOOR:
         for force in self.sc.system.getForces():
 
             if isinstance(force, mm.PeriodicTorsionForce):
-                const_1 = 2.0*(self.percentage_raise/100.0)
 
                 bias_1 = mm.CustomTorsionForce(bias_expression + '; U = k * (1 + cos(n * theta - theta0))')
                 bias_1.addGlobalParameter("alpha", alpha)
@@ -508,7 +507,7 @@ class FLOOR:
                     a1, a2, a3, a4, n, theta0, k = force.getTorsionParameters(i)
 
                     if ADD_(a1, a2, a3, a4):
-                        E = const_1 * k # kJ/mol
+                        E = 2.0*(self.percentage_raise/100.0) * k # kJ/mol
                         bias_1.addTorsion(a1, a2, a3, a4, [k, n, theta0, E])
                         n_added_1 += 1
                     else: pass
@@ -566,8 +565,9 @@ class FLOOR:
             else: pass
 
         if n_added_2 == 0 and n_added_1 == 0:
-            print('!! FLOOR : NO BIAS added. Double check why this happened. ')
+            print('!! FLOOR : NO BIAS added. Double check why this happened.')
         else: pass
+        print('')
 
     def check_plot_torsion_(self, r, plot=True, weights=None):
         
