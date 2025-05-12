@@ -153,6 +153,9 @@ class LAMBDA_SYSTEM:
         self.sc = SingleComponent(**self.args_initialise_object)
         self.sc.initialise_system_(**self.args_initialise_system)
         self.sc.initialise_simulation_(**self.args_initialise_simulation)
+        
+        if self.ind_atom_fixed is not None: self.ind_atom_fixed = self.sc.forward_atom_index_(self.ind_atom_fixed)
+        else: pass
 
         if self.fixed_atom:
             self.inds_true_atoms = np.array(list(set(np.arange(self.sc.N).tolist()) - set([self.ind_atom_fixed])))
