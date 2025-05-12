@@ -154,7 +154,7 @@ class LAMBDA_SYSTEM:
         self.sc.initialise_system_(**self.args_initialise_system)
         self.sc.initialise_simulation_(**self.args_initialise_simulation)
         
-        if self.ind_atom_fixed is not None: self.ind_atom_fixed = self.sc.forward_atom_index_(self.ind_atom_fixed)
+        if self.ind_atom_fixed is not None: self.ind_atom_fixed = int(self.sc.forward_atom_index_(self.ind_atom_fixed))
         else: pass
 
         if self.fixed_atom:
