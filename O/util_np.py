@@ -334,6 +334,9 @@ class TestConverged_1D:
         self.err = np.array(err)
         if verbose: print(f'with tol = {self.tol}, is converged:',self.__call__())
         else: pass
+        
+        self.MU = MU
+        self.x = np.array(x)
 
     def __call__(self):
         return self.err[-1] <= self.tol
@@ -342,4 +345,15 @@ class TestConverged_1D:
     def where(self):
         return np.where(self.err <= self.tol)[0]
 
+    def show_(self, window=1):
+        # scatter is faster than plot
+        import matplotlib.pyplot as plt
+        mean = self.MU[-1]
+        m = len(self.x)
+        t = np.arange(m)
+        plt.scatter(t, self.x, alpha=0.5,s=0.01, color='black')
+        plt.scatter(t, self.MU, alpha=1, s=1, color='black')
+        plt.plot([0,m], [mean]*2, color='black', linestyle='--')
+        plt.ylim(mean-window, mean+window)
+        
 ## ## 
