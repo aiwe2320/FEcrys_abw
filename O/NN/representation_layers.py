@@ -502,7 +502,7 @@ class SingleComponent_map(SC_helper):
     def flexible_torsions(self,):
         flexible_torsions = self.ABCD_IC[np.where(self.Focused_Torsions.mask_periodic.flatten()>0.5)[0]]
         if flexible_torsions.shape[0] > 0:
-            print('fully flexible torsions in the initialisation dataset are:')
+            print(f'{len(flexible_torsions)} fully flexible torsions in the initialisation dataset are:')
             print(flexible_torsions)
             print('[these indices refer to atom indices labeled on self.mol]')
         else:
