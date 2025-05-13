@@ -345,7 +345,7 @@ class TestConverged_1D:
     def where(self):
         return np.where(self.err <= self.tol)[0]
 
-    def show_(self, window=1, centre=False):
+    def show_(self, window=1, centre=False, show_x = True, color='black'):
         # scatter is faster than plot
         import matplotlib.pyplot as plt
         mean = self.MU[-1]
@@ -353,14 +353,14 @@ class TestConverged_1D:
         t = np.arange(m)
         
         if centre:
-            plt.scatter(t, self.x-mean, alpha=0.5,s=0.01, color='black')
-            plt.scatter(t, self.MU - mean, alpha=1, s=1, color='black')
-            plt.plot([0,m], [0]*2, color='black', linestyle='--')
+            if show_x: plt.scatter(t, self.x-mean, alpha=0.5,s=0.01, color=color)
+            plt.scatter(t, self.MU - mean, alpha=1, s=1, color=color)
+            plt.plot([0,m], [0]*2, color=color, linestyle='--')
             plt.ylim(-window, window)
         else:
-            plt.scatter(t, self.x, alpha=0.5,s=0.01, color='black')
-            plt.scatter(t, self.MU, alpha=1, s=1, color='black')
-            plt.plot([0,m], [mean]*2, color='black', linestyle='--')
+            if show_x: plt.scatter(t, self.x, alpha=0.5,s=0.01, color=color)
+            plt.scatter(t, self.MU, alpha=1, s=1, color=color)
+            plt.plot([0,m], [mean]*2, color=color, linestyle='--')
             plt.ylim(mean-window, mean+window)
         
 ## ## 
