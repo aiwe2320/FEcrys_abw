@@ -309,7 +309,7 @@ class NN_interface_helper:
 
         else: pass
 
-        plt.ylim(FE-window/n_mol, FE+window/n_mol)
+        plt.ylim(FE-window, FE+window)
         print(FE,'+/-', self.SDs[-1]/n_mol, 'final:', self.BAR_V_FE/n_mol, '+/-', self.BAR_V_SE/n_mol)
 
 class NN_interface_sc(NN_interface_helper):
