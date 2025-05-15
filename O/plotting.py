@@ -33,6 +33,7 @@ def plot_mol_larger_(mol):
 def plot_1D_histogram_(x, bins=80, range=None, density=True, kwargs_for_histogram={},
                        ax=None,
                        return_max_y = False,
+                       mask_0 = False,
                        **kwargs):
     ''' 1D histogram on the relevant x-grid '''
     hist, x_grid = np.histogram(x, bins=bins, range=range, density=density, **kwargs_for_histogram)
