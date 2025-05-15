@@ -23,6 +23,13 @@ from IPython.display import display
 
 ## ## ## ##
 
+def plot_mol_larger_(mol):
+    mol.RemoveConformer(0)
+    from rdkit.Chem import Draw
+    from IPython.display import Image, display
+    img = Draw.MolToImage(mol, size=(800, 800)) # Specify size here
+    display(img)
+
 def plot_1D_histogram_(x, bins=80, range=None, density=True, kwargs_for_histogram={},
                        ax=None,
                        return_max_y = False,
