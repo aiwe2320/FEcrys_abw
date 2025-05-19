@@ -42,7 +42,7 @@ def plot_1D_histogram_(x, bins=80, range=None, density=True, kwargs_for_histogra
     x_grid = x_grid[1:] - 0.5*(x_grid[1]-x_grid[0])
     if ax is not None: ax.plot(x_grid, hist, **kwargs)
     else:              plt.plot(x_grid, hist, **kwargs)
-    if return_max_y: hist[np.where(np.isfinite(hist))].max() #return hist.max()
+    if return_max_y: return hist[np.where(np.isfinite(hist))].max() #return hist.max()
     else: pass
 
 def interpolate_colors_(m, c0 = [0,0,1,1], c1 = [1,0,0,1]):
