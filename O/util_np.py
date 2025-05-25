@@ -324,7 +324,6 @@ class TestConverged_1D:
                  verbose = True,
                 ):
         self.tol = tol
-        self.verbose = verbose
         
         x = np.array(x).flatten()
         MU = cumulative_average_(x)
@@ -350,7 +349,7 @@ class TestConverged_1D:
     def recommend_cut_from(self,):
         # index of frame after which the quantity may be converged
         idx = len(self.x) - len(TestConverged_1D(np.flip(self.x), tol=self.tol, verbose=False).where)
-        if TestConverged_1D(self.x[idx:], tol=self.tol, verbose=self.verbose)():
+        if TestConverged_1D(self.x[idx:], tol=self.tol, verbose=False)():
             print('the quantity might be converged after frame with index:', idx)
         else: print('!!')
         return idx
