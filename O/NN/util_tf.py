@@ -1730,7 +1730,7 @@ def quat_inverse_(q):
     return tf.concat([q0,-q123],axis=-1)
 
 ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
-## box:
+## box: [placeholder only; further work]
 
 def box_forward_(b):
     ' placeholder '
@@ -1748,3 +1748,201 @@ def box_inverse_(h):
                   tf.stack([ h[...,3], h[...,1], zero    ],axis=-1),
                   tf.stack([ h[...,4], h[...,5], h[...,2]],axis=-1),], axis=-2)
     return b, ladJ
+
+""" 
+# considerations for training Gibbs FEs similar to DOI 10.1088/2632-2153/acefa8
+# The 2*log(V) term was well derived in the Tuckerman's book.
+# TODO: derive Eq.16 (triangular box), and connect to p(box; N,P,T) sampled by MD in practice (e.g., by openmm) 
+
+def reducePeriodicBoxVectors_tf_(b):
+    '''
+    reducePeriodicBoxVectors seems volume preserving
+
+    a few other functions may be needed for this topic:
+    adapted from svandenhaute test.zip file on https://github.com/openmm/openmm/issues/2514
+
+    def transform_symmetric_tf_(b):
+        # b : any (3,3) matrix made symmetric
+        s, U, Vt = tf.linalg.svd(b)
+        rot_mat = tf.einsum('...kj, ...ij->...ik',U, Vt)
+        b = tf.einsum('...ij, ...jk->...ik',b, rot_mat)
+        return b # ladJ ? ; a rotation, but rotation depends on the input
+    
+    def reorder_tf_(b):
+        def reorder_1_(b):
+            norms = tf.linalg.norm(b, axis=-1)
+            ordering = tf.argsort(-norms)
+            _b = []
+            for i in range(3):
+                _b.append(b[ordering[i],:])
+            return tf.stack(_b, axis=-2) 
+            
+        if len(b.shape) > 2:
+            return tf.stack([reorder_1_(x) for x in b], axis=0) 
+        else: return reorder_1_(b) # ladJ ?
+
+    def transform_lower_triangular_tf_(b):
+        mask = np.zeros([3,3])
+        mask[0,0] = 1.0
+        mask[1,0] = 1.0
+        mask[1,1] = 1.0
+        mask[2,0] = 1.0
+        mask[2,1] = 1.0
+        mask[2,2] = 1.0
+        mask = np2tf_(mask)
+        def transform_1_(b):
+            q, r = tf.linalg.qr(tf.einsum('ij->ji', b))
+            flip_vectors = tf.eye(3) * tf.sign(r) # reflections after rotation
+            rotation = tf.einsum('ij,jk->ik',tf.linalg.inv(tf.einsum('ij->ji', q)), flip_vectors) # full (improper) rotation
+            output = tf.einsum('ij,jk->ik',b,rotation)
+            output_np = output.numpy()
+            assert np.allclose(output_np, np.linalg.cholesky(output_np @ output_np.T), atol=1e-6) # !
+            return output*mask
+        if len(b.shape) > 2:
+            return tf.stack([transform_1_(x) for x in b], axis=0) 
+        else: return transform_1_(b) # ladJ ?
+
+    '''
+    v0 = b[...,0,:]
+    v1 = b[...,1,:]
+    v2 = b[...,2,:]
+    v2 = v2 - v1*tf.round(v2[...,1:2]/v1[...,1:2])
+    v2 = v2 - v0*tf.round(v2[...,0:1]/v0[...,0:1])
+    v1 = v1 - v0*tf.round(v1[...,0:1]/v0[...,0:1])
+    return tf.stack([v0,v1,v2],axis=-2)
+
+def box_forward2_(box):
+    b = box
+    '''
+    box    : (...,3,3) lower triangular
+    params : (...,6)
+    '''
+
+    def get_angle_(u1,u2):
+        angle = tf.acos(tf.clip_by_value(tf.reduce_sum(u1*u2, axis=-1, keepdims=True), -1.0+1e-8, 1.0-1e-8))
+        return angle
+
+    def get_torsion_(rA, rB, rC, rD):
+        ''' same as get_torsion_tf_ '''
+        # R            : (..., # atoms, 3)
+        # inds_4_atoms : (4,)
+        
+        vBA = rA - rB   # (...,3)
+        vBC = rC - rB   # (...,3)
+        vCD = rD - rC   # (...,3)
+        
+        uBC = unit_clipped_(vBC) # (...,3)
+    
+        w = vCD - tf.reduce_sum(vCD*uBC, axis=-1, keepdims=True)*uBC # (...,3)
+        v = vBA - tf.reduce_sum(vBA*uBC, axis=-1, keepdims=True)*uBC # (...,3)
+        
+        uBC1 = uBC[...,0] # (...,)
+        uBC2 = uBC[...,1] # (...,)
+        uBC3 = uBC[...,2] # (...,)
+      
+        zero = tf.zeros_like(uBC1) # (...,)
+        S = tf.stack([tf.stack([ zero, uBC3,-uBC2],axis=-1),
+                      tf.stack([-uBC3, zero, uBC1],axis=-1),
+                      tf.stack([ uBC2,-uBC1, zero],axis=-1)],axis=-1) # (...,3,3)
+        
+        y = tf.expand_dims(tf.einsum('...j,...jk,...k->...',w,S,v), axis=-1) # (...,1)
+        x = tf.expand_dims(tf.einsum('...j,...j->...',w,v), axis=-1)         # (...,1)
+        
+        phi = tf.math.atan2(y,x) # (...,1)
+        
+        return phi # (...,1)
+
+    d0 = norm_clipped_(b[...,0,:])
+    d1 = norm_clipped_(b[...,1,:])
+    d2 = norm_clipped_(b[...,2,:])
+
+    u0 = unit_clipped_(b[...,0,:])
+    u1 = unit_clipped_(b[...,1,:])
+    u2 = unit_clipped_(b[...,2,:])
+
+    a01 = get_angle_(u0,u1)
+
+    u01 = unit_(tf.linalg.cross(u0,u1))
+
+    a201 = get_angle_(u2,u01)
+
+    phi = get_torsion_(u2, u01, tf.zeros_like(u01), u0)
+
+    params = tf.stack([d0[...,0], d1[...,0], d2[...,0], a01[...,0], a201[...,0], phi[...,0]], axis=-1)
+
+    gamma = d1[...,0]*(d2[...,0]**2)*tf.sin(a201[...,0])
+    ladJ = - tf.math.log(gamma)
+
+    return params, ladJ # (m,6), (m,)
+
+def box_inverse2_(params):
+    '''
+    params : (...,6)
+    box    : (...,3,3) lower triangular
+    '''
+
+    d0   = params[...,0]
+    d1   = params[...,1]
+    d2   = params[...,2]
+    a01  = params[...,3]
+    a201 = params[...,4]
+    phi  = params[...,5]
+    
+    one = tf.ones_like(d0)
+    zero = tf.zeros_like(d0)
+    u0 = tf.stack([one, zero, zero], axis=-1)
+    u1 = tf.stack([tf.cos(a01), tf.sin(a01), zero],axis=-1)
+
+    ct = tf.cos(a201)
+    st = tf.sin(a201)
+    cp = tf.cos(phi)
+    sp = tf.sin(phi)
+
+    u2_0 = st*cp
+    u2_1 = st*sp
+    u2_2 = ct
+    u2 = tf.stack([u2_0, u2_1, u2_2],axis=-1)
+    
+    v0 = u0 * d0[...,tf.newaxis]
+    v1 = u1 * d1[...,tf.newaxis]
+    v2 = u2 * d2[...,tf.newaxis]
+
+    box = tf.stack([v0,v1,v2],axis=-2)
+
+    gamma = d1*(d2**2)*tf.sin(a201) # sympy 
+    
+    ladJ = tf.math.log(gamma)
+    
+    return box, ladJ # (m,3,3), (m,)
+
+''' Test box rep (2):
+
+def box_inverse2_J_(params):
+    with tf.GradientTape(persistent=True) as tape:
+        tape.watch(params)
+        b, ladJ = box_inverse2_(params)
+        _b = [b[...,0,0], b[...,1,0], b[...,1,1], b[...,2,0], b[...,2,1], b[...,2,2]]
+    J = tf.stack([tape.gradient(x, params) for x in _b], axis=-1) # (6,6)
+    return b, ladJ, J
+
+m = 1000
+a = np.clip(np.random.rand(m)+0.05, 1e-8, 10.)                  # +ve
+b = np.clip(np.random.rand(m)+0.05, 1e-8, 10.)                  # +ve
+c = np.clip(np.random.rand(m)+0.05, 1e-8, 10.)                  # +ve
+t0 = np.clip(np.random.rand(m), 1e-8, 1.-1e-8) * np.pi          # [0,pi]
+t1 = np.clip(np.random.rand(m), 1e-8, 1.-1e-8) * np.pi*0.5      # [0,pi/2] ; box[...,2,2] > 0
+p = np.random.rand(m)*2*np.pi - np.pi                           # [-pi,pi)
+params = np.stack([a,b,c,t0,t1,p],axis=-1)
+params = np2tf_(params)
+
+b, ladJi = box_inverse2_(params)
+_params, ladJf = box_forward2_(b)
+print(np.abs(_params-params).sum(), np.abs(ladJi+ladJf).max())
+
+_b, ladJ, J = box_inverse2_J_(_params)
+print(np.abs(b - _b).sum(), np.abs(tf.math.log(tf.abs(tf.linalg.det(J))) - ladJ).max())
+
+# this might be a convenient representation (better than Euler angles) after all the front-end Jacobians are figured out
+'''
+"""
+
