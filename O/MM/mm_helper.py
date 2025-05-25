@@ -1216,7 +1216,7 @@ def supercell_from_unitcell_(PDB_unitcell : str, # .pdb
 ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
 
 def box_in_reduced_form_(box):
-    ''' method copied from somewhere
+    ''' method copied from openmm sources
     Input:
         box : (3,3) box-vectors are rows
     Output:
@@ -1240,7 +1240,7 @@ def box_in_reduced_form_(box):
         return True
     
 def reducePeriodicBoxVectors_(box):
-    ''' method copied from somewhere
+    ''' method copied from openmm sources
     Input:
         box : (3,3) box-vectors are rows
     Output:
