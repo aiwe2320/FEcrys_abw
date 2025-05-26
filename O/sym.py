@@ -311,7 +311,7 @@ class DatasetSymmetryReduction:
         [A0h0,A0h1,A0h2]
         [A1h0,A1h1,A1h2]
         [A2h0,A2h1,A2h2]
-        so moving the rows, but can do each hydrogen separately (can do methyl after trimethyl)
+        moving the rows
         '''
         inds_h0 = inds_A0h3_A1h3_A2h3_i[:,0] # (3)
         r_h0_in = self.r[:,inds_h0,:] 
