@@ -47,7 +47,7 @@ class SingleComponent:
         self.n_atoms_mol = n_atoms_mol
         self.name = str(name)
 
-        self.print('# initialise_object (SingleComponent) with '+self.FF_name+' FF, from the input file (PDB):')
+        self.print('# initialise_object (SingleComponent) with '+self.FF_name+' FF, from the input file (PDB):\n', self.PDB)
 
         if self.FF_name == 'TIP4P': assert self.n_atoms_mol == 3
         else: pass
