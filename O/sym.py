@@ -57,7 +57,7 @@ class DatasetSymmetryReduction:
         Current default is [0,3] which works for one of the cases here with 4 molecules in unitcell
 
         (option 1) : entropic correction when lookup_indices chosen to reduce all symmetry-related states to one state:
-            FE_ergodic = FE_sym_randomised ~~ FE_sym_reduced - (# methyl + # trimethyl) * ln(3)
+            FE_ergodic = FE_sym_randomised = [ FE_sym_reduced - (# methyl + # trimethyl) * ln(3) ] ; lattice FE (kT)
             [from the point of view of current PGM: 3**(# methyl + # trimethyl) number of FE basins reduced to 1,
              this significantly reduces the demand on a symmetry-unaware model]
              
