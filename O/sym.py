@@ -69,6 +69,12 @@ class DatasetSymmetryReduction:
     '''
     
     def save_sym_reduced_dataset_(self, path_dataset=None, key='_sym_reduced'):
+        '''
+        Before saving the processed dataset, check_energy_() to confirm that energy did not change. 
+        Configurations before (self.r_init) and after (self.r) the reduction should have exactly the same energy! 
+        [Allowing a slight noise if comparing to energies saved during trajectory; because of numerical precision.]
+        This is because only the atomic indices are swapped in this processing step (coordinates are not changes).
+        '''
         if hasattr(self, 'path_dataset'):
             path_dataset = str(self.path_dataset)
         else: pass
