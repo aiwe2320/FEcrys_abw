@@ -245,7 +245,7 @@ class DatasetSymmetryReduction:
         
         self.inds_torsions_trimethyl_cA = []
         self.inds_trimethyl_cA012h3 = []
-        self.n_trimethyl_groups = 0 # 1 but anyway
+        self.n_trimethyl_groups = 0
         for inds_group in inds_group_occurrences:
             '''
             cD? - cC - cB - cA0 - cA0h3      (1) - (1) - (1) - [(1) - (3)] ; [move whole group according to the (1) part]
