@@ -1419,9 +1419,34 @@ class COST_FIX_permute_xyz_after_a_trajectory:
             info = 'frame: '+str(self.n_frames_saved)+' T sampled:'+str(self.temperature.mean().round(3))+' T expected:'+str(self.T)+verbose_info
             print(info, end='\r')
 
-        self._xyz += [x for x in self._unpermute_(np.array(self._xyz_top_), axis=-2)]
-        # (+) self._xyz and self.xyz behave as if each frame was permuted before saving, but that cost was avoided
-        # (-) interupting run_simulation_ will not save any xyz data. 
+        self._xyz += [x for x in self._unpermute_(np.array(self._xyz_top_), axis=-2)] # permute after
+        # ! interupting run_simulation_ will not save any xyz data. 
+
+    def u_(self, r, b=None):
+        '''
+        speed up evaluation also
+        '''
+        n_frames = r.shape[0]
+        r = np.array(self._permute_(r)) # permute before 
+        
+        _r = np.array(self._current_r_)
+        _b = np.array(self._current_b_)
+        
+        U = np.zeros([n_frames,1])
+        if b is None:
+            for i in range(n_frames):
+                self.simulation.context.setPositions(r[i])
+                U[i,0] = self._current_U_
+        else:
+            for i in range(n_frames):
+                self.simulation.context.setPositions(r[i])
+                self._set_b_(b[i])
+                U[i,0] = self._current_U_
+
+        self._set_r_(_r)
+        self._set_b_(_b)
+
+        return U*self.beta
 
 ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
 
