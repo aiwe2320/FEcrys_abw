@@ -282,7 +282,7 @@ class NN_interface_helper:
         self.BAR_V_SEs = np.max([self.BAR_V_SEs, self.BAR_V_SDs], axis=0)
         self.BAR_V_SE  = self.BAR_V_SEs[-1]
 
-    def plot_result_(self, window=1, entropy_only=False, plot_red=True, n_mol=1):
+    def plot_result_(self, window=1, entropy_only=False, plot_red=True, n_mol=1, colors=['green', 'blue', 'm', 'red']):
         assert type(n_mol) is int and n_mol >= 1
 
         BAR_V = np.array(self.estimates_BAR[2,:,0])/n_mol
@@ -295,18 +295,18 @@ class NN_interface_helper:
         else: pass
         FE = FEs[-1]
 
-        plt.plot(self.evaluation_grid, BAR_V, color='green')
-        plt.plot(self.evaluation_grid, self.estimates[0,:,7]/n_mol, color='blue', linewidth=0.3, linestyle='--')
-        plt.fill_between(self.evaluation_grid, BAR_V-BAR_V_SEs, BAR_V+BAR_V_SEs, alpha=0.4, color='green')
+        plt.plot(self.evaluation_grid, BAR_V, color=colors[0])
+        plt.plot(self.evaluation_grid, self.estimates[0,:,7]/n_mol, color=colors[1], linewidth=0.3, linestyle='--')
+        plt.fill_between(self.evaluation_grid, BAR_V-BAR_V_SEs, BAR_V+BAR_V_SEs, alpha=0.4, color=colors[0])
 
         if plot_red:
             #plt.plot([self.evaluation_grid[0],self.evaluation_grid[-1]], [FEs[-1]]*2, color='red')
-            plt.plot(self.evaluation_grid, FEs, color='m')
-            plt.plot(self.evaluation_grid, FEs-self.SDs/n_mol, color='m', linestyle='dotted')
-            plt.plot(self.evaluation_grid, FEs+self.SDs/n_mol, color='m', linestyle='dotted')
-            plt.plot(self.evaluation_grid, self.BAR_V_FEs/n_mol-self.BAR_V_SEs/n_mol, color='red', linestyle='dotted', linewidth=2)
-            plt.plot(self.evaluation_grid, self.BAR_V_FEs/n_mol+self.BAR_V_SEs/n_mol, color='red', linestyle='dotted', linewidth=2)
-            plt.plot(self.evaluation_grid, self.BAR_V_FEs/n_mol,                      color='red', linewidth=2)
+            plt.plot(self.evaluation_grid, FEs, color=colors[2])
+            plt.plot(self.evaluation_grid, FEs-self.SDs/n_mol, color=colors[2], linestyle='dotted')
+            plt.plot(self.evaluation_grid, FEs+self.SDs/n_mol, color=colors[2], linestyle='dotted')
+            plt.plot(self.evaluation_grid, self.BAR_V_FEs/n_mol-self.BAR_V_SEs/n_mol, color=colors[3], linestyle='dotted', linewidth=2)
+            plt.plot(self.evaluation_grid, self.BAR_V_FEs/n_mol+self.BAR_V_SEs/n_mol, color=colors[3], linestyle='dotted', linewidth=2)
+            plt.plot(self.evaluation_grid, self.BAR_V_FEs/n_mol,                      color=colors[3], linewidth=2)
 
         else: pass
 
