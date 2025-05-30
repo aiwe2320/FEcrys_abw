@@ -207,7 +207,8 @@ class NN_interface_helper:
 
         except:
             self.estimates_BAR = np.zeros([4, self.n_estimates, n_states])
-            offset = self.estimates[0,:,1][np.where(self.estimates[0,:,1]>-1e19)[0]].mean()
+            idx = 7 # 1 ; 7 closer to minimiser of than 1, faster to run mbar.
+            offset = self.estimates[0,:,idx][np.where(self.estimates[0,:,idx]>-1e19)[0]].mean()
 
             for i in range(self.n_estimates):
                 clear_output(wait=True)
