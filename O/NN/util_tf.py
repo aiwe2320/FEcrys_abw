@@ -1734,19 +1734,16 @@ def quat_inverse_(q):
 
 def box_forward_(b):
     ' placeholder '
-    ' b,h should be in reduced from'
     ladJ = 0.0 # (m,1)
     h = tf.stack([b[...,0,0],b[...,1,1],b[...,2,2],b[...,1,0],b[...,2,0],b[...,2,1]],axis=-1)
     return h, ladJ
 
 def box_inverse_(h):
     ' placeholder '
-    ' b,h should be in reduced from'
     ladJ = 0.0 # (m,1)
     zero = tf.zeros_like(h[...,0])
     b = tf.stack([tf.stack([ h[...,0], zero    , zero    ],axis=-1),
                   tf.stack([ h[...,3], h[...,1], zero    ],axis=-1),
                   tf.stack([ h[...,4], h[...,5], h[...,2]],axis=-1),], axis=-2)
     return b, ladJ
-
 
