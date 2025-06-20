@@ -1,0 +1,221 @@
+REMARK   1 CREATED WITH MDTraj 1.10.0, 2025-06-20
+CRYST1   15.780   15.780   15.780  90.00  90.00  90.00 P 1           1 
+MODEL        0
+ATOM      1 AR   ARG A   1       3.945   3.945   3.945  1.00  0.00      AR  Ar  
+TER       2      ARG A   1
+ATOM      3 AR   ARG B   1       1.315   1.315   3.945  1.00  0.00      AR  Ar  
+TER       4      ARG B   1
+ATOM      5 AR   ARG C   1       1.315   3.945   1.315  1.00  0.00      AR  Ar  
+TER       6      ARG C   1
+ATOM      7 AR   ARG D   1       3.945   1.315   1.315  1.00  0.00      AR  Ar  
+TER       8      ARG D   1
+ATOM      9 AR   ARG E   1       9.205   3.945   3.945  1.00  0.00      AR  Ar  
+TER      10      ARG E   1
+ATOM     11 AR   ARG F   1       6.575   1.315   3.945  1.00  0.00      AR  Ar  
+TER      12      ARG F   1
+ATOM     13 AR   ARG G   1       6.575   3.945   1.315  1.00  0.00      AR  Ar  
+TER      14      ARG G   1
+ATOM     15 AR   ARG H   1       9.205   1.315   1.315  1.00  0.00      AR  Ar  
+TER      16      ARG H   1
+ATOM     17 AR   ARG I   1      14.465   3.945   3.945  1.00  0.00      AR  Ar  
+TER      18      ARG I   1
+ATOM     19 AR   ARG J   1      11.835   1.315   3.945  1.00  0.00      AR  Ar  
+TER      20      ARG J   1
+ATOM     21 AR   ARG K   1      11.835   3.945   1.315  1.00  0.00      AR  Ar  
+TER      22      ARG K   1
+ATOM     23 AR   ARG L   1      14.465   1.315   1.315  1.00  0.00      AR  Ar  
+TER      24      ARG L   1
+ATOM     25 AR   ARG M   1       3.945   9.205   3.945  1.00  0.00      AR  Ar  
+TER      26      ARG M   1
+ATOM     27 AR   ARG N   1       1.315   6.575   3.945  1.00  0.00      AR  Ar  
+TER      28      ARG N   1
+ATOM     29 AR   ARG O   1       1.315   9.205   1.315  1.00  0.00      AR  Ar  
+TER      30      ARG O   1
+ATOM     31 AR   ARG P   1       3.945   6.575   1.315  1.00  0.00      AR  Ar  
+TER      32      ARG P   1
+ATOM     33 AR   ARG Q   1       9.205   9.205   3.945  1.00  0.00      AR  Ar  
+TER      34      ARG Q   1
+ATOM     35 AR   ARG R   1       6.575   6.575   3.945  1.00  0.00      AR  Ar  
+TER      36      ARG R   1
+ATOM     37 AR   ARG S   1       6.575   9.205   1.315  1.00  0.00      AR  Ar  
+TER      38      ARG S   1
+ATOM     39 AR   ARG T   1       9.205   6.575   1.315  1.00  0.00      AR  Ar  
+TER      40      ARG T   1
+ATOM     41 AR   ARG U   1      14.465   9.205   3.945  1.00  0.00      AR  Ar  
+TER      42      ARG U   1
+ATOM     43 AR   ARG V   1      11.835   6.575   3.945  1.00  0.00      AR  Ar  
+TER      44      ARG V   1
+ATOM     45 AR   ARG W   1      11.835   9.205   1.315  1.00  0.00      AR  Ar  
+TER      46      ARG W   1
+ATOM     47 AR   ARG X   1      14.465   6.575   1.315  1.00  0.00      AR  Ar  
+TER      48      ARG X   1
+ATOM     49 AR   ARG Y   1       3.945  14.465   3.945  1.00  0.00      AR  Ar  
+TER      50      ARG Y   1
+ATOM     51 AR   ARG Z   1       1.315  11.835   3.945  1.00  0.00      AR  Ar  
+TER      52      ARG Z   1
+ATOM     53 AR   ARG A   1       1.315  14.465   1.315  1.00  0.00      AR  Ar  
+TER      54      ARG A   1
+ATOM     55 AR   ARG B   1       3.945  11.835   1.315  1.00  0.00      AR  Ar  
+TER      56      ARG B   1
+ATOM     57 AR   ARG C   1       9.205  14.465   3.945  1.00  0.00      AR  Ar  
+TER      58      ARG C   1
+ATOM     59 AR   ARG D   1       6.575  11.835   3.945  1.00  0.00      AR  Ar  
+TER      60      ARG D   1
+ATOM     61 AR   ARG E   1       6.575  14.465   1.315  1.00  0.00      AR  Ar  
+TER      62      ARG E   1
+ATOM     63 AR   ARG F   1       9.205  11.835   1.315  1.00  0.00      AR  Ar  
+TER      64      ARG F   1
+ATOM     65 AR   ARG G   1      14.465  14.465   3.945  1.00  0.00      AR  Ar  
+TER      66      ARG G   1
+ATOM     67 AR   ARG H   1      11.835  11.835   3.945  1.00  0.00      AR  Ar  
+TER      68      ARG H   1
+ATOM     69 AR   ARG I   1      11.835  14.465   1.315  1.00  0.00      AR  Ar  
+TER      70      ARG I   1
+ATOM     71 AR   ARG J   1      14.465  11.835   1.315  1.00  0.00      AR  Ar  
+TER      72      ARG J   1
+ATOM     73 AR   ARG K   1       3.945   3.945   9.205  1.00  0.00      AR  Ar  
+TER      74      ARG K   1
+ATOM     75 AR   ARG L   1       1.315   1.315   9.205  1.00  0.00      AR  Ar  
+TER      76      ARG L   1
+ATOM     77 AR   ARG M   1       1.315   3.945   6.575  1.00  0.00      AR  Ar  
+TER      78      ARG M   1
+ATOM     79 AR   ARG N   1       3.945   1.315   6.575  1.00  0.00      AR  Ar  
+TER      80      ARG N   1
+ATOM     81 AR   ARG O   1       9.205   3.945   9.205  1.00  0.00      AR  Ar  
+TER      82      ARG O   1
+ATOM     83 AR   ARG P   1       6.575   1.315   9.205  1.00  0.00      AR  Ar  
+TER      84      ARG P   1
+ATOM     85 AR   ARG Q   1       6.575   3.945   6.575  1.00  0.00      AR  Ar  
+TER      86      ARG Q   1
+ATOM     87 AR   ARG R   1       9.205   1.315   6.575  1.00  0.00      AR  Ar  
+TER      88      ARG R   1
+ATOM     89 AR   ARG S   1      14.465   3.945   9.205  1.00  0.00      AR  Ar  
+TER      90      ARG S   1
+ATOM     91 AR   ARG T   1      11.835   1.315   9.205  1.00  0.00      AR  Ar  
+TER      92      ARG T   1
+ATOM     93 AR   ARG U   1      11.835   3.945   6.575  1.00  0.00      AR  Ar  
+TER      94      ARG U   1
+ATOM     95 AR   ARG V   1      14.465   1.315   6.575  1.00  0.00      AR  Ar  
+TER      96      ARG V   1
+ATOM     97 AR   ARG W   1       3.945   9.205   9.205  1.00  0.00      AR  Ar  
+TER      98      ARG W   1
+ATOM     99 AR   ARG X   1       1.315   6.575   9.205  1.00  0.00      AR  Ar  
+TER     100      ARG X   1
+ATOM    101 AR   ARG Y   1       1.315   9.205   6.575  1.00  0.00      AR  Ar  
+TER     102      ARG Y   1
+ATOM    103 AR   ARG Z   1       3.945   6.575   6.575  1.00  0.00      AR  Ar  
+TER     104      ARG Z   1
+ATOM    105 AR   ARG A   1       9.205   9.205   9.205  1.00  0.00      AR  Ar  
+TER     106      ARG A   1
+ATOM    107 AR   ARG B   1       6.575   6.575   9.205  1.00  0.00      AR  Ar  
+TER     108      ARG B   1
+ATOM    109 AR   ARG C   1       6.575   9.205   6.575  1.00  0.00      AR  Ar  
+TER     110      ARG C   1
+ATOM    111 AR   ARG D   1       9.205   6.575   6.575  1.00  0.00      AR  Ar  
+TER     112      ARG D   1
+ATOM    113 AR   ARG E   1      14.465   9.205   9.205  1.00  0.00      AR  Ar  
+TER     114      ARG E   1
+ATOM    115 AR   ARG F   1      11.835   6.575   9.205  1.00  0.00      AR  Ar  
+TER     116      ARG F   1
+ATOM    117 AR   ARG G   1      11.835   9.205   6.575  1.00  0.00      AR  Ar  
+TER     118      ARG G   1
+ATOM    119 AR   ARG H   1      14.465   6.575   6.575  1.00  0.00      AR  Ar  
+TER     120      ARG H   1
+ATOM    121 AR   ARG I   1       3.945  14.465   9.205  1.00  0.00      AR  Ar  
+TER     122      ARG I   1
+ATOM    123 AR   ARG J   1       1.315  11.835   9.205  1.00  0.00      AR  Ar  
+TER     124      ARG J   1
+ATOM    125 AR   ARG K   1       1.315  14.465   6.575  1.00  0.00      AR  Ar  
+TER     126      ARG K   1
+ATOM    127 AR   ARG L   1       3.945  11.835   6.575  1.00  0.00      AR  Ar  
+TER     128      ARG L   1
+ATOM    129 AR   ARG M   1       9.205  14.465   9.205  1.00  0.00      AR  Ar  
+TER     130      ARG M   1
+ATOM    131 AR   ARG N   1       6.575  11.835   9.205  1.00  0.00      AR  Ar  
+TER     132      ARG N   1
+ATOM    133 AR   ARG O   1       6.575  14.465   6.575  1.00  0.00      AR  Ar  
+TER     134      ARG O   1
+ATOM    135 AR   ARG P   1       9.205  11.835   6.575  1.00  0.00      AR  Ar  
+TER     136      ARG P   1
+ATOM    137 AR   ARG Q   1      14.465  14.465   9.205  1.00  0.00      AR  Ar  
+TER     138      ARG Q   1
+ATOM    139 AR   ARG R   1      11.835  11.835   9.205  1.00  0.00      AR  Ar  
+TER     140      ARG R   1
+ATOM    141 AR   ARG S   1      11.835  14.465   6.575  1.00  0.00      AR  Ar  
+TER     142      ARG S   1
+ATOM    143 AR   ARG T   1      14.465  11.835   6.575  1.00  0.00      AR  Ar  
+TER     144      ARG T   1
+ATOM    145 AR   ARG U   1       3.945   3.945  14.465  1.00  0.00      AR  Ar  
+TER     146      ARG U   1
+ATOM    147 AR   ARG V   1       1.315   1.315  14.465  1.00  0.00      AR  Ar  
+TER     148      ARG V   1
+ATOM    149 AR   ARG W   1       1.315   3.945  11.835  1.00  0.00      AR  Ar  
+TER     150      ARG W   1
+ATOM    151 AR   ARG X   1       3.945   1.315  11.835  1.00  0.00      AR  Ar  
+TER     152      ARG X   1
+ATOM    153 AR   ARG Y   1       9.205   3.945  14.465  1.00  0.00      AR  Ar  
+TER     154      ARG Y   1
+ATOM    155 AR   ARG Z   1       6.575   1.315  14.465  1.00  0.00      AR  Ar  
+TER     156      ARG Z   1
+ATOM    157 AR   ARG A   1       6.575   3.945  11.835  1.00  0.00      AR  Ar  
+TER     158      ARG A   1
+ATOM    159 AR   ARG B   1       9.205   1.315  11.835  1.00  0.00      AR  Ar  
+TER     160      ARG B   1
+ATOM    161 AR   ARG C   1      14.465   3.945  14.465  1.00  0.00      AR  Ar  
+TER     162      ARG C   1
+ATOM    163 AR   ARG D   1      11.835   1.315  14.465  1.00  0.00      AR  Ar  
+TER     164      ARG D   1
+ATOM    165 AR   ARG E   1      11.835   3.945  11.835  1.00  0.00      AR  Ar  
+TER     166      ARG E   1
+ATOM    167 AR   ARG F   1      14.465   1.315  11.835  1.00  0.00      AR  Ar  
+TER     168      ARG F   1
+ATOM    169 AR   ARG G   1       3.945   9.205  14.465  1.00  0.00      AR  Ar  
+TER     170      ARG G   1
+ATOM    171 AR   ARG H   1       1.315   6.575  14.465  1.00  0.00      AR  Ar  
+TER     172      ARG H   1
+ATOM    173 AR   ARG I   1       1.315   9.205  11.835  1.00  0.00      AR  Ar  
+TER     174      ARG I   1
+ATOM    175 AR   ARG J   1       3.945   6.575  11.835  1.00  0.00      AR  Ar  
+TER     176      ARG J   1
+ATOM    177 AR   ARG K   1       9.205   9.205  14.465  1.00  0.00      AR  Ar  
+TER     178      ARG K   1
+ATOM    179 AR   ARG L   1       6.575   6.575  14.465  1.00  0.00      AR  Ar  
+TER     180      ARG L   1
+ATOM    181 AR   ARG M   1       6.575   9.205  11.835  1.00  0.00      AR  Ar  
+TER     182      ARG M   1
+ATOM    183 AR   ARG N   1       9.205   6.575  11.835  1.00  0.00      AR  Ar  
+TER     184      ARG N   1
+ATOM    185 AR   ARG O   1      14.465   9.205  14.465  1.00  0.00      AR  Ar  
+TER     186      ARG O   1
+ATOM    187 AR   ARG P   1      11.835   6.575  14.465  1.00  0.00      AR  Ar  
+TER     188      ARG P   1
+ATOM    189 AR   ARG Q   1      11.835   9.205  11.835  1.00  0.00      AR  Ar  
+TER     190      ARG Q   1
+ATOM    191 AR   ARG R   1      14.465   6.575  11.835  1.00  0.00      AR  Ar  
+TER     192      ARG R   1
+ATOM    193 AR   ARG S   1       3.945  14.465  14.465  1.00  0.00      AR  Ar  
+TER     194      ARG S   1
+ATOM    195 AR   ARG T   1       1.315  11.835  14.465  1.00  0.00      AR  Ar  
+TER     196      ARG T   1
+ATOM    197 AR   ARG U   1       1.315  14.465  11.835  1.00  0.00      AR  Ar  
+TER     198      ARG U   1
+ATOM    199 AR   ARG V   1       3.945  11.835  11.835  1.00  0.00      AR  Ar  
+TER     200      ARG V   1
+ATOM    201 AR   ARG W   1       9.205  14.465  14.465  1.00  0.00      AR  Ar  
+TER     202      ARG W   1
+ATOM    203 AR   ARG X   1       6.575  11.835  14.465  1.00  0.00      AR  Ar  
+TER     204      ARG X   1
+ATOM    205 AR   ARG Y   1       6.575  14.465  11.835  1.00  0.00      AR  Ar  
+TER     206      ARG Y   1
+ATOM    207 AR   ARG Z   1       9.205  11.835  11.835  1.00  0.00      AR  Ar  
+TER     208      ARG Z   1
+ATOM    209 AR   ARG A   1      14.465  14.465  14.465  1.00  0.00      AR  Ar  
+TER     210      ARG A   1
+ATOM    211 AR   ARG B   1      11.835  11.835  14.465  1.00  0.00      AR  Ar  
+TER     212      ARG B   1
+ATOM    213 AR   ARG C   1      11.835  14.465  11.835  1.00  0.00      AR  Ar  
+TER     214      ARG C   1
+ATOM    215 AR   ARG D   1      14.465  11.835  11.835  1.00  0.00      AR  Ar  
+TER     216      ARG D   1
+ENDMDL
+END
