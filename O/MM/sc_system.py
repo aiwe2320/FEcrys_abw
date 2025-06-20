@@ -319,7 +319,7 @@ class SingleComponent:
         return load_pickle_(path_and_name)
 
     @staticmethod
-    def initialise_from_save_(path_and_name:str, resume_simulation=True):
+    def initialise_from_save_(path_and_name:str, resume_simulation=True, verbose=True):
         '''
         method allows to resume everything later (on another machine)
         '''
@@ -332,6 +332,7 @@ class SingleComponent:
             dataset = path_and_name
 
         sc = SingleComponent(**dataset['args_initialise_object'])
+        sc.verbose = verbose
         sc.initialise_system_(**dataset['args_initialise_system'])
         if resume_simulation:
             dataset['args_initialise_simulation']['rbv'] = dataset['MD dataset']['rbv']
