@@ -380,6 +380,54 @@ def concatenate_datasets_(paths_datasets : list):
 ## ADD openmm FFs below ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
 ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
 
+class LJ(MM_system_helper):
+
+    def __init__(self,):
+        super().__init__()
+
+    @classmethod
+    @property
+    def FF_name(self,):
+        return 'LJ'
+    
+    @property
+    def _single_mol_pdb_file_(self) -> Path:
+        return self.misc_dir / f"{self.name}_single_mol.pdb" 
+
+    def initialise_FF_(self,):
+        assert self.n_mol == self.N
+        assert self.n_atoms_mol == 1
+
+        if os.path.exists(self._single_mol_pdb_file_.absolute()): pass
+        else: process_mercury_output_(self.PDB, self.n_atoms_mol, single_mol = True, custom_path_name=str(self._single_mol_pdb_file_.absolute()),
+                                     ) # make *single_mol.pdb
+            
+    @property
+    def top_file_gmx_crys(self) -> Path:
+        return self.misc_dir / f"x_x_{self.name}_gmx.top"
+
+    def reset_n_mol_top_(self,):
+
+        lines_top = [f'#include "{self.name}.itp"',
+                     '',
+                     '[system]',
+                     'LJ',
+                     '',
+                     '[molecules]',
+                     f'{self.name}  ' + str(self.n_mol),
+                     ]
+        file_top = open(str(self.top_file_gmx_crys.absolute()), 'w')
+        for line in lines_top:
+            file_top.write(line + "\n")
+        file_top.close()
+
+    def set_FF_(self,):
+
+        self.reset_n_mol_top_()
+        self.ff = parmed.gromacs.GromacsTopologyFile(str(self.top_file_gmx_crys.absolute()))
+
+##
+
 class TIP4P(MM_system_helper):
     ''' mixin class for SingleComponent. Methods relevant only for using TIP4P are here.
     '''
@@ -396,7 +444,7 @@ class TIP4P(MM_system_helper):
     def _single_mol_pdb_file_(self) -> Path:
         return self.misc_dir / f"{self.name}_single_mol.pdb" 
 
-    def initialise_FF_(self, identity_permuation=False):
+    def initialise_FF_(self):
         '''
         run this after (n_mol and n_atoms_mol) defined in __init__ of SingleComponent
         '''
