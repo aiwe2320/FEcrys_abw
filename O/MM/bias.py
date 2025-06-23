@@ -378,6 +378,7 @@ class WALLS:
                  inds_torsion : list,
                  means : list,
                  width_percentage : float = 68.17,
+                 height = 200,
                  ):
         '''
         Inputs:
@@ -395,7 +396,7 @@ class WALLS:
         self.inds_torsion, self.inds_torsion_molecules = _set_inds_torsion_for_bias_(self.sc, inds_torsion)
         self.means = _set_means_torsions_for_bias_(self.sc, means)
         self.width_percentage = width_percentage
-        self.height = 200 
+        self.height = height
         
         # create the self.force to put into BIAS, and BIAS will then put it into self.sc.system
         
