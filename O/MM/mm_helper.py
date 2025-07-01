@@ -1115,6 +1115,8 @@ def get_index_average_box_automatic_(boxes,
 
 def get_unitcell_stack_order_(b, n_mol_unitcell=1, top_n=None):
     """ 
+    not sure if this is good
+    
     tells how many times to stack the unitcell in each of the three directions
         while minimising surface area to volume ratio (more spherical ~~ more cubic)
         
@@ -1154,7 +1156,24 @@ def get_unitcell_stack_order_(b, n_mol_unitcell=1, top_n=None):
     res = Grid_flat[np.argsort(-AoverV_flat)]
     res = res.astype(np.int32).tolist()
     res = dict(zip(np.prod(res,axis=-1)*n_mol_unitcell, res))
-    
+
+    ##
+    # prevent repeats, top results are better
+    n_mol_seen = []
+    _res = {}
+    for n_mol in res.keys():
+        if n_mol not in n_mol_seen:
+            _res[n_mol] = res[n_mol]
+            n_mol_seen.append(n_mol)
+        else: pass
+    res = _res
+    # if n_mol is possible but not at the top, move to the top anyway
+    _res = {}
+    for n_mol in np.sort(n_mol_seen):
+        _res[n_mol] = res[n_mol]
+    res = _res
+    ##
+
     if top_n is not None: res = dict(zip(list(res.keys())[:top_n], [res[n_mol] for n_mol in list(res.keys())[:top_n]]))
     else: pass
         
