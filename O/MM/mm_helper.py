@@ -62,8 +62,8 @@ CONST_kB = 1e-3*8.31446261815324 # kilojoule/(kelvin*mole)
 ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
 
 def get_force_by_name_(system, name:str):
-    forces = {sc.system.getForce(index).__class__.__name__: sc.system.getForce(
-        index) for index in range(sc.system.getNumForces())}
+    forces = {system.getForce(index).__class__.__name__: system.getForce(
+        index) for index in range(system.getNumForces())}
     return forces[name]
 
 def update_HarmonicBondForce_(_force, _lam, deepcopy=True):
