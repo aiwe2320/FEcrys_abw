@@ -61,6 +61,11 @@ CONST_kB = 1e-3*8.31446261815324 # kilojoule/(kelvin*mole)
 
 ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
 
+def get_force_by_name_(system, name:str):
+    forces = {sc.system.getForce(index).__class__.__name__: sc.system.getForce(
+        index) for index in range(sc.system.getNumForces())}
+    return forces[name]
+
 def update_HarmonicBondForce_(_force, _lam, deepcopy=True):
     if deepcopy: force = copy.deepcopy(_force)
     else: force = _force
@@ -781,7 +786,7 @@ class MM_system_helper:
         else: pass
         average_charge = charges_mol.sum()
         if np.abs(average_charge) > 1e-5: print('!! net charge of moelcule is:',average_charge)
-        else: print('net charge of molecule is neural')
+        else: print('net charge of molecule is neutral')
         return charges_mol
     
     @property
