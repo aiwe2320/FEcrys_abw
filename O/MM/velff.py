@@ -83,19 +83,19 @@ class velff(itp2FF):
 ## ## ## ## ## ## ## 
 
 def remove_force_by_names_(system, names:list, verbose=True):
-    def remove_force_by_name_(name):
+    def remove_force_by_name_(_name):
         index = 0
         for force in system.getForces():
-            if force.getName() == name: 
+            if force.getName() == _name: 
                 system.removeForce(index)
-                return [name]
+                return [_name]
             else: index += 1
         return []
         
     removed = []
-    for name in names: 
-        removed += remove_force_by_name_(name)
-        
+    for name in names:
+        while name in [force.getName() for force in system.getForces()]:
+            removed += remove_force_by_name_(name)
     if verbose: print(f'removed {len(removed)} forces from the system: {removed}')
     else: pass
         
