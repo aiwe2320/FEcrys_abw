@@ -1381,8 +1381,9 @@ class itp2FF(OPLS):
     def set_FF_(self,):
         ''' run this just before self.system initialisation  '''
         self.reset_n_mol_top_()
-        self.ff = parmed.gromacs.GromacsTopologyFile(str(self.top_crys.absolute()))
-
+        self.ff = parmed.gromacs.GromacsTopologyFile(str(self.top_crys.absolute())) # better
+        # self.ff = mm.app.GromacsTopFile(self.top_crys.absolute(), periodicBoxVectors=self.b0)
+    
     def reset_n_mol_top_(self,):
 
         lines_to_add = [
