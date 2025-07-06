@@ -199,6 +199,8 @@ class SingleComponent:
             else:                   assert self.n_DOF == 3*self.N
         else: pass
 
+        self.corrections_to_ff_(self.verbose)
+
         self.print('n_mol = ', str(self.n_mol)+',',
                    'n_atoms_mol =', str(self.n_atoms_mol)+',',
                    'N =', str(self.N)+',',
