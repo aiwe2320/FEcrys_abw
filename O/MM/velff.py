@@ -22,8 +22,8 @@ class velff(itp2FF):
 
         gen-pairs : 1-4 interactions are active for all non-bonded (NB) interactions
 
-        nrexcl = 2  : non-bonded interactions are excluded only for atoms separated by 0 or 1 bonds
-            ! default gmx parsers (parmed or openmm) : this is currently not supported (because kept for >=2 bonds apart)
+        nrexcl = 2  : non-bonded interactions are excluded only for atoms separated by 0,1,2 bonds
+            ! default gmx parsers (parmed or openmm) : this is currently not supported (because kept for >=3 bonds apart)
 
         comb-rule 1 : geometric mean for getting both eps_ij, sig_ij (or C6_ij from C6_i, C6_j, C12_ij from ...)
             this is supported only if combination rules are standard (e.g., OPLS), but not the case here, where for OPLS:
