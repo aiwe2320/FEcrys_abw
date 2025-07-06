@@ -1395,11 +1395,11 @@ class itp2FF(OPLS):
             '\n',
             '[ system ]',
             '; Name',
-            'Generic title',
+            self._system_name_,
             '\n',
             '[ molecules ]',
             '; Compound          #mols',
-            f'UNK               {self.n_mol}',
+            f'{self._compound_name_}               {self.n_mol}',
             '\n',
             ]
         file_top = open(str(self.top_crys.absolute()), 'w')
@@ -1414,7 +1414,9 @@ class OPLS_general(itp2FF):
         self._FF_name_ = 'OPLS'
         #                           '; nbfunc        comb-rule       gen-pairs       fudgeLJ      fudgeQQ',
         self._FF_name_defaults_line_ = '1               3               yes             0.5          0.5  '
-
+        self._system_name_ = 'Generic title'
+        self._compound_name_ = 'UNK'
+        
     @classmethod
     @property
     def FF_name(self,):
@@ -1426,7 +1428,9 @@ class GAFF_general(itp2FF):
         self._FF_name_ = 'GAFF'
         #                           '; nbfunc        comb-rule       gen-pairs       fudgeLJ      fudgeQQ',
         self._FF_name_defaults_line_ = '1               2               yes             0.5          0.83333333  '
-
+        self._system_name_ = 'Generic title'
+        self._compound_name_ = 'UNK'
+        
     @classmethod
     @property
     def FF_name(self,):
