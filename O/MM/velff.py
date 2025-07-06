@@ -240,3 +240,81 @@ def velff_C_force_(sc):
 
 ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
 
+''' test prooving that mm.Discrete2DFunction working correctly in velff_LJ_force_ (not just taking first N values from the flat NxN array)
+
+def test_velff_LJ_():
+
+    def velff_LJ_force_old_(sc, C6_C12_types_dictionary):
+        include_ij = _get_pairs_(_get_pairs_mol_inner_(sc.mol, n=3), sc.n_mol)
+        atom_types = [x.type for x in sc.ff.atoms]
+        
+        _table_C6 = np.eye(sc.N)*0.0
+        _table_C12 = np.eye(sc.N)*0.0
+        
+        for i in range(sc.N):
+            for j in range(sc.N):
+                if i >= j:
+                    type_A = atom_types[i]
+                    type_B = atom_types[j]
+                    try:  C6, C12 = C6_C12_types_dictionary[(type_A,type_B)]
+                    except: C6, C12 = C6_C12_types_dictionary[(type_B,type_A)]
+                    _table_C6[i, j] = C6
+                    _table_C12[i, j] = C12
+                    _table_C6[j, i] = _table_C6[i, j]
+                    _table_C12[j, i] = _table_C12[i, j]
+                else: pass
+        
+        _ljr_ =    '; ljr = ( (1/r^12)*C12 - (1/r^6)*C6 ) '
+        # switch:
+        _x  =      '; x = (r - s) / (c - s) '
+        _steps_ =  '; cr = step(c-r) ; rc = step(r-c) ; sr = step(s-r) ; rs = step(r-s) '
+        _switch_ = '; switch = rs * cr * (1 - 6*(x^5) + 15*(x^4) - 10*(x^3)) + rc + sr '
+
+        main = 'cr * switch * (ljr - 0 )'
+        lj_expression = main + _switch_ + _steps_ + _x + _ljr_
+
+        force = mm.CustomBondForce(lj_expression)
+        force.setUsesPeriodicBoundaryConditions(True)
+        
+        force.addGlobalParameter("c", sc.PME_cutoff  * mm.unit.nanometers)
+        force.addGlobalParameter("s", sc.SwitchingFunction_factor * sc.PME_cutoff * mm.unit.nanometers)
+        
+        force.addPerBondParameter('C6')
+        force.addPerBondParameter('C12')
+
+        for i in range(sc.N):
+            for j in range(sc.N):
+                if i >= j:
+                    if include_ij[i,j] > 0.5:
+                        force.addBond(i, j, [_table_C6[i,j], _table_C12[i,j]])
+                    else: pass
+                else: pass
+        return force
+    
+    name = 'veliparib'
+    n_atoms_mol = 34
+    FF_class = velff 
+
+    # new/current with LongRangeCorrection OFF
+    sc = SingleComponent(PDB='./O/MM/molecules/veliparib/veliparib_I_unitcell_cell111.pdb', name=name, n_atoms_mol=n_atoms_mol, FF_class=FF_class)
+    sc.verbose = False
+    sc.initialise_system_(PME_cutoff=0.36, removeCMMotion=True)
+    remove_force_by_names_(sc.system, ['NonbondedForce','HarmonicBondForce','HarmonicAngleForce','PeriodicTorsionForce','RBTorsionForce'])
+    get_force_by_name_(sc.system, 'CustomNonbondedForce').setUseLongRangeCorrection(False)
+    sc.initialise_simulation_(T=300, timestep_ps=0.001, minimise=True)
+    print('######################################################################')
+
+    # old/naive without LongRangeCorrection
+    sc = SingleComponent(PDB='./O/MM/molecules/veliparib/veliparib_I_unitcell_cell111.pdb', name=name, n_atoms_mol=n_atoms_mol, FF_class=FF_class)
+    sc.verbose = False
+    sc.initialise_system_(PME_cutoff=0.36, removeCMMotion=True)
+    force = velff_LJ_force_old_(sc, itp_nonbond_params_velff)
+    remove_force_by_names_(sc.system, ['CustomNonbondedForce','NonbondedForce','HarmonicBondForce','HarmonicAngleForce','PeriodicTorsionForce','RBTorsionForce'])
+    sc.system.addForce(force)
+    sc.initialise_simulation_(T=300, timestep_ps=0.001, P=1, minimise=True)
+
+    # should both give the same numbers before and after minimisation, suggesting same overall shape of PES:
+    # u before minimisation: 303.63141669435004 kT
+    # u after  minimisation: -77.35333936837897 kT
+
+'''
