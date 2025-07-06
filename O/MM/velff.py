@@ -83,17 +83,22 @@ class velff(itp2FF):
 ## ## ## ## ## ## ## 
 
 def remove_force_by_names_(system, names:list, verbose=True):
-    names_remove = names
-    index = 0 ; removed = []
-    for force in system.getForces():
-        name = force.getName()
-        if name in names_remove: 
-            system.removeForce(index) ; removed.append(name)
-        else: index += 1
+    def remove_force_by_name_(name):
+        index = 0
+        for force in system.getForces():
+            if force.getName() in name: 
+                system.removeForce(index)
+                return [name]
+            else: index += 1
+        return []
+        
+    removed = []
+    for name in names: 
+        removed += remove_force_by_name_(name)
+        
     if verbose: print(f'removed {len(removed)} forces from the system: {removed}')
     else: pass
-
-
+        
 def _get_pairs_mol_inner_(mol, n=3):
     '''
     n atoms in a row is n-1 bonds
