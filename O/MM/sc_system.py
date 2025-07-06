@@ -1166,11 +1166,12 @@ class OPLS(MM_system_helper):
         
     def itp_to_top_(self,):
         '''
-        >(1-4) interactions scaled by 1.0 * (LJ + Coulombic) ; all remaining non-bonded pairs of atoms
-        1-4    interactions scaled by 0.5 * (LJ + Coulombic) ; non-bonded intramolecular atoms exactly 3 bonds apart
-        1-3    interactions scaled by 0 
-        1-2    interactions scaled by 0
-        1-1    interactions scaled by 0 
+        nrexcl = 3
+
+        >(1-5) interactions scaled by 1.0 * (LJ + Coulombic) ; all remaining non-bonded pairs of atoms
+        1-5    interactions scaled by 0.5 * (LJ + Coulombic) ; non-bonded intramolecular atoms exactly 3 bonds apart
+        1-4    interactions scaled by 0 
+        1-3,1-2,1-1 interactions scaled by 0 
         '''
         lines_to_add = [
             '\n',
