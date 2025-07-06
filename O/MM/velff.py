@@ -133,9 +133,9 @@ def _get_pairs_(remove_mol_ij, n_mol):
     for i in range(n_mol):
         a = n_atoms_mol*i
         b = n_atoms_mol*(i+1)
-        include_ij[a:b,a:b] -= remove_mol_ij # remove self (1-1), (1-2)
+        include_ij[a:b,a:b] -= remove_mol_ij # remove 1-1, 1-2, 1-3
         
-    return include_ij # 1 : include, 0 : dont include / remove
+    return include_ij # 1 : include, 0 : dont include
 
 
 def velff_LJ_force_(sc, C6_C12_types_dictionary):
