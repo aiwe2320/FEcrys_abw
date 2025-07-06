@@ -48,7 +48,7 @@ class velff(itp2FF):
                 CustomNonbondedForce : only LJ  # defined manually below (to replace all automatically defined LJ)
                     >= 1-4 : LJ = LJ_function(i, j, tabulated_LJ_params)
                         tabulated_LJ_params is a function of i and j 
-                    < 1-4  : exclusions for 1-2, 1-1
+                    < 1-4  : exclusions for 1-3, 1-2, 1-1
                     
                     LJ_energy = dispersion_correction(switching_function(LJ_function(...,r_cut),r_switch))
                     dispersion_correction : x -> x + const*n_mol*n_mol / V
