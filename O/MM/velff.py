@@ -14,7 +14,7 @@ class velff(itp2FF):
         ''' notes:
 
         the following self._FF_name_defaults_line_ gives warnings that are dealt with by running self.recast_NB_()
-            run self.recast_NB_() as soon as self.system is defined
+            run self.recast_NB_() as soon as self.system is defined (added: done by default)
 
         ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
             
@@ -79,6 +79,9 @@ class velff(itp2FF):
 
         if verbose: print(f'added {len(forces_add)} forces to the system: {[x.getName() for x in forces_add]}')
         else: pass
+
+    def corrections_to_ff_(self, verbos=True):
+        self.recast_NB_(verbose=verbos)
 
 ## ## ## ## ## ## ## 
 
