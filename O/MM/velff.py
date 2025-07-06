@@ -195,7 +195,7 @@ def velff_LJ_force_(sc, C6_C12_types_dictionary):
     
     nb_method = mm.CustomNonbondedForce.CutoffPeriodic
     force.setNonbondedMethod(nb_method)
-    force.setCutoffDistance(sc.PME_cutoff)
+    force.setCutoffDistance(sc.PME_cutoff * mm.unit.nanometers)
     force.setUseSwitchingFunction(True)
     force.setSwitchingDistance(sc.SwitchingFunction_factor * sc.PME_cutoff * mm.unit.nanometers)
     force.setUseLongRangeCorrection(True)
