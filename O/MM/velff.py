@@ -86,7 +86,7 @@ def remove_force_by_names_(system, names:list, verbose=True):
     def remove_force_by_name_(name):
         index = 0
         for force in system.getForces():
-            if force.getName() in name: 
+            if force.getName() == name: 
                 system.removeForce(index)
                 return [name]
             else: index += 1
