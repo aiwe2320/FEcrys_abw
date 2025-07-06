@@ -256,6 +256,10 @@ class MM_system_helper:
         '''
         inject_methods_from_another_class_(self, class_to_inject_methods_from)
 
+    def corrections_to_ff_(self, verbose):
+        if verbose: print('no corrections to self.system')
+        else: pass
+    
     @property
     def _system_mass_(self,):
         return np.array([self.system.getParticleMass(i)._value for i in range(self.system.getNumParticles())])
