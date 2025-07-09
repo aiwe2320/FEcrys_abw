@@ -526,6 +526,8 @@ def get_FE_estimates_(
                 save_pickle_([r_BG, negS_BG, u_V, negS_V, w_V], name_save_BAR_inputs + '_r_&_ln(q(r))',)
             else: pass 
         else: pass
+
+        u_BG_mean = u_BG.mean()
     else:
         AVBG = 0.0
         EXPBG = 0.0
@@ -533,6 +535,7 @@ def get_FE_estimates_(
         BAR_T = 0.0
         BAR_V = 0.0
         AV_u_BAR_V = 0.0
+        u_BG_mean = 0.0
 
         if name_save_BAR_inputs is not None:
                 save_pickle_([r_BG, negS_BG, u_V, negS_V, w_V], name_save_BAR_inputs + '_r_&_ln(q(r))',)
@@ -551,7 +554,7 @@ def get_FE_estimates_(
                                     BAR_V,       # 7
                                     u_T.mean(),  # 8 
                                     u_V.mean(),  # 9
-                                    u_BG.mean(), # 10 
+                                    u_BG_mean,   # 10 
                                     AV_u_BAR_V,  # 11
                                     AV_u_EXPBG,  # 12
                                 ])
