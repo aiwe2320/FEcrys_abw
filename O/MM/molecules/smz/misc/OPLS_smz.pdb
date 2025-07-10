@@ -1,0 +1,35 @@
+TITLE     MDANALYSIS FRAMES FROM 0, STEP 1: Created by PDBWriter
+CRYST1  100.000  100.000  100.000  90.00  90.00  90.00 P 1           1
+MODEL        1
+ATOM      1  H1  SMZ X   1      49.840  45.630  51.890  1.00  0.00      SYST    
+ATOM      2  C2  SMZ X   1      49.810  46.630  51.860  1.00  0.00      SYST    
+ATOM      3  N1  SMZ X   1      50.940  47.300  51.610  1.00  0.00      SYST    
+ATOM      4  C3  SMZ X   1      48.610  47.260  52.060  1.00  0.00      SYST    
+ATOM      5  C1  SMZ X   1      50.810  48.620  51.570  1.00  0.00      SYST    
+ATOM      6  H2  SMZ X   1      47.790  46.740  52.290  1.00  0.00      SYST    
+ATOM      7  C4  SMZ X   1      48.570  48.630  51.920  1.00  0.00      SYST    
+ATOM      8  N2  SMZ X   1      49.710  49.320  51.740  1.00  0.00      SYST    
+ATOM      9  N3  SMZ X   1      52.000  49.270  51.310  1.00  0.00      SYST    
+ATOM     10  C11 SMZ X   1      47.300  49.420  51.950  1.00  0.00      SYST    
+ATOM     11  S1  SMZ X   1      52.150  50.880  50.970  1.00  0.00      SYST    
+ATOM     12  H10 SMZ X   1      52.840  48.730  51.350  1.00  0.00      SYST    
+ATOM     13  H9  SMZ X   1      46.470  48.860  52.020  1.00  0.00      SYST    
+ATOM     14  H7  SMZ X   1      47.190  50.080  51.210  1.00  0.00      SYST    
+ATOM     15  H8  SMZ X   1      47.460  49.900  52.810  1.00  0.00      SYST    
+ATOM     16  C5  SMZ X   1      51.270  51.180  49.510  1.00  0.00      SYST    
+ATOM     17  O1  SMZ X   1      51.560  51.640  52.020  1.00  0.00      SYST    
+ATOM     18  O2  SMZ X   1      53.550  51.010  50.710  1.00  0.00      SYST    
+ATOM     19  C6  SMZ X   1      51.880  50.940  48.280  1.00  0.00      SYST    
+ATOM     20  C10 SMZ X   1      49.960  51.650  49.550  1.00  0.00      SYST    
+ATOM     21  H3  SMZ X   1      52.820  50.600  48.260  1.00  0.00      SYST    
+ATOM     22  C7  SMZ X   1      51.210  51.180  47.120  1.00  0.00      SYST    
+ATOM     23  H6  SMZ X   1      49.520  51.820  50.430  1.00  0.00      SYST    
+ATOM     24  C9  SMZ X   1      49.290  51.890  48.380  1.00  0.00      SYST    
+ATOM     25  H4  SMZ X   1      51.650  51.000  46.230  1.00  0.00      SYST    
+ATOM     26  C8  SMZ X   1      49.900  51.660  47.140  1.00  0.00      SYST    
+ATOM     27  H5  SMZ X   1      48.350  52.220  48.410  1.00  0.00      SYST    
+ATOM     28  N4  SMZ X   1      49.190  51.850  46.010  1.00  0.00      SYST    
+ATOM     29  H12 SMZ X   1      49.770  51.930  45.370  1.00  0.00      SYST    
+ATOM     30  H11 SMZ X   1      48.460  52.300  45.970  1.00  0.00      SYST    
+ENDMDL
+END
