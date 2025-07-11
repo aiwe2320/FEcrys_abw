@@ -642,7 +642,7 @@ class model_helper_PGMcrys_v1:
         return[err_r_forward, err_l_forward], [err_r_backward, err_l_backward]
 
 class PGMcrys_v1(tf.keras.models.Model, model_helper_PGMcrys_v1, model_helper):
-    #""" !! : molecule should have >3 atoms (also true in ic_map) """
+    ''' !! : molecule should have >3 atoms (also true in ic_map) '''
     @staticmethod
     def load_model(path_and_name : str, VERSION='NEW'):
         if VERSION == 'NEW':
