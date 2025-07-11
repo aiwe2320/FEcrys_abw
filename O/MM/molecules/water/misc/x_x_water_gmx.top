@@ -1,0 +1,7 @@
+#include "forcefield.itp"
+#include "tip4p-ice.itp"
+
+[system]
+ICE
+[molecules]
+water  64
