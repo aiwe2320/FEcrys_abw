@@ -839,6 +839,8 @@ class PGMcrys_v1(tf.keras.models.Model, model_helper_PGMcrys_v1, model_helper):
         X = [x_P, X_C]
         return X, ladJ
 
+"""
+
 ####################################################################################################
 
 # attempts at PGMcrys_v2:
@@ -936,7 +938,7 @@ class C2P_connector_v2_PI(tf.keras.layers.Layer):
         return Output
 
 class PGMcrys_v2(tf.keras.models.Model, model_helper_PGMcrys_v1, model_helper):
-    #""" !! : molecule should have >3 atoms (also true in ic_map) """
+    #''' !! : molecule should have >3 atoms (also true in ic_map) '''
     @staticmethod
     def load_model(path_and_name : str, VERSION='NEW'):
         return PGMcrys_v2._load_model_(path_and_name, PGMcrys_v2)
@@ -1116,4 +1118,9 @@ class PGMcrys_v2(tf.keras.models.Model, model_helper_PGMcrys_v1, model_helper):
         return X, ladJ
 
     ##
+
+"""
+
+####################################################################################################
+
 
