@@ -656,9 +656,8 @@ class SingleComponent_map(SC_helper):
 
     def inverse_(self, variables_in):
         # variables_in:
-        # h  : (m,6)
         # xO : (m, 3*(n_mol-1))
-        # X  : (m, n_cells, n_mol_cell*high)
+        # X  : (m, n_mol, self.n_DOF_mol) # X_IC
         ladJ = 0.0
         ######################################################
         xO , X = variables_in
