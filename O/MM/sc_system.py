@@ -352,7 +352,7 @@ class SingleComponent:
 def concatenate_datasets_(paths_datasets : list):
     dataset_concat = {}
     a = 0
-    keys = ['xyz', 'COMs', 'b', 'u', 'T', 'rbv']
+    keys = ['xyz', 'COMs', 'b', 'u', 'T']
     for path in paths_datasets:
         dataset = load_pickle_(path)
         if a > 0:
