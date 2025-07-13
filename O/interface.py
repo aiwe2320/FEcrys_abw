@@ -544,6 +544,7 @@ class NN_interface_sc_multimap(NN_interface_helper):
               evaluate_on_training_data = False,
               #
               evaluate_main = True,
+              training_batch_size = 1000, # 1000 was always used
               ):
         
         if save_BAR: name_save_BAR_inputs = str(self.name_save_BAR_inputs)
@@ -570,8 +571,8 @@ class NN_interface_sc_multimap(NN_interface_helper):
                         # if the FF is cheap can use, BAR_V estimates during training will be saved.
                         list_potential_energy_functions = [self.nns[k].u_ for k in range(self.n_crystals)],
 
-                        # evalaution cost vs statistical significance of gradient of the loss (fixing to 1000, but can change)
-                        training_batch_size = 1000,
+                        # evalaution cost vs statistical significance of gradient of the loss (1000 is best)
+                        training_batch_size = training_batch_size,
                         # evalaution cost vs variance of FE estimates (affects standard error from pymbar if save_BAR True)
                         evaluation_batch_size = self.evaluation_batch_size,
 
