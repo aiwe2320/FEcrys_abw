@@ -754,6 +754,276 @@ class SingleComponent_map(SC_helper):
         mask = np.ones([1, self.n_mol ,self.n_DOF_mol]).astype(np.int32)
         return mask # (1, n_mol, n_DOF_mol) # can self.reshape_to_unitcells_ if needed
     
+####################################################################################################
+
+class SingleMolecule_map(SingleComponent_map):
+    ''' !! : molecule must have >3 atoms to use this M_{IC} layer '''
+    def __init__(self,
+                 PDB_single_mol: str,   
+                ):
+        super().__init__(PDB_single_mol)
+        self.VERSION = 'NEW'
+        
+    ## ## ## ##
+
+    def _forward_(self, r):
+        r = reshape_to_molecules_tf_(r, n_molecules=self.n_mol, n_atoms_in_molecule=self.n_atoms_mol)
+        X_IC, ladJ_IC = IC_forward_(r, self.ABCD_IC)
+        X_CB, ladJ_CB = CB_single_molecule_forward_(tf.gather(r, self.inds_atoms_CB, axis=-2))
+        return X_IC, X_CB, ladJ_IC, ladJ_CB
+
+    def _inverse_(self, X_IC, X_CB):
+        r_CB, ladJ_CB = CB_single_molecule_inverse_(X_CB)
+        r,    ladJ_IC = IC_inverse_(X_IC, r_CB, ABCD_IC_inverse=self.ABCD_IC_inverse, inds_unpermute_atoms=self.inds_unpermute_atoms)
+        r = reshape_to_atoms_tf_(r, n_molecules=self.n_mol, n_atoms_in_molecule=self.n_atoms_mol)
+        return r, ladJ_IC, ladJ_CB
+
+    ## ## ## ##
+    
+    def _forward_init_(self, r, batch_size = 10000):
+        shape = r.shape ;  m = shape[0]
+        self._first_times_crystal_(shape)
+        X_IC = []
+        a = []
+        d0 = []
+        d1 = []
+        ladJ_IC = []
+        ladJ_CB = []
+        for i in range(m//batch_size):
+            _from = i*batch_size
+            _to = (i+1)*batch_size
+            _r = reshape_to_molecules_tf_(r[_from:_to], self.n_mol, self.n_atoms_mol)
+            x_IC, x_CB, ladj_IC, ladj_CB = self._forward_(_r)
+            a.append(x_CB[0])
+            d0.append(x_CB[1])
+            d1.append(x_CB[2])
+            ladJ_IC.append(ladj_IC)
+            ladJ_CB.append(ladj_CB)
+            X_IC.append(x_IC)
+
+        # if any left [if none left; seems like it is fine to have this here anyway]
+        _r = reshape_to_molecules_tf_(r[_to:], self.n_mol, self.n_atoms_mol)
+        x_IC, x_CB, ladj_IC, ladj_CB = self._forward_(_r)
+        a.append(x_CB[0])
+        d0.append(x_CB[1])
+        d1.append(x_CB[2])
+        ladJ_IC.append(ladj_IC)
+        ladJ_CB.append(ladj_CB)
+        X_IC.append(x_IC)
+
+        a = tf.concat(a,axis=0)
+        d0 = tf.concat(d0,axis=0)
+        d1 = tf.concat(d1,axis=0)
+        ladJ_IC = tf.concat(ladJ_IC,axis=0)
+        ladJ_CB = tf.concat(ladJ_CB,axis=0)
+        X_IC = tf.concat(X_IC,axis=0) ; print('initialising on',X_IC.shape[0],'datapoints provided')
+        X_CB = [a,d0,d1]
+
+        return X_IC, X_CB, ladJ_IC, ladJ_CB
+
+    def initalise_(self,
+                   r_dataset,
+                   b0 = None,             # not used 
+                   batch_size=10000,
+                   n_mol_unitcell = None, # not used 
+                   COM_remover = None,    # not used 
+                   focused = True,
+                   ):
+        # r_dataset : (m,N,3)
+
+        X_IC, X_CB = self._forward_init_(r_dataset, batch_size=batch_size)[:2]
+        X_IC = X_IC.numpy()
+        X_CB = [x.numpy() for x in X_CB]
+        a, d0, d1 = X_CB
+
+        assert self.n_mol == self.n_mol_supercell == 1
+        n_mol_unitcell = 1
+        assert  self.n_mol_supercell // n_mol_unitcell ==  self.n_mol_supercell / n_mol_unitcell
+        self.n_mol_unitcell = n_mol_unitcell
+        self.n_unitcells = self.n_mol_supercell // self.n_mol_unitcell
 
 
+        # X_IC : (m, n_mol, n_atoms_IC, 3)
+        # a    : (m, n_mol, 1)
+        # d0   : (m, n_mol, 1)
+        # d1   : (m, n_mol, 1)
 
+        bonds = X_IC[...,0]  ; bonds = np.concatenate([d0,d1,bonds],axis=-1)
+        angles = X_IC[...,1] ; angles = np.concatenate([a,angles],axis=-1)
+        torsions = X_IC[...,2]
+
+        # bonds    : (m, n_mol, n_atoms_IC + 2)
+        # angles   : (m, n_mol, n_atoms_IC + 1)
+        # torsions : (m, n_mol, n_atoms_IC    )
+        
+        ''' not touching this to save time '''
+        bonds    = self.reshape_to_unitcells_(bonds   , combined_unitcells_with_batch_axis=True, forward=True, numpy = True) 
+        angles   = self.reshape_to_unitcells_(angles  , combined_unitcells_with_batch_axis=True, forward=True, numpy = True) 
+        torsions = self.reshape_to_unitcells_(torsions, combined_unitcells_with_batch_axis=True, forward=True, numpy = True) 
+
+        # bonds    : (m*n_unitcells, n_mol_unitcell, n_atoms_IC + 2)
+        # angles   : (m*n_unitcells, n_mol_unitcell, n_atoms_IC + 1)
+        # torsions : (m*n_unitcells, n_mol_unitcell, n_atoms_IC    )
+
+        self.focused = focused
+
+        # setting axis = [0,1] recovers old behavior
+        self.Focused_Bonds = FocusedBonds(bonds,          axis=[0], focused=self.focused)
+        self.Focused_Angles = FocusedAngles(angles,       axis=[0], focused=self.focused)
+        self.Focused_Torsions = FocusedTorsions(torsions, axis=[0], focused=self.focused)
+
+        self.n_DOF_mol = self.n_atoms_IC*3 + 3 #+ 3
+        self.ln_base_C = - np2tf_( self.n_mol_supercell*self.n_DOF_mol*np.log(2.0) )
+        self.ln_base_P = 0.0 #- np2tf_( 3*(self.n_mol_supercell-1)*np.log(2.0) )
+        
+        self.set_periodic_mask_()
+
+    def set_periodic_mask_(self,):
+
+        self.periodic_mask = np.concatenate([
+                            self.Focused_Bonds.mask_periodic[:,0],      # all zero
+                            self.Focused_Angles.mask_periodic[:,0],     # all zero
+                            self.Focused_Torsions.mask_periodic[:,0],   # True periodic_mask_same_in_all_molecules
+                            # self.Focused_Hemisphere.mask_periodic[:,0], # True periodic_mask_same_in_all_molecules
+                            ], axis=-1).reshape([self.n_DOF_mol]) # reshape just to check.
+
+
+    @property
+    def current_masks_periodic_torsions_and_Phi(self,):
+        '''
+        for match_topology_ when different instances of this obj are used for the same set of coupling layers (multimap)
+        '''
+        return [self.Focused_Torsions.mask_periodic,
+                # self.Focused_Hemisphere.Focused_Phi.mask_periodic,
+               ]
+
+    def match_topology_(self, ic_maps:list):
+        '''
+        for the multimap functionality, when different instances of this obj are used for the same set of coupling layers
+        '''
+        self.Focused_Torsions.set_ranges_(
+            merge_periodic_masks_([ic_map.current_masks_periodic_torsions_and_Phi[0] for ic_map in ic_maps])
+        )
+        # self.Focused_Hemisphere.set_ranges_(
+        #     merge_periodic_masks_([ic_map.current_masks_periodic_torsions_and_Phi[1] for ic_map in ic_maps])
+        # )
+        self.set_periodic_mask_()
+
+    ''' various parts that did not need changing inherited from SingleComponent_map
+    '''
+
+    def sample_base_P_(self, m):
+        # p_{0} (base distribution) positions:
+        return None
+    
+    ##
+    
+    def forward_(self, r):
+        # r : (m, N, 3)
+        ladJ = 0.0
+        ######################################################
+        X_IC, X_CB, ladJ_IC, ladJ_CB = self._forward_(r)
+        ladJ += tf.reduce_sum(ladJ_IC + ladJ_CB, axis=-2) # (m,1)
+        a, d0, d1 = X_CB
+
+        #### EXTERNAL : #### None
+
+        #### INTERNAL : ####
+
+        bonds = X_IC[...,0]  ; bonds  = tf.concat([d0,d1,bonds],axis=-1)
+        angles = X_IC[...,1] ; angles = tf.concat([a,angles],axis=-1)
+        torsions = X_IC[...,2]
+
+        # bonds    : (m, n_mol, n_atoms_IC + 2)
+        # angles   : (m, n_mol, n_atoms_IC + 1)
+        # torsions : (m, n_mol, n_atoms_IC    )
+
+        bonds    = self.reshape_to_unitcells_(bonds   , combined_unitcells_with_batch_axis=True, forward=True) 
+        angles   = self.reshape_to_unitcells_(angles  , combined_unitcells_with_batch_axis=True, forward=True) 
+        torsions = self.reshape_to_unitcells_(torsions, combined_unitcells_with_batch_axis=True, forward=True) 
+
+        # bonds    : (m*n_unitcells, n_mol_unitcell, n_atoms_IC + 2)
+        # angles   : (m*n_unitcells, n_mol_unitcell, n_atoms_IC + 1)
+        # torsions : (m*n_unitcells, n_mol_unitcell, n_atoms_IC    )
+        
+        x_bonds, ladJ_scale_bonds = self.Focused_Bonds(bonds, forward=True)
+        # x_bonds             : same
+        # ladJ_scale_bonds    : (1,1)
+        ladJ += ladJ_scale_bonds * self.n_unitcells
+
+        x_angles, ladJ_scale_angles = self.Focused_Angles(angles, forward=True)
+        # x_angles            : same
+        # ladJ_scale_angles   : (1,1)
+        ladJ += ladJ_scale_angles * self.n_unitcells
+
+        x_torsions, ladJ_scale_torsions = self.Focused_Torsions(torsions, forward=True)
+        # x_torsions          : same
+        # ladJ_scale_torsions : (1,1)
+        ladJ += ladJ_scale_torsions * self.n_unitcells
+
+        # x_bonds    : (m*n_unitcells, n_mol_unitcell, n_atoms_IC + 2)
+        # x_angles   : (m*n_unitcells, n_mol_unitcell, n_atoms_IC + 1)
+        # x_torsions : (m*n_unitcells, n_mol_unitcell, n_atoms_IC    )
+
+        x_bonds    = self.reshape_to_unitcells_(x_bonds   , combined_unitcells_with_batch_axis=True, forward=False) 
+        x_angles   = self.reshape_to_unitcells_(x_angles  , combined_unitcells_with_batch_axis=True, forward=False) 
+        x_torsions = self.reshape_to_unitcells_(x_torsions, combined_unitcells_with_batch_axis=True, forward=False) 
+
+        # x_bonds    : (m, n_mol, n_atoms_IC + 2)
+        # x_angles   : (m, n_mol, n_atoms_IC + 1)
+        # x_torsions : (m, n_mol, n_atoms_IC    )
+
+        X = tf.concat([x_bonds, x_angles, x_torsions], axis=-1) 
+        # X : (m, n_mol, n_DOF_mol)
+
+        xO = None
+        variables = [xO , X]
+        return variables, ladJ
+    
+    def inverse_(self, variables_in):
+        # variables_in:
+        # X : (m, n_mol, self.n_DOF_mol) ; n_mol = 1
+        ladJ = 0.0
+        ######################################################
+        _, X = variables_in
+        
+        toA = self.n_atoms_IC+2
+        toB = toA + self.n_atoms_IC+1
+        toC = toB + self.n_atoms_IC
+
+        x_bonds = X[...,:toA]
+        x_angles = X[...,toA:toB]
+        x_torsions = X[...,toB:toC]
+
+        x_bonds    = self.reshape_to_unitcells_(x_bonds   , combined_unitcells_with_batch_axis=True, forward=True)
+        x_angles   = self.reshape_to_unitcells_(x_angles  , combined_unitcells_with_batch_axis=True, forward=True)
+        x_torsions = self.reshape_to_unitcells_(x_torsions, combined_unitcells_with_batch_axis=True, forward=True)
+  
+        torsions, ladJ_scale_torsions = self.Focused_Torsions(x_torsions, forward=False)
+        ladJ += ladJ_scale_torsions * self.n_unitcells
+        angles, ladJ_scale_angles = self.Focused_Angles(x_angles, forward=False)
+        ladJ += ladJ_scale_angles * self.n_unitcells
+        bonds, ladJ_scale_bonds = self.Focused_Bonds(x_bonds, forward=False)
+        ladJ += ladJ_scale_bonds * self.n_unitcells
+
+        bonds    = self.reshape_to_unitcells_(bonds   , combined_unitcells_with_batch_axis=True, forward=False)
+        angles   = self.reshape_to_unitcells_(angles  , combined_unitcells_with_batch_axis=True, forward=False)
+        torsions = self.reshape_to_unitcells_(torsions, combined_unitcells_with_batch_axis=True, forward=False)
+
+        d0 = bonds[...,:1]
+        d1 = bonds[...,1:2]
+        bonds = bonds[...,2:]
+        a = angles[...,:1]
+        angles = angles[...,1:]
+        X_IC = tf.stack([bonds, angles, torsions], axis=-1)
+
+        ######################################################
+
+        X_CB = [a, d0, d1]
+
+        r, ladJ_IC, ladJ_CB = self._inverse_(X_IC=X_IC, X_CB=X_CB)
+        ladJ += tf.reduce_sum(ladJ_IC + ladJ_CB, axis=-2)
+        # r : (m, N, 3)
+        return r, ladJ
+
+####################################################################################################
