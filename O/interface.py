@@ -302,10 +302,10 @@ class NN_interface_helper:
         if plot_red:
             #plt.plot([self.evaluation_grid[0],self.evaluation_grid[-1]], [FEs[-1]]*2, color='red')
             plt.plot(self.evaluation_grid, FEs, color=colors[2])
-            plt.plot(self.evaluation_grid, FEs-self.SDs/n_mol, color=colors[2], linestyle='dotted')
-            plt.plot(self.evaluation_grid, FEs+self.SDs/n_mol, color=colors[2], linestyle='dotted')
-            plt.plot(self.evaluation_grid, self.BAR_V_FEs/n_mol-self.BAR_V_SEs/n_mol, color=colors[3], linestyle='dotted', linewidth=2)
-            plt.plot(self.evaluation_grid, self.BAR_V_FEs/n_mol+self.BAR_V_SEs/n_mol, color=colors[3], linestyle='dotted', linewidth=2)
+            plt.plot(self.evaluation_grid, FEs-self.SDs/n_mol, color=colors[2], linestyle='dotted', zorder=9)
+            plt.plot(self.evaluation_grid, FEs+self.SDs/n_mol, color=colors[2], linestyle='dotted', zorder=9)
+            plt.plot(self.evaluation_grid, self.BAR_V_FEs/n_mol-self.BAR_V_SEs/n_mol, color=colors[3], linestyle='dotted', linewidth=2, zorder=10)
+            plt.plot(self.evaluation_grid, self.BAR_V_FEs/n_mol+self.BAR_V_SEs/n_mol, color=colors[3], linestyle='dotted', linewidth=2, zorder=10)
             plt.plot(self.evaluation_grid, self.BAR_V_FEs/n_mol,                      color=colors[3], linewidth=2)
 
         else: pass
