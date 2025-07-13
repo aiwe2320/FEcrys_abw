@@ -839,6 +839,174 @@ class PGMcrys_v1(tf.keras.models.Model, model_helper_PGMcrys_v1, model_helper):
         X = [x_P, X_C]
         return X, ladJ
 
+####################################################################################################
+
+class PGMmol(tf.keras.models.Model, model_helper_PGMcrys_v1, model_helper):
+    ''' molecule should have >3 atoms'''
+    @staticmethod
+    def load_model(path_and_name : str):
+        return PGMmol.load_model_(path_and_name, PGMmol)
+    
+    def __init__(self,
+                 ic_maps : list,
+                 n_layers : int = 4, 
+                 optimiser_LR_decay = [0.001,0.0],
+                 DIM_connection = None, # not used. was here before, thinking about pretraining on single molecule before moving conformer params into crystal model
+                 n_att_heads = None,    # not used.
+                 initialise = True,
+                ):
+        super().__init__()
+        self.init_args = {  'ic_maps' : ic_maps,
+                            'n_layers' : n_layers,
+                            'optimiser_LR_decay' : optimiser_LR_decay,
+                            }
+        self.DIM_connection = None
+        
+        if str(type(ic_maps)) not in ["<class 'list'>","<class 'tensorflow.python.training.tracking.data_structures.ListWrapper'>"]: 
+            ic_maps = [ic_maps]
+        else: pass
+
+        self.ic_maps = ic_maps
+        self.n_mol = int(self.ic_maps[0].n_mol)
+        assert self.n_mol == 1
+        assert all([ic_map.n_mol == self.n_mol for ic_map  in self.ic_maps])
+        assert all([ic_map.n_atoms_mol == ic_maps[0].n_atoms_mol for ic_map in self.ic_maps])
+        self.n_maps = len(self.ic_maps)
+
+        if self.n_maps > 1:
+            print('matching ic_maps for the single model:')
+            [ic_map.match_topology_(ic_maps) for ic_map in self.ic_maps]
+            print('checking that ic_maps match the model:')
+            assert all(np.abs(ic_map.periodic_mask - ic_maps[0].periodic_mask).sum()==0 for ic_map in self.ic_maps)
+        else: pass
+        self.periodic_mask = np.array(self.ic_maps[0].periodic_mask)
+        assert all([np.abs(self.periodic_mask - ic_map.periodic_mask).sum() == 0 for ic_map in self.ic_maps])
+
+        #### 
+
+        if self.n_maps > 1:
+            self.dim_crystal_encoding = 1
+            self.crystal_encodings = np2tf_(np.linspace(-1.,1.,self.n_maps))
+            self.extension_shape = np2tf_(np.zeros([self.n_mol,1]))
+        else:
+            self.dim_crystal_encoding = 0
+            self.crystal_encodings = np2tf_(np.array([0]))
+            self.extension_shape = np2tf_(np.zeros([self.n_mol,0]))
+
+        ####
+        self.n_layers = n_layers
+        self.optimiser_LR_decay = optimiser_LR_decay
+        ##
+        n_hidden_main = 2
+        hidden_activation = tf.nn.leaky_relu
+        n_bins = 5
+
+        self.layers_C = [ CONFORMER_FLOW_LAYER(
+                            periodic_mask = self.periodic_mask,
+                            layer_index = i,
+                            n_mol = self.n_mol, # 1
+
+                            DIM_P2C_connection = self.dim_crystal_encoding,
+                            DIM_C2P_connection = None,
+                            name = 'CONFORMER_FLOW_LAYER',
+
+                            half_layer_class = SPLINE_COUPLING_HALF_LAYER,
+                            kwargs_for_given_half_layer_class = {'n_hidden' : n_hidden_main,
+                                                                'dims_hidden' : None,
+                                                                'hidden_activation' : hidden_activation,
+                                                                },
+                            use_tfp = False,
+                            n_bins = n_bins,
+                            min_bin_width = 0.001,
+                            knot_slope_range = [0.001, 50.0],
+
+                            custom_coupling_mask = None, 
+                            n_hidden_connection = None,
+                        ) for i in range(self.n_layers)]
+        
+        ## p_{0}:
+        self.ln_base_ = self.ic_maps[0].ln_base_
+        self.sample_base_ = self.ic_maps[0].sample_base_
+        
+        ## trainability:
+        self.all_parameters_trainable = True
+        if initialise: self.initialise()
+        else: pass
+
+    def get_extension_(self, m, crystal_index):
+        # 'crystal_index' (here index of metastable state of single molecule in vaccum)
+
+        number = self.crystal_encodings[crystal_index]
+        extension = self.extension_shape + number   # (1, 1)
+        extension = tf.stack([extension]*m, axis=0) # (m, 1, 1)
+
+        return extension # 'crystal embeddings', zero dimensional if training on just 1 state
+
+    def _forward_coupling_(self, X, crystal_index=0):
+        # trainable trasformation x -> z, conditioned on 'crystal_index' (here index of metastable state of single molecule in vaccum)
+        # X : (m,1,3*(N-2)) ; all DOFs of a single molecule
+
+        ladJ = 0.0
+        _, X_C = X
+        extension = self.get_extension_(m=X_C.shape[0], crystal_index=crystal_index)
+
+        for i in range(self.n_layers):
+            X_C, ladj = self.layers_C[i].forward_(X_C, aux=extension) ; ladJ += ladj
+
+        Z = [_, X_C]
+        return Z, ladJ
+    
+    def _inverse_coupling_(self, Z, crystal_index=0):
+         # trainable trasformation z -> x, conditioned on 'crystal_index' (here index of metastable state of single molecule in vaccum)
+        # Z : (m,1,3*(N-2)) ; all DOFs of a single molecule
+        ladJ = 0.0
+        _, X_C = Z
+        extension = self.get_extension_(m=X_C.shape[0], crystal_index=crystal_index)
+
+        for i in reversed(range(self.n_layers)):
+            X_C, ladj = self.layers_C[i].inverse_(X_C, aux=extension) ; ladJ += ladj
+
+        X = [_, X_C]
+        return X, ladJ
+    
+    def test_inverse_(self, r, crystal_index=0, graph=True):
+        # test invertibility of the model in both directions
+        ''' same as method with the same name in model_helper but has crystal_index as arg '''
+
+        r = np2tf_(r) 
+        m = r.shape[0]
+
+        if graph: f_ = self.forward  ; i_ = self.inverse
+        else:     f_ = self.forward_ ; i_ = self.inverse_
+        ##
+        z, ladJrz   = f_(r, crystal_index=crystal_index)
+        _r, ladJzr = i_(z, crystal_index=crystal_index)
+
+        err_r_forward = np.abs(r - _r)
+        err_r_forward = [err_r_forward.mean(), err_r_forward.max()]
+        err_l_forward = np.array(ladJrz + ladJzr)
+        err_l_forward = [err_l_forward.mean(), err_l_forward.min(), err_l_forward.max()]
+        ##
+        z = self.sample_base_(m)
+        _r, ladJzr = i_(z, crystal_index=crystal_index)
+        
+        try: 
+            _z, ladJrz = f_(_r, crystal_index=crystal_index)
+
+            err_r_backward = [np.abs(z[-1] - _z[-1])] # no positions
+            err_r_backward = [[x.mean(), x.max()] for x in err_r_backward]
+            err_l_backward = np.array(ladJrz + ladJzr)
+            err_l_backward = [err_l_backward.mean(), err_l_backward.min(), err_l_backward.max()]
+
+        except:
+            err_r_backward = [None]
+            err_l_backward = [None]
+
+        # [2,3], [[2]*..,3] 
+        return[err_r_forward, err_l_forward], [err_r_backward, err_l_backward]
+
+####################################################################################################
+
 """
 
 ####################################################################################################
