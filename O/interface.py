@@ -411,7 +411,11 @@ class NN_interface_sc(NN_interface_helper):
             if value > 1.000001: print('!!', value)
             else: print(value)
         except:
-            value = max([np.abs(np.array(_x)).max() for _x in x]) # 1.0000004 , 1.0000006
+            values = []
+            for _x in x:
+                try: values.append(np.abs(np.array(_x)).max())
+                except: pass
+            value = max(values) # 1.0000004 , 1.0000006
             if value > 1.000001: print('!!', value)
             else: print(value)
 
