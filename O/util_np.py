@@ -373,3 +373,9 @@ class TestConverged_1D:
             plt.ylim(mean-window, mean+window)
         
 ## ## 
+
+def K_to_C_(K):
+    return K - 273.15
+
+def C_to_K_(C):
+    return C + 273.15
