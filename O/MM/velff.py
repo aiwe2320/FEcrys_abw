@@ -184,7 +184,8 @@ def velff_LJ_force_(sc, C6_C12_types_dictionary):
     table_C6 = mm.Discrete2DFunction(sc.N, sc.N, _table_C6.flatten().tolist())
     table_C12 = mm.Discrete2DFunction(sc.N, sc.N, _table_C12.flatten().tolist())
     
-    force = mm.CustomNonbondedForce('(1/r^12)*C12 - (1/r^6)*C6 ; C6 = table_C6(p1,p2) ; C12 = table_C12(p1,p2)')
+    force = mm.CustomNonbondedForce('ecm_lambda * ((1/r^12)*C12 - (1/r^6)*C6) ; C6 = table_C6(p1,p2) ; C12 = table_C12(p1,p2)')
+    force.addGlobalParameter('ecm_lambda', 1.0)
     
     force.addPerParticleParameter("p")
     force.addTabulatedFunction('table_C6', table_C6)
