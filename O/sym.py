@@ -217,7 +217,7 @@ class DatasetSymmetryReduction:
         else: self._prepare_sort_methyl_()
 
         _range = [-np.pi, np.pi]
-        fig, ax = plt.subplots(self.n_mol, self.n_methyl_groups, figsize=(6,6))
+        fig, ax = plt.subplots(max(self.n_mol, 2), max(self.n_methyl_groups, 2), figsize=(6,6))
         _r = reshape_to_molecules_np_(self.r, n_atoms_in_molecule=self.n_atoms_mol, n_molecules=self.n_mol)
         for i in range(self.n_methyl_groups):
             phi_h0 = get_torsion_np_(_r,  self.inds_torsions_ch3[i][0])
