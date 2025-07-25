@@ -690,16 +690,20 @@ class PGMcrys_v1(tf.keras.models.Model, model_helper_PGMcrys_v1, model_helper):
         self.periodic_mask = np.array(self.ic_maps[0].periodic_mask)
         assert all([np.abs(self.periodic_mask - ic_map.periodic_mask).sum() == 0 for ic_map in self.ic_maps])
         # preparing how psi_{C->P} and psi_{P->C} are extended along last axis with crystal encoding:
+
+        if self.ic_maps[0].VERSION == 'P3': number_of_parallel_molecules = self.ic_maps[0].n_unitcells
+        else: number_of_parallel_molecules = self.n_mol
+                     
         if self.n_maps > 1:
             self.dim_crystal_encoding = 1
             self.crystal_encodings = np2tf_(np.linspace(-1.,1.,self.n_maps))
             self.C2P_extension_shape = np2tf_(np.zeros([1,1]))
-            self.P2C_extension_shape = np2tf_(np.zeros([self.n_mol,1]))
+            self.P2C_extension_shape = np2tf_(np.zeros([number_of_parallel_molecules, 1]))
         else:
             self.dim_crystal_encoding = 0
             self.crystal_encodings = np2tf_(np.array([0]))
             self.C2P_extension_shape = np2tf_(np.zeros([1,0]))
-            self.P2C_extension_shape = np2tf_(np.zeros([self.n_mol,0]))
+            self.P2C_extension_shape = np2tf_(np.zeros([number_of_parallel_molecules, 0]))
 
         ####
 
@@ -709,9 +713,6 @@ class PGMcrys_v1(tf.keras.models.Model, model_helper_PGMcrys_v1, model_helper):
         self.n_att_heads = n_att_heads
 
         ##
-        if self.ic_maps[0].VERSION == 'P3': number_of_parallel_molecules = self.ic_maps[0].n_unitcells
-        else: number_of_parallel_molecules = self.n_mol
-
         self.DIM_P2C_connection = self.DIM_connection  
         self.DIM_C2P_connection = number_of_parallel_molecules*self.DIM_connection
         self.DIM_C2C_connection = None
