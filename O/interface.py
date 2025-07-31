@@ -303,7 +303,7 @@ class NN_interface_helper:
         plot.fill_between(self.evaluation_grid, BAR_V-BAR_V_SEs, BAR_V+BAR_V_SEs, alpha=0.4, color=colors[0])
 
         if plot_red:
-            #plt.plot([self.evaluation_grid[0],self.evaluation_grid[-1]], [FEs[-1]]*2, color='red')
+            #plot.plot([self.evaluation_grid[0],self.evaluation_grid[-1]], [FEs[-1]]*2, color='red')
             plot.plot(self.evaluation_grid, FEs, color=colors[2])
             plot.plot(self.evaluation_grid, FEs-self.SDs/n_mol, color=colors[2], linestyle='dotted', zorder=9)
             plot.plot(self.evaluation_grid, FEs+self.SDs/n_mol, color=colors[2], linestyle='dotted', zorder=9)
@@ -313,7 +313,7 @@ class NN_interface_helper:
 
         else: pass
 
-        if ax is not None: plt.set_ylim(FE-window, FE+window)
+        if ax is not None: plot.set_ylim(FE-window, FE+window)
         else:              plot.ylim(FE-window, FE+window)
         print(FE,'+/-', self.SDs[-1]/n_mol, 'final:', self.BAR_V_FE/n_mol, '+/-', self.BAR_V_SE/n_mol)
 
