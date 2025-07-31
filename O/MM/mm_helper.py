@@ -153,20 +153,23 @@ def update_CustomNonbondedForce_(_force, _lam, deepcopy=True):
     if deepcopy: force = copy.deepcopy(_force)
     else: force = _force
 
-    ''' only in OPLS and TIP4P, not in GAFF '''
-
     # epsilon_ij = (eps_i * eps_j)**0.5      # _lam * epsilon_ij = ((_lam*eps_i) * (_lam*eps_j))**0.5
 
     # [force.getPerParticleParameterName(0), force.getPerParticleParameterName(1)]
     # ['epsilon', 'sigma']
-    assert force.getPerParticleParameterName(0) == 'epsilon'
+    try:
+        assert force.getGlobalParameterName(0) == 'ecm_lambda'
+        force.setGlobalParameterDefaultValue(0, defaultValue=_lam)
 
-    for i in range(force.getNumParticles()):
-        old_params = force.getParticleParameters(i)
-        epsilon_i, sigma_i = old_params
-        new_epsilon_i = epsilon_i*_lam
-        new_params = [new_epsilon_i, sigma_i]
-        force.setParticleParameters(i, new_params) # second arg : list (of two numbers)
+    except:
+        assert force.getPerParticleParameterName(0) == 'epsilon'
+
+        for i in range(force.getNumParticles()):
+            old_params = force.getParticleParameters(i)
+            epsilon_i, sigma_i = old_params
+            new_epsilon_i = epsilon_i*_lam
+            new_params = [new_epsilon_i, sigma_i]
+            force.setParticleParameters(i, new_params) # second arg : list (of two numbers)
     return force
 
 def put_lambda_into_system_(system,
