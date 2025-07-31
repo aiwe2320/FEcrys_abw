@@ -322,14 +322,10 @@ class SingleComponent:
 
     @staticmethod
     def initialise_from_save_(path_and_name:str, resume_simulation=True, verbose=True):
-        '''
-        method allows to resume everything later (on another machine)
-        '''
-        '''
-        TODO if needed: be able to do the same when lambda < 1
-        '''
+
         if type(path_and_name) is str:
             dataset = SingleComponent.load_simulation_data_(path_and_name=path_and_name)
+            print(f'initialising from saved dataset: {path_and_name}')
         else:
             dataset = path_and_name
 
