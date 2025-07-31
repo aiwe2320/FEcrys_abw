@@ -577,7 +577,7 @@ def merge_periodic_masks_(list_periodic_masks):
 
 ## focused rotations:
 
-# cell600 : a uniform grid on S3 # 4D version of icosahedron (centres of black pentagons on a soccer ball)
+# cell600 : a uniform grid on S3 (used for grid search in Static_Rotations_Layer)
 cell600 = [ [ 0.5       ,  0.5       ,  0.5       ,  0.5       ],
             [-0.5       ,  0.5       ,  0.5       ,  0.5       ],
             [ 0.5       , -0.5       ,  0.5       ,  0.5       ],
