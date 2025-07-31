@@ -1043,16 +1043,6 @@ def quat2axisangle_(q):
     axis = q123 / n
     return axis*angle
 
-'''
-def get_E_(x):
-    """ REF: https://github.com/noegroup/bgflow
-    Input:  x : (..., n)
-    Output: E : (..., n, n-1) : n-1 n-dimensional othonormal vectors on S(n-1) at x
-    """
-    E = tf.linalg.svd(tf.einsum('...i,...j->...ij',x,x))[-1][...,1:] # (..., d_extrisic, d_intrisic)
-    return E
-'''
-
 ## ##
 
 def get_coupling_masks_(dim_flow : int):
