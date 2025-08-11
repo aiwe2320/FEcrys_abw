@@ -159,6 +159,14 @@ class DatasetSymmetryReduction:
 
     ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
 
+    def cluster_symmetric_torsion_(self, phi, symmetry_order:int, offest=np.pi):
+        C = [cluster_symmetric_torsion_(phi, symmetry_order=symmetry_order, offest=offest)]
+        for _ in range(symmetry_order-1): 
+            C.append(np.mod(C[-1]+1, symmetry_order))
+        return np.stack(C, axis=-1).reshape([self.n_frames, symmetry_order])
+
+    ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+    
     def _prepare_sort_methyl_(self,):
         methyl_group_smarts = "[CH3]"
         methyl_pattern = Chem.MolFromSmarts(methyl_group_smarts)
@@ -182,15 +190,9 @@ class DatasetSymmetryReduction:
         a = ind_mol*self.n_atoms_mol ; b = a + self.n_atoms_mol
 
         phi_h0 = get_torsion_np_(reshape_to_molecules_np_(self.r[:,a:b], n_atoms_in_molecule=self.n_atoms_mol, n_molecules=1)[:,0], inds_torsions_0) 
-
+        C = self.cluster_symmetric_torsion_(phi_h0, 3)
+        
         inds_H = np.array([inds_torsions_0, inds_torsions_1, inds_torsions_2])
-
-        symmetry_order = 3
-        C = [cluster_symmetric_torsion_(phi_h0, symmetry_order=symmetry_order)]
-        for _ in range(symmetry_order-1): 
-            C.append(np.mod(C[-1]+1,symmetry_order))
-        C = np.stack(C, axis=-1).reshape([self.n_frames, symmetry_order])
-
         inds_H_j =  inds_H + ind_mol * self.n_atoms_mol
 
         if lookup_index >= 0:
@@ -289,13 +291,7 @@ class DatasetSymmetryReduction:
         inds_cA0_cA1_cA2 = np.array([inds_torsions[0], inds_torsions[1], inds_torsions[2]])
         inds_A0h3_A1h3_A2h3 = np.array(self.inds_trimethyl_cA012h3[occurrence])
 
-        symmetry_order = 3
-
-        C = [cluster_symmetric_torsion_(phi_cA0[:,i], symmetry_order=symmetry_order, offest=offest)]
-        for _ in range(symmetry_order-1):
-            C.append(np.mod(C[-1]+1,symmetry_order))
-        C = np.stack(C,axis=-1)
-        C = C.reshape([len(C), symmetry_order])
+        C = self.cluster_symmetric_torsion_(phi_cA0[:,i], 3, offest=offest)
 
         ''' moving the carbons A0, A1, A2 (the main part) '''
         inds_cA0_cA1_cA2_i = inds_cA0_cA1_cA2 + i * self.n_atoms_mol
@@ -380,3 +376,4 @@ class DatasetSymmetryReduction:
                 if axes_off: ax[j].set_axis_off()
                 else: ax[j].set_xticks([-np.pi, -np.pi/2, 0, np.pi/2, np.pi], ['$-\pi$','$-\pi/2$','$0$','$\pi/2$','$\pi$'])
         plt.tight_layout()
+
