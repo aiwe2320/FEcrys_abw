@@ -182,7 +182,7 @@ class DatasetSymmetryReduction:
         self.n_methyl_groups = len(self.inds_torsions_ch3)
         print('# methyl groups:', self.n_methyl_groups)
 
-    def _sort_methyl_(self, ind_methyl, ind_mol, lookup_index=0, offset=np.pi)):
+    def _sort_methyl_(self, ind_methyl, ind_mol, lookup_index=0, offset=np.pi):
         inds_torsions_0 = np.array(self.inds_torsions_ch3[ind_methyl][0])
         inds_torsions_1 = np.array(self.inds_torsions_ch3[ind_methyl][1])
         inds_torsions_2 = np.array(self.inds_torsions_ch3[ind_methyl][2])
@@ -397,6 +397,7 @@ class DatasetSymmetryReduction:
                 if axes_off: ax[j].set_axis_off()
                 else: ax[j].set_xticks([-np.pi, -np.pi/2, 0, np.pi/2, np.pi], ['$-\pi$','$-\pi/2$','$0$','$\pi/2$','$\pi$'])
         plt.tight_layout()
+
 
 
 
