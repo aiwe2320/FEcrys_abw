@@ -182,7 +182,7 @@ class DatasetSymmetryReduction:
         self.n_methyl_groups = len(self.inds_torsions_ch3)
         print('# methyl groups:', self.n_methyl_groups)
 
-    def _sort_methyl_(self, ind_methyl, ind_mol, lookup_index=0):
+    def _sort_methyl_(self, ind_methyl, ind_mol, lookup_index=0, offset=np.pi)):
         inds_torsions_0 = np.array(self.inds_torsions_ch3[ind_methyl][0])
         inds_torsions_1 = np.array(self.inds_torsions_ch3[ind_methyl][1])
         inds_torsions_2 = np.array(self.inds_torsions_ch3[ind_methyl][2])
@@ -190,7 +190,7 @@ class DatasetSymmetryReduction:
         a = ind_mol*self.n_atoms_mol ; b = a + self.n_atoms_mol
 
         phi_h0 = get_torsion_np_(reshape_to_molecules_np_(self.r[:,a:b], n_atoms_in_molecule=self.n_atoms_mol, n_molecules=1)[:,0], inds_torsions_0) 
-        C = self.cluster_symmetric_torsion_(phi_h0, 3)
+        C = self.cluster_symmetric_torsion_(phi_h0, 3, offest=offset)
         
         inds_H = np.array([inds_torsions_0, inds_torsions_1, inds_torsions_2])
         inds_H_j =  inds_H + ind_mol * self.n_atoms_mol
@@ -205,6 +205,7 @@ class DatasetSymmetryReduction:
                 permutation = self.LOOKUP_random_rotation[np.random.choice(3, 1, replace=False)[0]]
                 self.r[frame,inds_H_j,:] = np.take(self.r[frame,inds_H_j,:], permutation, axis=0)
 
+    ''' some cases need different offests for different methyl groups, adding.
     def sort_methyl_(self, lookup_indices=[0,3]):
         if hasattr(self, 'n_trimethyl_groups'): pass
         else: self._prepare_sort_methyl_()
@@ -216,7 +217,24 @@ class DatasetSymmetryReduction:
             lookup_inds = (list(lookup_indices[i])*self.n_mol)[:self.n_mol]
             print('dealing with methyl group',i)
             [self._sort_methyl_(i, j, lookup_index = lookup_inds[j]) for j in range(self.n_mol)];
+    '''
+    def sort_methyl_(self, lookup_indices=[0,3], offsets=[np.pi]):
+        if hasattr(self, 'n_trimethyl_groups'): pass
+        else: self._prepare_sort_methyl_()
 
+        if type(lookup_indices[0]) is int:
+            lookup_indices = [lookup_indices]*self.n_methyl_groups
+            if len(offsets) > 1: print('!! check why this is printed')
+            offsets = [offsets[0]]*self.n_methyl_groups
+        else:
+            assert len(lookup_indices) == self.n_methyl_groups
+            assert len(offsets) == self.n_methyl_groups
+
+        for i in range(self.n_methyl_groups):
+            lookup_inds = (list(lookup_indices[i])*self.n_mol)[:self.n_mol]
+            print('dealing with methyl group',i)
+            [self._sort_methyl_(i, j, lookup_index = lookup_inds[j], offset=offsets[i]) for j in range(self.n_mol)];
+    
     def plot_methyl_(self, axes_off=True):
         if hasattr(self, 'n_methyl_groups'): pass
         else: self._prepare_sort_methyl_()
@@ -379,6 +397,7 @@ class DatasetSymmetryReduction:
                 if axes_off: ax[j].set_axis_off()
                 else: ax[j].set_xticks([-np.pi, -np.pi/2, 0, np.pi/2, np.pi], ['$-\pi$','$-\pi/2$','$0$','$\pi/2$','$\pi$'])
         plt.tight_layout()
+
 
 
 
