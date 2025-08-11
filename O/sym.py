@@ -209,10 +209,13 @@ class DatasetSymmetryReduction:
         if hasattr(self, 'n_trimethyl_groups'): pass
         else: self._prepare_sort_methyl_()
 
-        lookup_indices = (list(lookup_indices)*self.n_mol)[:self.n_mol]
+        if type(lookup_indices[0]) is int: lookup_indices = [lookup_indices]*self.n_methyl_groups
+        else:                              assert len(lookup_indices) == self.n_methyl_groups
+        
         for i in range(self.n_methyl_groups):
+            lookup_inds = (list(lookup_indices[i])*self.n_mol)[:self.n_mol]
             print('dealing with methyl group',i)
-            [self._sort_methyl_(i, j, lookup_index = lookup_indices[j]) for j in range(self.n_mol)];
+            [self._sort_methyl_(i, j, lookup_index = lookup_inds[j]) for j in range(self.n_mol)];
 
     def plot_methyl_(self, axes_off=True):
         if hasattr(self, 'n_methyl_groups'): pass
@@ -376,4 +379,5 @@ class DatasetSymmetryReduction:
                 if axes_off: ax[j].set_axis_off()
                 else: ax[j].set_xticks([-np.pi, -np.pi/2, 0, np.pi/2, np.pi], ['$-\pi$','$-\pi/2$','$0$','$\pi/2$','$\pi$'])
         plt.tight_layout()
+
 
