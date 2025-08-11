@@ -282,7 +282,8 @@ class NN_interface_helper:
         self.BAR_V_SEs = np.max([self.BAR_V_SEs, self.BAR_V_SDs], axis=0)
         self.BAR_V_SE  = self.BAR_V_SEs[-1]
 
-    def plot_result_(self, window=1, entropy_only=False, plot_red=True, n_mol=1, colors=['green', 'blue', 'm', 'red'], ax=None):
+    def plot_result_(self, window=1, entropy_only=False, plot_red=True, n_mol=1, colors=['green', 'blue', 'm', 'red'], ax=None,
+                     plot_raw_errors = True):
         if ax is not None: plot = ax
         else: plot = plt
 
@@ -300,8 +301,10 @@ class NN_interface_helper:
 
         plot.plot(self.evaluation_grid, BAR_V, color=colors[0])
         plot.plot(self.evaluation_grid, self.estimates[0,:,7]/n_mol, color=colors[1], linewidth=0.3, linestyle='--')
-        plot.fill_between(self.evaluation_grid, BAR_V-BAR_V_SEs, BAR_V+BAR_V_SEs, alpha=0.4, color=colors[0])
-
+        if plot_raw_errors:
+            plot.fill_between(self.evaluation_grid, BAR_V-BAR_V_SEs, BAR_V+BAR_V_SEs, alpha=0.4, color=colors[0])
+        else: pass
+        
         if plot_red:
             #plot.plot([self.evaluation_grid[0],self.evaluation_grid[-1]], [FEs[-1]]*2, color='red')
             plot.plot(self.evaluation_grid, FEs, color=colors[2])
