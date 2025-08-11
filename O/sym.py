@@ -437,7 +437,7 @@ class DatasetSymmetryReduction:
         
         lookup_indices = (list(lookup_indices)*self.n_mol)[:self.n_mol]
         print('dealing with custom n2 group')
-        [self. _sort_n2_(inds_A, inds_B, j, lookup_index=lookup_indices[j], offest=offest) for j in range(self.n_mol)];
+        [self._sort_n2_(inds_A, inds_B, j, lookup_index=lookup_indices[j], offest=offest) for j in range(self.n_mol)];
 
     def _sort_n2_(self, inds_A, inds_B, ind_mol, lookup_index=0, offest=0):
         inds_torsions_0 = inds_A
@@ -487,7 +487,4 @@ class DatasetSymmetryReduction:
         plt.tight_layout()
 
     ## ## ## ## 
-
-
-
 
