@@ -221,7 +221,7 @@ class NN_interface_helper:
                     if type(x) is list: x = x[0]
                     else: pass
                     m = x.shape[-1]//2
-
+                    # offset = x[0,:m].mean()
                     mbar_res = MBAR(np.stack([x[0]-offset, x[1]],axis=0),
                                     np.array([m]*2),
                                     n_bootstraps=n_bootstraps,
@@ -243,7 +243,7 @@ class NN_interface_helper:
                     if type(x) is list: x = x[0]
                     else: pass
                     m = x.shape[-1]//2
-
+                    # offset = x[0,:m].mean()
                     mbar_res = MBAR(np.stack([x[0]-offset, x[1]],axis=0),
                                     np.array([m]*2),
                                     n_bootstraps=n_bootstraps,
@@ -369,6 +369,15 @@ class NN_interface_sc(NN_interface_helper):
             self.n_training = int(self.u.shape[0]*self.fraction_training)
 
             del self.simulation_data
+
+    def truncate_data_(self, m=None):
+        inds = np.random.choice(len(self.u),len(self.u),replace=False)
+        self.r = self.r[inds][:m]
+        self.u = self.u[inds][:m]
+        assert len(self.r) == len(self.u)
+        self.n_training = int(self.u.shape[0]*self.fraction_training)
+        
+        self.Ts = self.Ts[inds][:m]
 
     def set_ic_map_step1(self, ind_root_atom=11, option=None):
         '''
