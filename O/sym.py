@@ -398,6 +398,95 @@ class DatasetSymmetryReduction:
                 else: ax[j].set_xticks([-np.pi, -np.pi/2, 0, np.pi/2, np.pi], ['$-\pi$','$-\pi/2$','$0$','$\pi/2$','$\pi$'])
         plt.tight_layout()
 
+    ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
+
+    def plot_torsion_(self, index_of_atom:int, axes_off=False):
+        '''
+        # plot_mol_larger_(self.sc.mol) ; to see atoms
+        # self.ic_map.ABCD_IC           ; to see all indices
+        '''
+
+        can_plot = index_of_atom in self.ic_map.inds_atoms_IC
+        if can_plot: pass
+        else:  print('! this atom does not have an associated torsional angle') ; assert can_plot
+
+        inds_phi = self.ic_map.ABCD_IC[np.where(self.ic_map.ABCD_IC[:,0]==index_of_atom)[0][0]]
+        print(f'Plotting torsion histogram of atom {index_of_atom} (indices: {inds_phi})')
+
+        _r = reshape_to_molecules_np_(self.r, n_atoms_in_molecule=self.n_atoms_mol, n_molecules=self.n_mol)
+        phi = get_torsion_np_(_r, inds_phi)
+
+        _range = [-np.pi, np.pi]
+        m = len(phi)
+        fig, ax = plt.subplots(self.n_mol, figsize=(6,6))
+        for j in range(self.n_mol):
+            plot_1D_histogram_(phi[:,j,0], range=_range, color='C0', ax=ax[j], mask_0=True)
+            ax[j].scatter(phi[:,j,0], [-1]*m, color='C0', s=0.1)
+            ax[j].set_xlim(_range)
+            if axes_off: ax[j].set_axis_off()
+            else: pass
+        plt.tight_layout()
+
+    ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
+    ## reshuffle indices of two selected atoms:
+
+    def sort_n2_(self, inds_AB:list, lookup_indices:list=[-1], offest=0):
+
+        inds_A, inds_B = self.ic_map.ABCD_IC[[np.where(self.ic_map.ABCD_IC[:,0]==ind)[0][0] for ind in inds_AB]]
+        assert [inds_A[i]==inds_B[i] for i in [1,2,3]] and inds_A[0]!=inds_B[0]
+        
+        lookup_indices = (list(lookup_indices)*self.n_mol)[:self.n_mol]
+        print('dealing with custom n2 group')
+        [self. _sort_n2_(inds_A, inds_B, j, lookup_index=lookup_indices[j], offest=offest) for j in range(self.n_mol)];
+
+    def _sort_n2_(self, inds_A, inds_B, ind_mol, lookup_index=0, offest=0):
+        inds_torsions_0 = inds_A
+        inds_torsions_1 = inds_B
+
+        a = ind_mol*self.n_atoms_mol ; b = a + self.n_atoms_mol
+
+        phi_h0 = get_torsion_np_(reshape_to_molecules_np_(self.r[:,a:b], n_atoms_in_molecule=self.n_atoms_mol, n_molecules=1)[:,0], inds_torsions_0) 
+        C = self.cluster_symmetric_torsion_(phi_h0, 2, offest=offest)
+
+        inds_X_j = np.array([inds_torsions_0[0], inds_torsions_1[0]]) + ind_mol * self.n_atoms_mol
+
+        assert lookup_index in [-1, 0, 1]
+
+        if lookup_index >= 0:
+            LOOKUPS = [{(0,1):(0,1), (1,0):(1,0)}, {(0,1):(1,0), (1,0):(0,1)}]
+            for frame in range(self.n_frames):
+                permutation = list(LOOKUPS[lookup_index][tuple(C[frame].tolist())])
+                self.r[frame,inds_X_j,:] = np.take(self.r[frame,inds_X_j,:], permutation, axis=0)
+        else:
+            LOOKUPS = [[0,1], [1,0]]
+            for frame in range(self.n_frames):
+                permutation = LOOKUPS[np.random.choice(2, 1, replace=False)[0]]
+                self.r[frame,inds_X_j,:] = np.take(self.r[frame,inds_X_j,:], permutation, axis=0)
+
+    def plot_n2_(self, inds_AB:list, axes_off=True):
+
+        inds_A, inds_B = self.ic_map.ABCD_IC[[np.where(self.ic_map.ABCD_IC[:,0]==ind)[0][0] for ind in inds_AB]]
+        assert [inds_A[i]==inds_B[i] for i in [1,2,3]] and inds_A[0]!=inds_B[0]
+
+        _range = [-np.pi, np.pi]
+        fig, ax = plt.subplots(self.n_mol, figsize=(6,6))
+        _r = reshape_to_molecules_np_(self.r, n_atoms_in_molecule=self.n_atoms_mol, n_molecules=self.n_mol)
+
+        phi_h0 = get_torsion_np_(_r, inds_A)
+        phi_h1 = get_torsion_np_(_r, inds_B)
+        m = len(phi_h0)
+
+        for j in range(self.n_mol):
+            plot_1D_histogram_(phi_h0[:,j,0], range=_range, color='C0', ax=ax[j], mask_0=True)
+            plot_1D_histogram_(phi_h1[:,j,0], range=_range, color='C1', ax=ax[j], mask_0=True)
+            ax[j].scatter(phi_h0[:,j,0], [-1]*m, color='C0', s=0.1)
+            ax[j].scatter(phi_h1[:,j,0], [-2]*m, color='C1', s=0.1)
+            ax[j].set_xlim(_range)
+            if axes_off: ax[j].set_axis_off()
+            else: pass
+        plt.tight_layout()
+
+    ## ## ## ## 
 
 
 
