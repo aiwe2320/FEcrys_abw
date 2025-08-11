@@ -371,6 +371,24 @@ class NN_interface_sc(NN_interface_helper):
             del self.simulation_data
 
     def truncate_data_(self, m=None):
+        '''
+        If needed: 
+            this function makes the dataset (self.r) smaller in size
+                ran as soon as NN_interface_sc initialised (at least before set_ic_map_step2)
+        
+        Why:
+        Memory (RAM) in larger supercells overflows such that tensorflow does not work:
+            - cause: tensorflow (tf) loading whole dataset into GPU memory
+                - cause: any one function in any part of ic_map, during dataset initialisation, not numpy but tf
+            - solutions (good): 
+                change all functions involved with dataset initialisation to numpy (i.e., have a numpy version of ic_map._forward_)
+                change to torch where small data batches attached to gpu at any time
+                use a computer with more (V)RAM
+            - solutions (bad):
+                use this function to be able to train something large, but at the cost of error bars being high.
+                    - cause: early overfitting = validation loss not properly minimised
+                        - cause: q (PGM) not symmetry aware --> needs plenty data in a larger supercell --> memory.
+        '''
         inds = np.random.choice(len(self.u),len(self.u),replace=False)
         self.r = self.r[inds][:m]
         self.u = self.u[inds][:m]
