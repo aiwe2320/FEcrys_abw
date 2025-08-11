@@ -83,9 +83,9 @@ class DatasetSymmetryReduction:
         dataset['MD dataset']['xyz'] = self.r
         save_pickle_(dataset, path_dataset_sym)
 
-    def check_energy_(self,):
-        self.u_sym = self.sc.u_(self.r, b=self.sc.boxes)
-        print('np.abs(self.u_sym - self.sc.u).max():', np.abs(self.u_sym - self.sc.u).max())
+    def check_energy_(self, m=None):
+        self.u_sym = self.sc.u_(self.r[:m], b=self.sc.boxes[:m])
+        print('np.abs(self.u_sym - self.sc.u).max():', np.abs(self.u_sym - self.sc.u[:m]).max())
 
     def __init__(self,
                  path_dataset : str,
@@ -379,5 +379,6 @@ class DatasetSymmetryReduction:
                 if axes_off: ax[j].set_axis_off()
                 else: ax[j].set_xticks([-np.pi, -np.pi/2, 0, np.pi/2, np.pi], ['$-\pi$','$-\pi/2$','$0$','$\pi/2$','$\pi$'])
         plt.tight_layout()
+
 
 
