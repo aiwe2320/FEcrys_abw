@@ -446,8 +446,6 @@ class NN_interface_sc(NN_interface_helper):
         self.u = self.u[inds][:m]
         assert len(self.r) == len(self.u)
         self.n_training = int(self.u.shape[0]*self.fraction_training)
-        
-        self.Ts = self.Ts[inds][:m]
 
     def set_ic_map_step1(self, ind_root_atom=11, option=None):
         '''
