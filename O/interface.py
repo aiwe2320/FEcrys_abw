@@ -925,7 +925,7 @@ class NN_interface_sc_multimap_selective_evaluation(NN_interface_sc_multimap):
             except:
                 print(f'evalaution batch {i}: evaluating potential energies on model samples. The estimate will be saved.')
                 r_BG, ln_q_BG, u_V, ln_q_V, w_V = load_pickle_(name)
-                # TDOD (in general for biased data): add way to rewight pymbar solving 2state BAR when wights (w_V) not None
+                # TODO (in general for biased data): add way to rewight pymbar solving 2state BAR when weights (w_V) not None
 
                 assert len(r_BG) == len(ln_q_BG)
                 assert len(u_V)  == len(ln_q_V)
