@@ -338,7 +338,7 @@ class NN_interface_helper:
 
         BAR_V_FEs_raw = np.array(self.BAR_V_FEs_raw)/n_mol
         BAR_V_SEs_raw = np.array(self.BAR_V_SEs_raw)/n_mol
-        BAR_V_FEs_averaged = np.array(self.BAR_V_FEs)/n_mol ; FE  = BAR_V_FEs_averaged[-1]
+        BAR_V_FEs_averaged = np.array(self.BAR_V_FEs)/n_mol ; FE = float(self.BAR_V_FE)
         BAR_V_SEs_averaged = np.array(self.BAR_V_SEs)/n_mol
 
         plot.plot(self.evaluation_grid, BAR_V_FEs_raw, color=colors[0])
