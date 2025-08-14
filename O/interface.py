@@ -191,7 +191,9 @@ class NN_interface_helper:
                                 # can check other methods
                                 n_bootstraps = 0, # default in MBAR class https://pymbar.readthedocs.io/en/latest/mbar.html
                                 uncertainty_method = None, # can set 'bootstrap' if n_bootstraps not None
-                                save_output = True):
+                                save_output = True,
+                                method_for_selective_evalaution_ = None,
+                               ):
         # from energies that were saved during training
         n_states = 1
         try:
@@ -201,7 +203,7 @@ class NN_interface_helper:
             print('found saved BAR result')
             self.set_final_result_()
             if rerun:
-                print('rerun=True, so rerunning BAR calculation again.')
+                print('rerun = True')
                 assert 'go to'=='except'
             else: pass
 
@@ -210,53 +212,59 @@ class NN_interface_helper:
             idx = 7 # 1 ; 7 closer to minimiser of than 1, faster to run mbar.
             offset = self.estimates[0,:,idx][np.where(self.estimates[0,:,idx]>-1e19)[0]].mean()
 
-            for i in range(self.n_estimates):
-                clear_output(wait=True)
-                print(i)
-
-                name = self.name_save_BAR_inputs+'_BAR_input_'+str(i)+'_state'+str(index_of_state)+'_'+'_T'
-                try:
-                    x = load_pickle_(name)
-                    # change this when weights are used (x[1]), currently weights are ignored (data, model are unbiased)
-                    if type(x) is list: x = x[0]
-                    else: pass
-                    m = x.shape[-1]//2
-                    # offset = x[0,:m].mean()
-                    mbar_res = MBAR(np.stack([x[0]-offset, x[1]],axis=0),
-                                    np.array([m]*2),
-                                    n_bootstraps=n_bootstraps,
-                                    ).compute_free_energy_differences(
-                                        uncertainty_method=uncertainty_method
-                                        )
-                    FE = mbar_res['Delta_f'][1,0] + offset
-                    SE = mbar_res['dDelta_f'][1,0]
-                except:
-                    FE = 1e20 ; SE = 1e20
-                    print('BAR: T estimate'+str(i)+'skipped')
-                self.estimates_BAR[0,i,0] = FE
-                self.estimates_BAR[1,i,0] = SE
-                
-                name = self.name_save_BAR_inputs+'_BAR_input_'+str(i)+'_state'+str(index_of_state)+'_'+'_V'
-                try:
-                    x = load_pickle_(name)
-                    # change this when weights are used (x[1]), currently weights are ignored (data, model are unbiased)
-                    if type(x) is list: x = x[0]
-                    else: pass
-                    m = x.shape[-1]//2
-                    # offset = x[0,:m].mean()
-                    mbar_res = MBAR(np.stack([x[0]-offset, x[1]],axis=0),
-                                    np.array([m]*2),
-                                    n_bootstraps=n_bootstraps,
-                                    ).compute_free_energy_differences(
-                                        uncertainty_method=uncertainty_method
-                                        )
-                    FE = mbar_res['Delta_f'][1,0] + offset
-                    SE = mbar_res['dDelta_f'][1,0]
-                except:
-                    FE = 1e20 ; SE = 1e20
-                    print('BAR: V estimate'+str(i)+'skipped')
-                self.estimates_BAR[2,i,0] = FE
-                self.estimates_BAR[3,i,0] = SE
+            if method_for_selective_evalaution_ is not None: 
+                method_for_selective_evalaution_(obj = self,
+                                                 index_of_state = index_of_state,
+                                                 AVMD_V=self.estimates[0,:,1],
+                                                 )
+            else:
+                for i in range(self.n_estimates):
+                    clear_output(wait=True)
+                    print(i)
+    
+                    name = self.name_save_BAR_inputs+'_BAR_input_'+str(i)+'_state'+str(index_of_state)+'_'+'_T'
+                    try:
+                        x = load_pickle_(name)
+                        # change this when weights are used (x[1]), currently weights are ignored (data, model are unbiased)
+                        if type(x) is list: x = x[0]
+                        else: pass
+                        m = x.shape[-1]//2
+                        # offset = x[0,:m].mean()
+                        mbar_res = MBAR(np.stack([x[0]-offset, x[1]],axis=0),
+                                        np.array([m]*2),
+                                        n_bootstraps=n_bootstraps,
+                                        ).compute_free_energy_differences(
+                                            uncertainty_method=uncertainty_method
+                                            )
+                        FE = mbar_res['Delta_f'][1,0] + offset
+                        SE = mbar_res['dDelta_f'][1,0]
+                    except:
+                        FE = 1e20 ; SE = 1e20
+                        print('BAR: T estimate'+str(i)+'skipped')
+                    self.estimates_BAR[0,i,0] = FE
+                    self.estimates_BAR[1,i,0] = SE
+                    
+                    name = self.name_save_BAR_inputs+'_BAR_input_'+str(i)+'_state'+str(index_of_state)+'_'+'_V'
+                    try:
+                        x = load_pickle_(name)
+                        # change this when weights are used (x[1]), currently weights are ignored (data, model are unbiased)
+                        if type(x) is list: x = x[0]
+                        else: pass
+                        m = x.shape[-1]//2
+                        # offset = x[0,:m].mean()
+                        mbar_res = MBAR(np.stack([x[0]-offset, x[1]],axis=0),
+                                        np.array([m]*2),
+                                        n_bootstraps=n_bootstraps,
+                                        ).compute_free_energy_differences(
+                                            uncertainty_method=uncertainty_method
+                                            )
+                        FE = mbar_res['Delta_f'][1,0] + offset
+                        SE = mbar_res['dDelta_f'][1,0]
+                    except:
+                        FE = 1e20 ; SE = 1e20
+                        print('BAR: V estimate'+str(i)+'skipped')
+                    self.estimates_BAR[2,i,0] = FE
+                    self.estimates_BAR[3,i,0] = SE
 
             self.estimates_BAR  = np.where(np.isnan(self.estimates_BAR),1e20,self.estimates_BAR)
 
@@ -282,6 +290,7 @@ class NN_interface_helper:
         self.BAR_V_SEs = np.max([self.BAR_V_SEs, self.BAR_V_SDs], axis=0)
         self.BAR_V_SE  = self.BAR_V_SEs[-1]
 
+    '''
     def plot_result_(self, window=1, entropy_only=False, plot_red=True, n_mol=1, colors=['green', 'blue', 'm', 'red'], ax=None,
                      plot_raw_errors = True):
         if ax is not None: plot = ax
@@ -313,12 +322,47 @@ class NN_interface_helper:
             plot.plot(self.evaluation_grid, self.BAR_V_FEs/n_mol-self.BAR_V_SEs/n_mol, color=colors[3], linestyle='dotted', linewidth=2, zorder=10)
             plot.plot(self.evaluation_grid, self.BAR_V_FEs/n_mol+self.BAR_V_SEs/n_mol, color=colors[3], linestyle='dotted', linewidth=2, zorder=10)
             plot.plot(self.evaluation_grid, self.BAR_V_FEs/n_mol,                      color=colors[3], linewidth=2)
-
         else: pass
 
         if ax is not None: plot.set_ylim(FE-window, FE+window)
         else:              plot.ylim(FE-window, FE+window)
         print(FE,'+/-', self.SDs[-1]/n_mol, 'final:', self.BAR_V_FE/n_mol, '+/-', self.BAR_V_SE/n_mol)
+    '''
+    def plot_result_(self, window=1, entropy_only=False,
+                     plot_red=True, n_mol=1, colors=['green', 'blue', 'm', 'red'], ax=None,
+                     plot_raw_errors = True):
+        if ax is not None: plot = ax
+        else: plot = plt
+
+        assert type(n_mol) is int and n_mol >= 1
+
+        BAR_V_FEs_raw = np.array(self.BAR_V_FEs_raw)/n_mol
+        BAR_V_SEs_raw = np.array(self.BAR_V_SEs_raw)/n_mol
+        BAR_V_FEs_averaged = np.array(self.BAR_V_FEs)/n_mol ; FE  = BAR_V_FEs_averaged[-1]
+        BAR_V_SEs_averaged = np.array(self.BAR_V_SEs)/n_mol
+
+        plot.plot(self.evaluation_grid, BAR_V_FEs_raw, color=colors[0])
+        plot.plot(self.evaluation_grid, self.estimates[0,:,7]/n_mol, color=colors[1], linewidth=0.3, linestyle='--')
+
+        if plot_raw_errors:
+            plot.fill_between(self.evaluation_grid, BAR_V_FEs_raw-BAR_V_SEs_raw, BAR_V_FEs_raw+BAR_V_SEs_raw, alpha=0.4, color=colors[0])
+        else: pass
+        
+        if plot_red:
+            #plot.plot([self.evaluation_grid[0],self.evaluation_grid[-1]], [FEs[-1]]*2, color='red')
+            plot.plot(self.evaluation_grid, self.FEs/n_mol, color=colors[2])
+            plot.plot(self.evaluation_grid, self.FEs/n_mol-self.SDs/n_mol, color=colors[2], linestyle='dotted', zorder=9)
+            plot.plot(self.evaluation_grid, self.FEs/n_mol+self.SDs/n_mol, color=colors[2], linestyle='dotted', zorder=9)
+            plot.plot(self.evaluation_grid, BAR_V_FEs_averaged - BAR_V_SEs_averaged, color=colors[3], linestyle='dotted', linewidth=2, zorder=10)
+            plot.plot(self.evaluation_grid, BAR_V_FEs_averaged + BAR_V_SEs_averaged, color=colors[3], linestyle='dotted', linewidth=2, zorder=10)
+            plot.plot(self.evaluation_grid, BAR_V_FEs_averaged,                      color=colors[3], linewidth=2)
+        else: pass
+
+        if ax is not None: plot.set_ylim(FE-window, FE+window)
+        else:              plot.ylim(FE-window, FE+window)
+
+        print(f'rough grid search estimate: {self.FEs[-1]/n_mol}  +/- standard deviation = {self.SDs[-1]/n_mol} ')
+        print(f'     pymbar final estimate: {self.BAR_V_FE/n_mol} +/- standard error     = {self.BAR_V_SE/n_mol}')
 
 class NN_interface_sc(NN_interface_helper):
     '''
@@ -754,5 +798,161 @@ class NN_interface_sc_multimap(NN_interface_helper):
                 self.samples_from_model.append(load_pickle_(self.name_save_samples+'_crystal_index='+str(crystal_index)))
         else:
             self.samples_from_model = load_pickle_(self.name_save_samples+'_crystal_index='+str(crystal_index))
+
+## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
+
+class NN_interface_sc_multimap_selective_evaluation(NN_interface_sc_multimap):
+    def __init__(self,*args,**kwargs):
+        super().__init__(*args,**kwargs)
+
+    def train(self,
+              n_batches = 2000,
+              verbose = True,
+              verbose_divided_by_n_mol = True,
+              f_halfwindow_visualisation = 1.0, # int or list
+              test_inverse = False,
+              #
+              training_batch_size = 1000, # 1000 was always used
+              ):
+        save_BAR = True
+        save_mBAR = False
+        save_misc = True
+        
+        if save_BAR: name_save_BAR_inputs = str(self.name_save_BAR_inputs)
+        else: name_save_BAR_inputs = None
+
+        if save_mBAR: name_save_mBAR_inputs = str(self.name_save_mBAR_inputs)
+        else: name_save_mBAR_inputs = None
+
+        self.trainer.train(
+                        n_batches = n_batches,
+                        list_r_training   = [nn.r_training for nn in self.nns],
+                        list_r_validation = [nn.r_validation for nn in self.nns],
+                        list_u_training   = [nn.u_training for nn in self.nns],
+                        list_u_validation = [nn.u_validation for nn in self.nns],
+                        list_w_training = None,
+                        list_w_validation = None,
+                        list_potential_energy_functions = [None for k in range(self.n_crystals)],
+                        training_batch_size = training_batch_size,
+                        evaluation_batch_size = self.evaluation_batch_size,
+                        evaluate_main = True,
+                        name_save_BAR_inputs = name_save_BAR_inputs,
+                        name_save_mBAR_inputs = name_save_mBAR_inputs,
+                        shuffle = True,
+                        f_halfwindow_visualisation = f_halfwindow_visualisation,
+                        verbose = verbose,
+                        verbose_divided_by_n_mol = verbose_divided_by_n_mol,
+                        evaluate_on_training_data = False,
+                        test_inverse = test_inverse,
+                        save_generated_configurations_anyway = False, 
+                    )
+        print('training time so far:', np.round(self.trainer.training_time, 2), 'minutes')
+
+        if save_misc:
+            self.save_misc_()
+            print('misc training outputs were saved')
+        else: pass
+        if test_inverse:
+            self.save_inv_test_results_()
+            print('inv_test results were saved')
+        else: pass
+
+    def solve_BAR_using_pymbar_(self, rerun=False, n_selective_evalautions = 5):
+        self.n_selective_evalautions = n_selective_evalautions 
+        for k in range(self.n_crystals):
+            _nn = self.nns[k]
+            _nn.solve_BAR_using_pymbar_(rerun = True,
+                                        index_of_state = k, 
+                                        key = '_crystal_index=' + str(k), 
+                                        method_for_selective_evalaution_ = self.method_for_selective_evalaution_v1_)
+            self.reset_final_result_(_nn)
+
+    def reset_final_result_(self, obj):
+
+        AVMD_V = np.array(obj.estimates[0,:,1])
+
+        BAR_V_FEs_raw = np.array(obj.estimates_BAR[2,:,0])
+        BAR_V_SEs_raw = np.array(obj.estimates_BAR[3,:,0])
+
+        inds_solved = np.array(self.inds_solved_current)
+
+        BAR_V_FEs = FE_of_model_curve_(AVMD_V[inds_solved], BAR_V_FEs_raw[inds_solved])
+        obj.BAR_V_FE = BAR_V_FEs[-1]
+
+        BAR_V_SDs = FE_of_model_curve_(AVMD_V[inds_solved], (BAR_V_FEs_raw[inds_solved] - BAR_V_FEs)**2)**0.5
+        obj.BAR_V_SD =  BAR_V_SDs[-1]
+
+        BAR_V_SEs = FE_of_model_curve_(AVMD_V[inds_solved] - BAR_V_SEs_raw[inds_solved], BAR_V_SEs_raw[inds_solved])
+        BAR_V_SEs = np.max([BAR_V_SEs, BAR_V_SDs], axis=0)
+        obj.BAR_V_SE  = BAR_V_SEs[-1]
+
+        nan_for_plotting  = np.ones_like(BAR_V_FEs_raw) * np.nan
+        obj.BAR_V_FEs_raw = np.array(nan_for_plotting)
+        obj.BAR_V_SEs_raw = np.array(nan_for_plotting)
+        obj.BAR_V_FEs     = np.array(nan_for_plotting)
+        obj.BAR_V_SDs     = np.array(nan_for_plotting)
+        obj.BAR_V_SEs     = np.array(nan_for_plotting)
+
+        obj.BAR_V_FEs_raw[inds_solved] = np.array(BAR_V_FEs_raw[inds_solved])
+        obj.BAR_V_SEs_raw[inds_solved] = np.array(BAR_V_SEs_raw[inds_solved])
+        obj.BAR_V_FEs[inds_solved]     = np.array(BAR_V_FEs)
+        obj.BAR_V_SDs[inds_solved]     = np.array(BAR_V_SDs)
+        obj.BAR_V_SEs[inds_solved]     = np.array(BAR_V_SEs)
+
+    def method_for_selective_evalaution_v1_(self,
+                                            obj,
+                                            index_of_state,
+                                            AVMD_V,
+                                            ):
+        validation_loss_curve = np.array( - AVMD_V )
+        # chosing parts that come from model when it had the lowest validiation error
+        inds_best_validation_batches = np.argsort(validation_loss_curve)[:self.n_selective_evalautions]
+
+        offset = AVMD_V[np.where(AVMD_V>-1e19)[0]].mean()
+
+        obj.estimates_BAR = np.ma.array(obj.estimates_BAR, mask=True)
+        
+        print('')
+        print(f'two-state BAR evaluation in macrostate {index_of_state}:')
+        for i in inds_best_validation_batches:
+            path_and_name = obj.name_save_BAR_inputs+'_BAR_input_'+str(i)+'_state'+str(index_of_state) + '_'
+            name = path_and_name + '_r_&_ln(q(r))'
+            name_complete = path_and_name + '_V'
+            name_solved = path_and_name + '_r_&_ln(q(r))_solved'
+
+            try:
+                FE, SE = load_pickle_(name_solved) #; print('found ')
+            except:
+                print(f'evalaution batch {i}: evaluating potential energies on model samples. The estimate will be saved.')
+                r_BG, ln_q_BG, u_V, ln_q_V, w_V = load_pickle_(name)
+                # TDOD (in general for biased data): add way to rewight pymbar solving 2state BAR when wights (w_V) not None
+
+                assert len(r_BG) == len(ln_q_BG)
+                assert len(u_V)  == len(ln_q_V)
+                n_V  = len(u_V)
+                n_BG = len(ln_q_BG) 
+
+                # the expensive step:
+                u_BG = self.nns[index_of_state].u_(r_BG) # = obj.u_(r_BG)
+
+                Q = np.stack([   np.concatenate([u_V, u_BG])[...,0] - offset,
+                            - np.concatenate([ln_q_V, ln_q_BG])[...,0], # important: negative sign for positive energy
+                            ], axis=0)
+                Ns = np.array([n_V, n_BG])
+                mbar_res = MBAR(Q, Ns).compute_free_energy_differences()
+
+                FE = mbar_res['Delta_f'][1,0] + offset
+                SE = mbar_res['dDelta_f'][1,0]
+
+                save_pickle_([FE, SE], name=name_solved, verbose=False)
+                save_pickle_(Q, name=name_complete, verbose=False)
+            
+            # obj.estimates_BAR[0,i,0] = 0.0 # nothing here, not evalauting on training data
+            # obj.estimates_BAR[1,i,0] = 0.0 # nothing here, not evalauting on training data
+            obj.estimates_BAR[2,i,0] = FE    # FE on validation data
+            obj.estimates_BAR[3,i,0] = SE    # SE on validation data
+            # this turns masks to False for elements that are not zeros (batches that were done above)
+
+        self.inds_solved_current = np.where(obj.estimates_BAR[2,:,0].mask == False)[0]
 
 ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
