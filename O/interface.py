@@ -108,14 +108,19 @@ class NN_interface_helper:
     ## ## ## ##
 
     def load_energies_during_training_(self, index_of_state=0):
-        n_states = 1
-        i = self.n_estimates-1
-        name = self.name_save_BAR_inputs+'_BAR_input_'+str(i)+'_state'+str(index_of_state)+'_'+'_V'
-        x = load_pickle_(name)
+        for i in range(self.n_estimates):
+            try:
+                name = self.name_save_BAR_inputs+'_BAR_input_'+str(i)+'_state'+str(index_of_state)+'_'+'_V'
+                x = load_pickle_(name)
+                break
+            except: pass
         if type(x) is list: _this_ = lambda x : x[0] # ...
         else: _this_ = lambda x : x
+        
         x = _this_(x)
         m = x.shape[-1]//2
+        
+        n_states = 1
         self.MD_energies_T = np.zeros([n_states, self.n_estimates, m])
         self.MD_energies_V = np.zeros([n_states, self.n_estimates, m])
         self.BG_energies = np.zeros([n_states, self.n_estimates, m])
