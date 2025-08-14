@@ -945,7 +945,9 @@ class NN_interface_sc_multimap_selective_evaluation(NN_interface_sc_multimap):
                 SE = mbar_res['dDelta_f'][1,0]
 
                 save_pickle_([FE, SE], name=name_solved, verbose=False)
-                save_pickle_(Q, name=name_complete, verbose=False)
+                save_pickle_(np.stack([np.concatenate([u_V,       u_BG])[...,0],
+                                     - np.concatenate([ln_q_V, ln_q_BG])[...,0]], axis=0), 
+                             name=name_complete, verbose=False)
             
             # obj.estimates_BAR[0,i,0] = 0.0 # nothing here, not evalauting on training data
             # obj.estimates_BAR[1,i,0] = 0.0 # nothing here, not evalauting on training data
