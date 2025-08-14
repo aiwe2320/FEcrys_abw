@@ -935,7 +935,7 @@ class NN_interface_sc_multimap_selective_evaluation(NN_interface_sc_multimap):
                 # the expensive step:
                 u_BG = self.nns[index_of_state].u_(r_BG) # = obj.u_(r_BG)
 
-                Q = np.stack([   np.concatenate([u_V, u_BG])[...,0] - offset,
+                Q = np.stack([np.concatenate([u_V, u_BG])[...,0] - offset,
                             - np.concatenate([ln_q_V, ln_q_BG])[...,0], # important: negative sign for positive energy
                             ], axis=0)
                 Ns = np.array([n_V, n_BG])
