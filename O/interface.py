@@ -926,7 +926,7 @@ class NN_interface_sc_multimap_selective_evaluation(NN_interface_sc_multimap):
             try:
                 FE, SE = load_pickle_(name_solved) #; print('found ')
             except:
-                print(f'evalaution batch {i}: evaluating potential energies on model samples. The estimate will be saved.')
+                print(f'evaluation batch {i}: evaluating potential energies on model samples. The estimate will be saved.')
                 r_BG, ln_q_BG, u_V, ln_q_V, w_V = load_pickle_(name)
                 # TODO (in general for biased data): add way to rewight pymbar solving 2state BAR when weights (w_V) not None
 
