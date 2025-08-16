@@ -46,7 +46,7 @@ class methods_for_permutation:
         return self._permute_crystal_to_top_[inds]
 
     ## ## ## ## ## ## ## ## ## ## ## ##
-    ## COST_FIX_permute_xyz_after_a_trajectory:
+    ## moved from COST_FIX_permute_xyz_after_a_trajectory:
 
     def set_arrays_blank_(self,):
         self._xyz_top_ = []
