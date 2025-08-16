@@ -1,5 +1,8 @@
 from .mm_helper import *
 
+from .ff_setup import *
+OPLS = OPLS_general
+
 ## ## ## ## ## ## ## ## ## ## ## ##
 
 ''' TODO: explain how to use in a notebook '''
@@ -895,9 +898,6 @@ class GAFF(MM_system_helper):
         if self.using_gmx_loader: self.set_FF_gmx_()
         else: self.set_FF_amber_()
 
-from .ff_setup import *
-OPLS = OPLS_general
-
 """
 class OPLS(MM_system_helper):
     ''' mixin class for SingleComponent. Methods relevant only for using OPLS are here.
@@ -1507,5 +1507,4 @@ class COST_FIX_permute_xyz_after_a_trajectory:
 
 ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
 """
-
 
