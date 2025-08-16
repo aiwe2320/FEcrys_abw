@@ -1,3 +1,6 @@
+from .ff_setup import velff
+
+"""
 from .sc_system import *
 
 ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
@@ -319,3 +322,4 @@ def test_velff_LJ_():
     # u after  minimisation: -77.35333936837897 kT
 
 '''
+"""
