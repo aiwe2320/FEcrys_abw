@@ -13,12 +13,11 @@ class SingleComponent:
                 atom_order_PDB_match_itp = False, # depreceated
                 FF_class = None,
                 ):
-        if FF_class is None: 
-            mixin = {'GAFF': GAFF, 'OPLS': OPLS, 'TIP4P':TIP4P}[FF_name]
-            cls.FF_name = FF_name
-        else: 
-            mixin = FF_class
-            cls.FF_name = FF_class.FF_name
+        
+        if FF_class is None: mixin = {'GAFF': GAFF, 'OPLS': OPLS, 'TIP4P':TIP4P}[FF_name]
+        else:                mixin = FF_class
+
+        cls.FF_name = mixin.FF_name
 
         cls = type(cls.__name__ + '+' + mixin.__name__, (cls, mixin), {})
         return super(SingleComponent, cls).__new__(cls)
@@ -896,6 +895,10 @@ class GAFF(MM_system_helper):
         if self.using_gmx_loader: self.set_FF_gmx_()
         else: self.set_FF_amber_()
 
+from .ff_setup import *
+OPLS = OPLS_general
+
+"""
 class OPLS(MM_system_helper):
     ''' mixin class for SingleComponent. Methods relevant only for using OPLS are here.
 
@@ -1503,5 +1506,6 @@ class COST_FIX_permute_xyz_after_a_trajectory:
         return U*self.beta
 
 ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
+"""
 
 
