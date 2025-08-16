@@ -242,22 +242,19 @@ def put_lambda_into_system_(system,
 
 ## ## 
 
-def inject_methods_from_another_class_(self, class_to_inject_methods_from):
-    import types
-    for name, method in class_to_inject_methods_from.__dict__.items():
-        if callable(method) and not name.startswith("__"):
-            setattr(self, name, types.MethodType(method, self))
+#def inject_methods_from_another_class_(self, class_to_inject_methods_from):
+#    import types
+#    for name, method in class_to_inject_methods_from.__dict__.items():
+#        if callable(method) and not name.startswith("__"):
+#            setattr(self, name, types.MethodType(method, self))
 
 class MM_system_helper:
     def __init__(self,):
         self.reduce_drift = False
         self.NPT = False # switches to permanently True when barostat added, stays true if barostat removed.
 
-    def inject_methods_from_another_class_(self, class_to_inject_methods_from):
-        '''
-        for superficial use only: careful not to override methods back to default that were already overridden
-        '''
-        inject_methods_from_another_class_(self, class_to_inject_methods_from)
+    def inject_methods_from_another_class_(self, class_to_inject_methods_from, **kwargs):
+        inject_methods_from_another_class_(self, class_to_inject_methods_from, **kwargs)
 
     def corrections_to_ff_(self, verbose):
         if verbose: print('no corrections to self.system')
