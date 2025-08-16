@@ -42,6 +42,23 @@ import pickle
 
 ## ## 
 
+def inject_methods_from_another_class_(target_instance, source_class, include_properties=False):
+    import types
+    for name, item in source_class.__dict__.items():
+        
+        if name.startswith("__"): continue
+        else: pass
+            
+        if callable(item):
+            setattr(target_instance, name, types.MethodType(item, target_instance))
+        else: pass
+            
+        if include_properties and isinstance(item, (property, types.GetSetDescriptorType, types.MemberDescriptorType)):
+            setattr(target_instance.__class__, name, item)
+        else: pass
+
+## ## 
+
 def save_pickle_(x, name, verbose=True):
     ''' save any python variable, or instance of an object as a pickled file with name
     '''
@@ -379,3 +396,4 @@ def K_to_C_(K):
 
 def C_to_K_(C):
     return C + 273.15
+
