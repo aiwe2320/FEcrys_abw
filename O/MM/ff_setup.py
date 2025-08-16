@@ -196,7 +196,7 @@ class itp2FF(MM_system_helper):
             if self.n_mol > 1: print('this assumes all molecules in the input PDB have the same permutation as the first molecule')
             else: pass
             print("'permuation of atoms turned ON' -> to reduce cost during run_simulation_ the method for saving xyz frames is slightly adjusted")
-            self.inject_methods_from_another_class_(methods_for_permutation)
+            self.inject_methods_from_another_class_(methods_for_permutation, include_properties=True)
 
     def initialise_FF_(self,):
         ''' run this only after (n_mol and n_atoms_mol) defined in __init__ of SingleComponent '''
