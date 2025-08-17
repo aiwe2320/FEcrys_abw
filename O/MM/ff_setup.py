@@ -645,13 +645,15 @@ class tmFF(itp2FF):
                 start = True
             else: pass
             if start:
-                line_split = line.split()
-                if line_split[0] != ';':
-                    try:
-                        typeA, typeB, _, C6, C12 = line_split
-                        self.nonbond_params[(typeA, typeB)] = [float(C6), float(C12)]
-                    except: pass # print(f'skipped line {line}')
-                else: pass
+                try:
+                    line_split = line.split()
+                    if line_split[0] != ';':
+                        try:
+                            typeA, typeB, _, C6, C12 = line_split
+                            self.nonbond_params[(typeA, typeB)] = [float(C6), float(C12)]
+                        except: pass # print(f'skipped line {line}')
+                    else: pass
+                except: pass
             else: pass
                 
         file.close()
