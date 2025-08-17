@@ -428,63 +428,64 @@ def custom_C_force_(sc):
 
 ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
 
-class velff(itp2FF):
+''' notes (tmFF):
+
+the following self._FF_name_defaults_line_ gives warnings that are dealt with by running self.recast_NB_() as soon as self.system
+
+## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
+    
+nbfunc : same as OPLS (1) ; similar to this py file was tested for OPLS that already works by default.
+
+gen-pairs : 1-4 interactions are active for all non-bonded (NB) interactions
+
+nrexcl = 2  : non-bonded interactions are excluded only for atoms separated by 0,1,2 bonds
+    ! default gmx parsers (parmed or openmm) : this is currently not supported (because kept for >=3 bonds apart)
+
+comb-rule 1 : geometric mean for getting both eps_ij, sig_ij (or C6_ij from C6_i, C6_j, C12_ij from ...)
+    this is supported only if combination rules are standard (e.g., OPLS), but not the case here, where for OPLS:
+            NonbondedForce : some LJ, no Coulombic       # defined automatically
+                < 1-5  : exceptions : qq_ij = 0 ; LJ = 0
+                    set all zero
+                = 1-5  : exceptions : qq_ij = fudgeQQ * qi * qj ; LJ = fudgeLJ * combine(i, j, LJ_params)
+                    combined manually as exceptions
+                > 1-5  : qi * qj ; LJ = 0
+                    all remaining electrostatic (without any fudge)
+            CustomNonbondedForce : most LJ, no Coulombic # defined automatically
+                > 1-5  : LJ = customizable_energy_function(i, j, LJ_param, combination_rule)
+                <= 1-5 : exclusions for 1-5, ..., 1-1 interactions
+
+atoms types : itp file has LJ parameters already as combined as C6_ij and C12_ij for different atom type pairs
+    ! default gmx parsers (parmed or openmm) : this is currently not supported
+
+    the way this is dealt with in this ff (where fudgeQQ = fudgeLJ = 1):
+        NonbondedForce : only Coulombic # defined manually below (to replace all automatically defined Coulombic)
+            < 1-4  : exceptions : qq_ij = 0 ; LJ = 0
+            >= 1-4 : qi * qj ; LJ = 0
+        CustomNonbondedForce : only LJ  # defined manually below (to replace all automatically defined LJ)
+            >= 1-4 : LJ = LJ_function(i, j, tabulated_LJ_params)
+                tabulated_LJ_params is a function of i and j 
+            < 1-4  : exclusions for 1-3, 1-2, 1-1
+            
+            LJ_energy = dispersion_correction(switching_function(LJ_function(...,r_cut),r_switch))
+            dispersion_correction : x -> x + const*n_mol*n_mol / V
+                the exactness of the const matters for delta_u when volumes are different
+                the const takes into account the shapes of the smooth 1D functions > r_switch
+'''
+
+class tmFF(itp2FF):
+    ''' tailor-made FF '''
     def __init__(self,):
         super().__init__()
-        self._FF_name_ = 'velff'
-        ''' notes:
-
-        the following self._FF_name_defaults_line_ gives warnings that are dealt with by running self.recast_NB_()
-            run self.recast_NB_() as soon as self.system is defined (added: done by default)
-
-        ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
-            
-        nbfunc : same as OPLS (1) ; similar to this py files was tested for OPLS that already works by default.
-
-        gen-pairs : 1-4 interactions are active for all non-bonded (NB) interactions
-
-        nrexcl = 2  : non-bonded interactions are excluded only for atoms separated by 0,1,2 bonds
-            ! default gmx parsers (parmed or openmm) : this is currently not supported (because kept for >=3 bonds apart)
-
-        comb-rule 1 : geometric mean for getting both eps_ij, sig_ij (or C6_ij from C6_i, C6_j, C12_ij from ...)
-            this is supported only if combination rules are standard (e.g., OPLS), but not the case here, where for OPLS:
-                    NonbondedForce : some LJ, no Coulombic       # defined automatically
-                        < 1-5  : exceptions : qq_ij = 0 ; LJ = 0
-                            set all zero
-                        = 1-5  : exceptions : qq_ij = fudgeQQ * qi * qj ; LJ = fudgeLJ * combine(i, j, LJ_params)
-                            combined manually as exceptions
-                        > 1-5  : qi * qj ; LJ = 0
-                            all remaining electrostatic (without any fudge)
-                    CustomNonbondedForce : most LJ, no Coulombic # defined automatically
-                        > 1-5  : LJ = customizable_energy_function(i, j, LJ_param, combination_rule)
-                        <= 1-5 : exclusions for 1-5, ..., 1-1 interactions
-
-        atoms types : itp file has LJ parameters already as combined as C6_ij and C12_ij for different atom type pairs
-            ! default gmx parsers (parmed or openmm) : this is currently not supported
-
-            the way this is dealt with in this ff (where fudgeQQ = fudgeLJ = 1):
-                NonbondedForce : only Coulombic # defined manually below (to replace all automatically defined Coulombic)
-                    < 1-4  : exceptions : qq_ij = 0 ; LJ = 0
-                    >= 1-4 : qi * qj ; LJ = 0
-                CustomNonbondedForce : only LJ  # defined manually below (to replace all automatically defined LJ)
-                    >= 1-4 : LJ = LJ_function(i, j, tabulated_LJ_params)
-                        tabulated_LJ_params is a function of i and j 
-                    < 1-4  : exclusions for 1-3, 1-2, 1-1
-                    
-                    LJ_energy = dispersion_correction(switching_function(LJ_function(...,r_cut),r_switch))
-                    dispersion_correction : x -> x + const*n_mol*n_mol / V
-                        the exactness of the const matters for delta_u when volumes are different
-                        the const takes into account the shapes of the smooth 1D functions > r_switch
-        '''
+        self._FF_name_ = 'tmFF'
         #                           '; nbfunc        comb-rule       gen-pairs       fudgeLJ      fudgeQQ',
         self._FF_name_defaults_line_ = '1               1               yes             1.0          1.0  '
-        self._system_name_ = 'veliparib'
-        self._compound_name_ = 'vel'
+        self._system_name_ = 'organic'
+        self._compound_name_ = 'molecule'
     
     @classmethod
     @property
     def FF_name(self,):
-        return 'velff'
+        return 'tmFF'
     
     def a_step_after_initialise_(self,):
         file_name = str(self.itp_mol.absolute())
@@ -531,5 +532,20 @@ class velff(itp2FF):
     def corrections_to_ff_(self, verbos=True):
         self.recast_NB_(verbose=verbos)
 
+class velff(tmFF, itp2FF):
+    ''' keeping seperate to load pickled files '''
+    def __init__(self,):
+        super().__init__()
+        self._FF_name_ = 'velff'
+        #                           '; nbfunc        comb-rule       gen-pairs       fudgeLJ      fudgeQQ',
+        self._FF_name_defaults_line_ = '1               1               yes             1.0          1.0  '
+        self._system_name_ = 'veliparib'
+        self._compound_name_ = 'vel'
+    
+    @classmethod
+    @property
+    def FF_name(self,):
+        return 'velff'
+  
 ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
-## all other tailor-made FFs go here
+
