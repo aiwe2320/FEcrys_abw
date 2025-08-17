@@ -539,13 +539,17 @@ def custom_LJ_force_(sc, C6_C12_types_dictionary):
                 else: pass
             else: pass
     
-    nb_method = mm.CustomNonbondedForce.CutoffPeriodic
-    force.setNonbondedMethod(nb_method)
-    force.setCutoffDistance(sc.PME_cutoff * mm.unit.nanometers)
-    force.setUseSwitchingFunction(True)
-    force.setSwitchingDistance(sc.SwitchingFunction_factor * sc.PME_cutoff * mm.unit.nanometers)
-    force.setUseLongRangeCorrection(True)
-    
+    if sc.n_mol > 1:
+        nb_method = mm.CustomNonbondedForce.CutoffPeriodic
+        force.setNonbondedMethod(nb_method)
+        force.setCutoffDistance(sc.PME_cutoff * mm.unit.nanometers)
+        force.setUseSwitchingFunction(True)
+        force.setSwitchingDistance(sc.SwitchingFunction_factor * sc.PME_cutoff * mm.unit.nanometers)
+        force.setUseLongRangeCorrection(True)
+    else:
+        nb_method = mm.CustomNonbondedForce.NoCutoff
+        force.setNonbondedMethod(nb_method)
+
     return [force]
 
 def custom_C_force_(sc):
@@ -557,12 +561,15 @@ def custom_C_force_(sc):
     force = mm.NonbondedForce()
     force.setNonbondedMethod( get_force_by_name_(sc.system, 'NonbondedForce').getNonbondedMethod() ) # 4 here ; 5 (LJ-PME), but cannot use it with velff
     force.setEwaldErrorTolerance(sc.custom_EwaldErrorTolerance)
-    force.setCutoffDistance(sc.PME_cutoff * mm.unit.nanometers)
-    force.setIncludeDirectSpace(True)
-    force.setUseSwitchingFunction(True)
-    force.setSwitchingDistance(sc.SwitchingFunction_factor * sc.PME_cutoff * mm.unit.nanometers)
-    force.setUseDispersionCorrection(True)
-
+    
+    if sc.n_mol > 1:
+        force.setCutoffDistance(sc.PME_cutoff * mm.unit.nanometers)
+        force.setIncludeDirectSpace(True)
+        force.setUseSwitchingFunction(True)
+        force.setSwitchingDistance(sc.SwitchingFunction_factor * sc.PME_cutoff * mm.unit.nanometers)
+        force.setUseDispersionCorrection(True)
+    else: pass
+    
     for i in range(sc.N):
         force.addParticle(*[q[i] * unit.elementary_charge, 0.0, 0.0, ])
 
