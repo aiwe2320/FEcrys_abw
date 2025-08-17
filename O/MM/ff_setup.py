@@ -1,6 +1,128 @@
 from .mm_helper import *
 
 ## ## ## ## ## ## ## ## ## ## ## ##
+## moved from sc_system to here:
+
+def change_charges_itp_top_(path_top_or_itp_file_in : str,
+                            path_top_or_itp_file_out : str,
+                            n_atoms_mol : int,
+                            replacement_charges : np.ndarray = None, #! correct permuation of atoms
+                            neutralise_charge : bool = True,
+                            ):
+    print('')
+    print('__ changing charges in top/itp: __________________________')
+    file_in_path = str(path_top_or_itp_file_in)
+    file_out_path = str(path_top_or_itp_file_out)
+    
+    file_in = open(file_in_path, 'r')
+    lines_in = []
+    for line in file_in:
+        lines_in.append(line)
+    file_in.close()
+    
+    indx_header = [i for i in range(len(lines_in)) if '[ atoms ]' in lines_in[i]][0]
+    
+    inds_lines_replace = []
+    charges_in_str = []
+    i = indx_header
+    while len(charges_in_str) < n_atoms_mol:
+        split = re.split('\s+',lines_in[i])
+
+        #if len(split) == 13 and split[0] != ';':
+        #    inds_lines_replace.append(i)
+        #    charges_in_str.append(split[7])
+        #else: pass
+        try:
+            if '.' in split[7] and '.' in split[8]: # charge (7), mass (8) parts have a dot..
+                inds_lines_replace.append(i)
+                charges_in_str.append(split[7])
+            else: pass
+        except: pass
+
+        i +=1
+        
+    charges_in = np.array([float(x) for x in charges_in_str])
+    if replacement_charges is None:
+        if neutralise_charge:
+            charges_out = charges_in - charges_in.mean()
+            print('average charge neutralised from',charges_in.mean(),'to',charges_out.mean())
+        else:
+            charges_out = charges_in
+            print('charges with average',charges_in.mean(),'were unchanged')
+    else:
+        assert len(replacement_charges) == n_atoms_mol
+        charges_out = replacement_charges
+        print('charges with average',charges_in.mean(),'were repalced with custom charges with average of',replacement_charges.mean())
+        
+    charges_out_str = [str(x) for x in charges_out]
+    
+    lines_out = dict(zip(np.arange(len(lines_in)), lines_in))
+    lines_replaced = []
+    for i, charge_in_str, charge_out_str in zip(inds_lines_replace, charges_in_str ,charges_out_str):
+        lines_out[i] = lines_out[i].replace(charge_in_str, charge_out_str)
+        lines_replaced.append(i)
+    
+    print('replaced',len(lines_replaced),'lines from',lines_replaced[0],'to',lines_replaced[-1],'in',file_in_path)
+
+    file_out = open(file_out_path, 'w')
+    for i in range(len(lines_out)):
+        file_out.write(lines_out[i])
+    file_out.close()
+
+    print('these changes were written into file:',file_out_path)
+
+    print('__________________________________________________________\n')
+    return charges_out
+
+def change_n_mol_top_(path_top_file_in : str,
+                      path_top_file_out : str,
+                      replace_n_mol : int,
+                      verbose = True,
+                     ):
+    if verbose: print_ = lambda *x : print(*x)
+    else: print_ = lambda *x : None
+    print_('')
+    print_('__ changing n_mol in top: ________________________________')
+    file_in_path = str(path_top_file_in)
+    file_out_path = str(path_top_file_out)
+
+    file_in = open(file_in_path, 'r')
+    lines_in = []
+    for line in file_in:
+        lines_in.append(line)
+    file_in.close()
+
+    indx_header = [i for i in range(len(lines_in)) if '[ molecules ]' in lines_in[i]][0]
+
+    inds_lines_replace = []
+    n_mol_in_str = []
+    i = indx_header
+    while len(n_mol_in_str) < 1:
+        split = re.split('\s+',lines_in[i])
+        if len(split) == 3 and split[0] != ';':
+            inds_lines_replace.append(i)
+            n_mol_in_str.append(split[1])
+        else: pass
+        i +=1
+    assert len(n_mol_in_str) == 1
+    assert len(inds_lines_replace) == 1
+
+    lines_out = dict(zip(np.arange(len(lines_in)), lines_in))
+    i = inds_lines_replace[0]
+    lines_out[i] = lines_out[i].replace(n_mol_in_str[0], str(replace_n_mol))
+
+    print_('in the',file_in_path)
+    print_('replaced 1 line (',i,') \n from: \n    ',lines_in[i] ,'to \n    ',lines_out[i][:-1])
+
+    file_out = open(file_out_path, 'w')
+    for i in range(len(lines_out)):
+        file_out.write(lines_out[i])
+    file_out.close()
+
+    print_('these changes were written into file:',file_out_path)
+    print_('__________________________________________________________\n')
+
+## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
 
 class methods_for_permutation:
 
@@ -105,7 +227,9 @@ class methods_for_permutation:
         self._set_b_(_b)
 
         return U*self.beta
-    
+
+## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
+
 class itp2FF(MM_system_helper):
     def __init__(self,):
         super().__init__()
@@ -114,6 +238,11 @@ class itp2FF(MM_system_helper):
     @property
     def itp_mol(self) -> Path:
         return self.misc_dir / f"{self._FF_name_}_{self.name}.itp"
+    
+    @property
+    def itp_mol_adjusted_charges(self) -> Path:
+        # default : not written or used
+        return self.misc_dir / f"{self._FF_name_}_{self.name}_adjusted_charges.itp"
     
     @property
     def top_crys(self) -> Path:
@@ -201,7 +330,7 @@ class itp2FF(MM_system_helper):
     def a_step_after_initialise_(self,):
         pass
 
-    def initialise_FF_(self,):
+    def initialise_FF_(self, neuralise_net_charge=False, replacement_charges=None):
         ''' run this only after (n_mol and n_atoms_mol) defined in __init__ of SingleComponent '''
         if os.path.exists(self.single_mol_pdb.absolute()): pass
         else: process_mercury_output_(self.PDB, self.n_atoms_mol, single_mol = True, custom_path_name=str(self.single_mol_pdb.absolute()))
@@ -210,6 +339,19 @@ class itp2FF(MM_system_helper):
         else: print('!! expected file not found:',self.itp_mol.absolute(),)
 
         self.set_pemutation_to_match_topology_()
+
+        if neuralise_net_charge or replacement_charges is not None:
+            itp_mol_adjusted_charges = self.itp_mol_adjusted_charges.absolute()
+            if not os.path.exists(itp_mol_adjusted_charges) or replacement_charges is not None:
+                change_charges_itp_top_(path_top_or_itp_file_in = str(self.itp_mol.absolute()),
+                                        path_top_or_itp_file_out = str(itp_mol_adjusted_charges),
+                                        n_atoms_mol= self.n_atoms_mol,
+                                        replacement_charges = replacement_charges,
+                                        neutralise_charge = neuralise_net_charge,
+                                        )
+            else: pass
+            self.adjusted_charges = True
+        else: self.adjusted_charges = False
 
         self.a_step_after_initialise_()
 
@@ -220,9 +362,11 @@ class itp2FF(MM_system_helper):
         # self.ff = mm.app.GromacsTopFile(self.top_crys.absolute(), periodicBoxVectors=self.b0)
     
     def reset_n_mol_top_(self,):
+        if self.adjusted_charges: line0 = f'#include "{self._FF_name_}_{self.name}_adjusted_charges.itp"'
+        else:                     line0 = f'#include "{self._FF_name_}_{self.name}.itp"'
 
         lines_to_add = [
-            f'#include "{self._FF_name_}_{self.name}.itp"',
+            line0,
             '\n',
             '[ defaults ]',
             '; nbfunc        comb-rule       gen-pairs       fudgeLJ      fudgeQQ',
@@ -551,4 +695,3 @@ class velff(tmFF, itp2FF):
         return 'velff'
   
 ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
-
