@@ -450,12 +450,15 @@ def _get_pairs_mol_inner_(single_mol_pdb_file, n=3):
     n_atoms_mol = len(AM)
 
     import networkx as nx
+    '''
     gr = nx.Graph()
     for i in range(n_atoms_mol):
         for j in range(n_atoms_mol):
-            if AM[i,j]>0.1:
+            if AM[i,j]>0.5:
                 gr.add_edge(i,j)
             else: pass 
+    '''
+    gr = nx.from_numpy_array(AM, create_using = nx.DiGraph)
     assert np.abs(nx.adjacency_matrix(gr).toarray() - AM).sum() == 0
     
     within_n_bonds_away = np.eye(n_atoms_mol)*0
