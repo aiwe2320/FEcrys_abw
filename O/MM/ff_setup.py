@@ -290,7 +290,7 @@ def remove_force_by_names_(system, names:list, verbose=True):
     if verbose: print(f'removed {len(removed)} forces from the system: {removed}')
     else: pass
 
-def _get_pairs_mol_inner_(mol, n=3):
+def _get_pairs_mol_inner_(single_mol_pdb_file, n=3):
     '''
     n atoms in a row is n-1 bonds
 
@@ -298,6 +298,9 @@ def _get_pairs_mol_inner_(mol, n=3):
             within 2 bonds away removed
             within 3 bonds away kept (1-2-3-4 ; 1-4 kept)
     '''
+    # important that this is the pdb taken from the .gro file
+    # in velff no permutaion was used, but in general should not use self.mol here.
+    mol = Chem.MolFromPDBFile(str(single_mol_pdb_file), removeHs=False)
     
     AM = Chem.rdmolops.GetAdjacencyMatrix( mol )
     n_atoms_mol = len(AM)
@@ -336,7 +339,7 @@ def _get_pairs_(remove_mol_ij, n_mol):
 def custom_LJ_force_(sc, C6_C12_types_dictionary):
     ''' LJ : all Lennard-Jones '''
 
-    include_ij = _get_pairs_(_get_pairs_mol_inner_(sc.mol, n=3), sc.n_mol)
+    include_ij = _get_pairs_(_get_pairs_mol_inner_(sc.pdb_mol, n=3), sc.n_mol)
     atom_types = [x.type for x in sc.ff.atoms]
     
     _table_C6 = np.eye(sc.N)*0.0
@@ -400,7 +403,7 @@ def custom_LJ_force_(sc, C6_C12_types_dictionary):
 
 def custom_C_force_(sc):
     ''' C : all Coulombic '''
-    include_ij = _get_pairs_(_get_pairs_mol_inner_(sc.mol, n=3), sc.n_mol)
+    include_ij = _get_pairs_(_get_pairs_mol_inner_(sc.pdb_mol, n=3), sc.n_mol)
 
     q = np.concatenate([sc.partial_charges_mol]*sc.n_mol,axis=0) # (N,)
 
