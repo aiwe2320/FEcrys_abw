@@ -331,51 +331,40 @@ class SingleComponent_map(SC_helper):
         self.n_mol_supercell = self.n_mol
         
     def _forward_init_(self, r, batch_size = 10000):
-        shape = r.shape ;  m = shape[0]
+        shape = r.shape ; m = shape[0]
         self._first_times_crystal_(shape)
+        
         X_IC = []
-        rO = []
-        q = []
-        a = []
-        d0 = []
-        d1 = []
-        ladJ_IC = []
-        ladJ_CB = []
-        for i in range(m//batch_size):
-            _from = i*batch_size
-            _to = (i+1)*batch_size
-            _r = reshape_to_molecules_tf_(r[_from:_to], self.n_mol, self.n_atoms_mol)
+        rO = [] ; q = [] ; a = [] ; d0 = [] ; d1 = []
+        ladJ_IC = [] ; ladJ_CB = []
+
+        n_batches = m // batch_size + (1 if m % batch_size else 0)
+        for i in range(n_batches):
+            
+            _r = np2tf_(r[i*batch_size:(i+1)*batch_size])
+            _r = reshape_to_molecules_tf_(_r, self.n_mol, self.n_atoms_mol)
             x_IC, x_CB, ladj_IC, ladj_CB = self._forward_(_r)
-            rO.append(x_CB[0])
-            q.append(x_CB[1])
-            a.append(x_CB[2])
-            d0.append(x_CB[3])
-            d1.append(x_CB[4])
-            ladJ_IC.append(ladj_IC)
-            ladJ_CB.append(ladj_CB)
-            X_IC.append(x_IC)
 
-        # if any left [if none left; seems like it is fine to have this here anyway]
-        _r = reshape_to_molecules_tf_(r[_to:], self.n_mol, self.n_atoms_mol)
-        x_IC, x_CB, ladj_IC, ladj_CB = self._forward_(_r)
-        rO.append(x_CB[0])
-        q.append(x_CB[1])
-        a.append(x_CB[2])
-        d0.append(x_CB[3])
-        d1.append(x_CB[4])
-        ladJ_IC.append(ladj_IC)
-        ladJ_CB.append(ladj_CB)
-        X_IC.append(x_IC)
+            rO.append(x_CB[0].numpy())
+            q.append(x_CB[1].numpy())
+            a.append(x_CB[2].numpy())
+            d0.append(x_CB[3].numpy())
+            d1.append(x_CB[4].numpy())
+            ladJ_IC.append(ladj_IC.numpy())
+            ladJ_CB.append(ladj_CB.numpy())
+            X_IC.append(x_IC.numpy())
 
+        X_IC = tf.concat(X_IC,axis=0)
+        
         rO = tf.concat(rO,axis=0)
         q = tf.concat(q,axis=0)
-        a = tf.concat(a,axis=0)
+        a = tf.concat(a,axis=0) ; print(f'initialising on {a.shape[0]} datapoints provided')
         d0 = tf.concat(d0,axis=0)
         d1 = tf.concat(d1,axis=0)
+        X_CB = [rO, q, a, d0, d1]
+        
         ladJ_IC = tf.concat(ladJ_IC,axis=0)
         ladJ_CB = tf.concat(ladJ_CB,axis=0)
-        X_IC = tf.concat(X_IC,axis=0) ; print('initialising on',X_IC.shape[0],'datapoints provided')
-        X_CB = [rO,q,a,d0,d1]
 
         return X_IC, X_CB, ladJ_IC, ladJ_CB
 
@@ -1027,3 +1016,4 @@ class SingleMolecule_map(SingleComponent_map):
         return r, ladJ
 
 ####################################################################################################
+
