@@ -565,7 +565,9 @@ class NN_interface_sc_multimap(NN_interface_helper):
             n_mol_unitcells = [None]*self.n_crystals
         else:
             if type(n_mol_unitcells) is int and self.n_crystals == 1: n_mol_unitcells = [n_mol_unitcells]
-            else: assert type(n_mol_unitcells) is list
+            else: 
+                assert type(n_mol_unitcells) is list
+                assert len(n_mol_unitcells) == self.n_crystals
         
         self.n_mol_unitcells = n_mol_unitcells 
 
