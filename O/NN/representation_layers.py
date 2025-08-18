@@ -354,17 +354,17 @@ class SingleComponent_map(SC_helper):
             ladJ_CB.append(ladj_CB.numpy())
             X_IC.append(x_IC.numpy())
 
-        X_IC = tf.concat(X_IC,axis=0)
+        X_IC = np.concatenate(X_IC,axis=0)
         
-        rO = tf.concat(rO,axis=0)
-        q = tf.concat(q,axis=0)
-        a = tf.concat(a,axis=0) ; print(f'initialising on {a.shape[0]} datapoints provided')
-        d0 = tf.concat(d0,axis=0)
-        d1 = tf.concat(d1,axis=0)
+        rO = np.concatenate(rO, axis=0)
+        q  = np.concatenate(q,  axis=0)
+        a  = np.concatenate(a,  axis=0) ; print(f'initialising on {a.shape[0]} datapoints provided')
+        d0 = np.concatenate(d0, axis=0)
+        d1 = np.concatenate(d1, axis=0)
         X_CB = [rO, q, a, d0, d1]
         
-        ladJ_IC = tf.concat(ladJ_IC,axis=0)
-        ladJ_CB = tf.concat(ladJ_CB,axis=0)
+        ladJ_IC = np.concatenate(ladJ_IC, axis=0)
+        ladJ_CB = np.concatenate(ladJ_CB, axis=0)
 
         return X_IC, X_CB, ladJ_IC, ladJ_CB
 
@@ -405,8 +405,6 @@ class SingleComponent_map(SC_helper):
         # b0        : (3,3) or (m,3,3)
 
         X_IC, X_CB = self._forward_init_(r_dataset, batch_size=batch_size)[:2]
-        X_IC = X_IC.numpy()
-        X_CB = [x.numpy() for x in X_CB]
         rO, q, a, d0, d1 = X_CB
 
         assert  self.n_mol_supercell // n_mol_unitcell ==  self.n_mol_supercell / n_mol_unitcell
@@ -1016,4 +1014,5 @@ class SingleMolecule_map(SingleComponent_map):
         return r, ladJ
 
 ####################################################################################################
+
 
