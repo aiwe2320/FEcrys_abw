@@ -806,9 +806,21 @@ class NN_interface_sc_multimap(NN_interface_helper):
 
 ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
 
-class NN_interface_sc_multimap_selective_evaluation(NN_interface_sc_multimap):
-    def __init__(self,*args,**kwargs):
-        super().__init__(*args,**kwargs)
+class NN_interface_sc_multimap_selective_evaluation:
+    
+    ''' this should allow the interface_T.py things to also work with this if needed, selecting parent_class = one of them '''
+    default_parent = NN_interface_sc_multimap
+    
+    def __new__(cls, *args, parent_class = default_parent, **kwargs):
+        cls = type(cls.__name__ + '+' + parent_class.__name__, (cls, parent_class), {})
+        return super().__new__(cls)
+
+    def __init__(self, *args, parent_class = default_parent, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+#class NN_interface_sc_multimap_selective_evaluation(NN_interface_sc_multimap):
+#    def __init__(self,*args,**kwargs):
+#        super().__init__(*args,**kwargs)
 
     def train(self,
               n_batches = 2000,
