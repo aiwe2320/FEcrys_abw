@@ -222,8 +222,10 @@ class NN_interface_sc_T(NN_interface_sc_multimap):
         self.b0 = np.array(self.nns[0].b0)
         self.n_mol = int(self.nns[0].sc.n_mol)
         for k in range(self.n_crystals):
-            assert np.abs(np.sum(self.nns[k].b0 - self.b0)) < 1e-5
+            check = np.abs(np.sum(self.nns[k].b0 - self.b0)) < 1e-5
+            assert check, '! please use NN_interface_sc_TV instead' # adding this soon
             assert self.nns[k].sc.n_mol == self.n_mol
+            
             # also the packing needs to be the same, assumed same when all datasets(T) here are ran from same initial structure
             # thermal expansion is ignored here because not sure how to interpolate between different boxes
 
@@ -303,5 +305,6 @@ class NN_interface_sc_T(NN_interface_sc_multimap):
         else: pass
 
 ######################################################################################################
+
 
 
