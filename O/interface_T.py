@@ -284,9 +284,6 @@ class NN_interface_sc_T(NN_interface_sc_multimap):
                   initialise = True, # for debugging in eager mode
                   test_inverse = True,
                   ):
-        '''
-        since simplified the rest (this is the last function), self.Ts now need to be a uniform grid !
-        '''
         self.model = self.model_class(
                                     ic_map = self.ic_map,
                                     n_temperatures = self.n_crystals,
@@ -304,5 +301,7 @@ class NN_interface_sc_T(NN_interface_sc_multimap):
                 inv_test_res0 = self.model.test_inverse_(r, crystal_index=crystal_index, graph =True)
                 print('T=',self.Ts[crystal_index],'inv_test_res0',inv_test_res0)
         else: pass
+
+######################################################################################################
 
 
