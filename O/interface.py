@@ -424,6 +424,8 @@ class NN_interface_sc(NN_interface_helper):
 
     def truncate_data_(self, m=None):
         '''
+        trying to fix this by attaching and detaching batches especially if array is larger along other axes
+        
         If needed: 
             this function makes the dataset (self.r) smaller in size
                 ran as soon as NN_interface_sc initialised (at least before set_ic_map_step2)
@@ -441,11 +443,13 @@ class NN_interface_sc(NN_interface_helper):
                     - cause: early overfitting = validation loss not properly minimised
                         - cause: q (PGM) not symmetry aware --> needs plenty data in a larger supercell --> memory.
         '''
-        inds = np.random.choice(len(self.u),len(self.u),replace=False)
+        m_initial = len(self.u)
+        inds = np.random.choice(m_initial, m_initial, replace=False)
         self.r = self.r[inds][:m]
         self.u = self.u[inds][:m]
         assert len(self.r) == len(self.u)
         self.n_training = int(self.u.shape[0]*self.fraction_training)
+        print(f'{m} out of {m_initial} datapoints will be used from this dataset')
 
     def set_ic_map_step1(self, ind_root_atom=11, option=None):
         '''
