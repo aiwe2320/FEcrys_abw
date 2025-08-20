@@ -71,8 +71,11 @@ from .rqs import cast_32_, cast_64_, rqs_bin_
 ## ## ## ## 
 
 DTYPE_tf = tf.float32
-np2tf_ = lambda x : tf.cast(x, dtype=DTYPE_tf)
-tf2np_ = lambda x : x.numpy() 
+# ABW
+def np2tf_(x): return tf.cast(x, dtype=DTYPE_tf)
+def tf2np_(x): return x.numpy()
+# np2tf_ = lambda x: tf.cast(x, dtype=DTYPE_tf)
+# tf2np_ = lambda x : x.numpy() 
 
 PI = 3.14159265358979323846264338327950288
 
@@ -81,13 +84,18 @@ PI = 3.14159265358979323846264338327950288
 
 _clip_low_at_ = 1e-8
 _clip_high_at_ = 1e+18
-clip_positive_ = lambda x : tf.clip_by_value(x, _clip_low_at_, _clip_high_at_) 
+def clip_positive_(x): return tf.clip_by_value(x, _clip_low_at_, _clip_high_at_)  # ABW
+# clip_positive_ = lambda x : tf.clip_by_value(x, _clip_low_at_, _clip_high_at_) 
 
-norm_ = lambda x : tf.norm(x, axis=-1,keepdims=True)
-unit_ = lambda x : x / norm_(x)
+def norm_(x): return tf.norm(x, axis=-1,keepdims=True)  # ABW
+def unit_(x): return x / norm_(x)
+# norm_ = lambda x : tf.norm(x, axis=-1,keepdims=True)
+# unit_ = lambda x : x / norm_(x)
 
-norm_clipped_ = lambda x : clip_positive_(tf.norm(x,axis=-1,keepdims=True))
-unit_clipped_ = lambda x : x / norm_clipped_(x)
+def norm_clipped_(x): return clip_positive_(tf.norm(x,axis=-1,keepdims=True)) # ABW
+def unit_clipped_(x): return x / norm_clipped_(x)
+# norm_clipped_ = lambda x : clip_positive_(tf.norm(x,axis=-1,keepdims=True))
+# unit_clipped_ = lambda x : x / norm_clipped_(x)
 
 def det_3x3_(M, keepdims=False):
     # M : (...,3,3)
@@ -748,11 +756,16 @@ class Static_Rotations_Layer:
         '''
         # arbitrary heuristic choice of error functions that are higher in places that are worse
         # https://www.desmos.com/calculator/k351slu5g3
-        err_theta0_ = lambda x : tf.reduce_sum(  5*tf.sin(x+0.1)**10 + (x+0.1)**2  )
-        err_theta1_ = lambda x : tf.reduce_sum(  9*tf.sin(0.8*x)**8 + (0.8*x)**2   )
-        err_phi_    = lambda x : tf.reduce_sum(    tf.sin(0.8*x)**4 + 0.5*(x**2)   )
+        
+        def err_theta0_(x): return tf.reduce_sum(  5*tf.sin(x+0.1)**10 + (x+0.1)**2  )  # ABW
+        def err_theta1_(x): return tf.reduce_sum(  9*tf.sin(0.8*x)**8 + (0.8*x)**2   )
+        def err_phi_(x):    return tf.reduce_sum(    tf.sin(0.8*x)**4 + 0.5*(x**2)   )
+        # err_theta0_ = lambda x : tf.reduce_sum(  5*tf.sin(x+0.1)**10 + (x+0.1)**2  )
+        # err_theta1_ = lambda x : tf.reduce_sum(  9*tf.sin(0.8*x)**8 + (0.8*x)**2   )
+        # err_phi_    = lambda x : tf.reduce_sum(    tf.sin(0.8*x)**4 + 0.5*(x**2)   )
 
-        error_function_ = lambda s : err_theta0_(s[...,:1]) + err_theta1_(s[...,1:2]) + err_phi_(s[...,2:])
+        def error_function_(s): return err_theta0_(s[...,:1]) + err_theta1_(s[...,1:2]) + err_phi_(s[...,2:])  # ABW
+        # error_function_ = lambda s : err_theta0_(s[...,:1]) + err_theta1_(s[...,1:2]) + err_phi_(s[...,2:])
         ''' grid search for best rotations:
         for each molecule, or a set of molecules, a single rotation that minimises the error_function_ above
         is chosen after evaluating on the entire grid of rotations (the set of all cell600 vectors):
@@ -844,8 +857,10 @@ def sample_theta0_fastest_(m, A, B, test=False):
     
         return y.numpy()
 
-    f_ = lambda x : x - 0.5*np.sin(2.0*x) # could not find inverse to approximating it using the spline
-    dfdx_ = lambda x : 1.0 - np.cos(2.0*x) # 2.0*(np.sin(x)**2)
+    def f_(x): return x - 0.5*np.sin(2.0*x)  # ABW
+    def dfdx_(x): return 1.0 - np.cos(2.0*x)
+    # f_ = lambda x : x - 0.5*np.sin(2.0*x) # could not find inverse to approximating it using the spline
+    # dfdx_ = lambda x : 1.0 - np.cos(2.0*x) # 2.0*(np.sin(x)**2)
 
     n_bins = 20
     grid = np.linspace(0, 0.5*PI, n_bins)
@@ -966,7 +981,10 @@ class FocusedHemisphere:
             # uniform sampling.
         else:
             # uniform sampling.
-            self.sample_quaternion_patch_ = lambda m : hemisphere_(sample_q_([m, self.n_mol]))
+            def sample_quaternion_patch_def_(m): return hemisphere_(sample_q_([m, self.n_mol]))  # ABW
+            self.sample_quaternion_patch_ = sample_quaternion_patch_def_
+            #self.sample_quaternion_patch_ = lambda m : hemisphere_(sample_q_([m, self.n_mol]))
+            
             # was sample_q_([m, self.n_mol]), because fliped when converted to flow by any packing layer.
             self.V_patch = np.array([PI**2]*self.n_mol) # (n_mol,)
             self.log_area_patch = np2tf_(np.log(self.V_patch).sum()) # sum over molecules
@@ -1584,7 +1602,8 @@ def CB_single_molecule_inverse_(X):
 ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
 ## hemisphere:
 
-hemisphere_ = lambda x : x * tf.where(x[...,:1]<0.0, -1.0, 1.0)
+def hemisphere_(x): return x * tf.where(x[...,:1]<0.0, -1.0, 1.0)
+#hemisphere_ = lambda x : x * tf.where(x[...,:1]<0.0, -1.0, 1.0)
 
 def hemisphere_forward_(q, rescale_marginals=True):
     '''
