@@ -1,7 +1,0 @@
-#include "argon.itp"
-
-[system]
-LJ
-
-[molecules]
-argon  108

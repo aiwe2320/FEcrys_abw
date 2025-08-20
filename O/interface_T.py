@@ -222,10 +222,8 @@ class NN_interface_sc_T(NN_interface_sc_multimap):
         self.b0 = np.array(self.nns[0].b0)
         self.n_mol = int(self.nns[0].sc.n_mol)
         for k in range(self.n_crystals):
-            check = np.abs(np.sum(self.nns[k].b0 - self.b0)) < 1e-5
-            assert check, '! please use NN_interface_sc_TV instead' # adding this soon
+            assert np.abs(np.sum(self.nns[k].b0 - self.b0)) < 1e-5
             assert self.nns[k].sc.n_mol == self.n_mol
-            
             # also the packing needs to be the same, assumed same when all datasets(T) here are ran from same initial structure
             # thermal expansion is ignored here because not sure how to interpolate between different boxes
 
@@ -286,6 +284,9 @@ class NN_interface_sc_T(NN_interface_sc_multimap):
                   initialise = True, # for debugging in eager mode
                   test_inverse = True,
                   ):
+        '''
+        since simplified the rest (this is the last function), self.Ts now need to be a uniform grid !
+        '''
         self.model = self.model_class(
                                     ic_map = self.ic_map,
                                     n_temperatures = self.n_crystals,
@@ -303,8 +304,5 @@ class NN_interface_sc_T(NN_interface_sc_multimap):
                 inv_test_res0 = self.model.test_inverse_(r, crystal_index=crystal_index, graph =True)
                 print('T=',self.Ts[crystal_index],'inv_test_res0',inv_test_res0)
         else: pass
-
-######################################################################################################
-
 
 

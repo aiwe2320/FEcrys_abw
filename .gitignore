@@ -1,0 +1,11 @@
+# Ignore data
+O/MM/molecules/A/data/*
+!O/MM/molecules/A/data/NPT
+O/MM/molecules/A/data/NPT/*
+
+O/NN/training_results/BAR/*
+O/NN/training_results/fitted_models/*
+O/NN/training_results/misc/*
+O/NN/training_results/samples/*
+
+./*.gro

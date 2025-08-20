@@ -1,9 +1,0 @@
-REMARK   1 CREATED WITH MDTraj 1.10.0, 2025-06-20
-CRYST1    3.800    3.800    3.800  90.00  90.00  90.00 P 1           1 
-MODEL        0
-ATOM      1 AR   ARG A   1       0.950   0.950   0.950  1.00  0.00      AR  Ar  
-TER       2      ARG A   1
-ATOM      3 AR   AGR B   1       2.850   2.850   2.850  1.00  0.00      AR  Ar  
-TER       4      AGR B   1
-ENDMDL
-END

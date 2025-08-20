@@ -1,8 +1,5 @@
 from .mm_helper import *
 
-from .ff_setup import *
-OPLS = OPLS_general
-
 ## ## ## ## ## ## ## ## ## ## ## ##
 
 ''' TODO: explain how to use in a notebook '''
@@ -16,11 +13,12 @@ class SingleComponent:
                 atom_order_PDB_match_itp = False, # depreceated
                 FF_class = None,
                 ):
-        
-        if FF_class is None: mixin = {'GAFF': GAFF, 'OPLS': OPLS, 'TIP4P':TIP4P}[FF_name]
-        else:                mixin = FF_class
-
-        cls.FF_name = mixin.FF_name
+        if FF_class is None: 
+            mixin = {'GAFF': GAFF, 'OPLS': OPLS, 'TIP4P':TIP4P}[FF_name]
+            cls.FF_name = FF_name
+        else: 
+            mixin = FF_class
+            cls.FF_name = FF_class.FF_name
 
         cls = type(cls.__name__ + '+' + mixin.__name__, (cls, mixin), {})
         return super(SingleComponent, cls).__new__(cls)
@@ -224,6 +222,7 @@ class SingleComponent:
                                barostat_1_scaling = [True,True,True],
                                stride_barostat = 25,
                                custom_integrator = None, # lambda function with other parameters specified
+                               inp_plat = 'CUDA'
                               ):
         self.args_initialise_simulation = { 'rbv'                : rbv,
                                             'minimise'           : minimise,
@@ -262,7 +261,8 @@ class SingleComponent:
         if self.P is not None: self._add_barostat_to_system_()
         else: pass
 
-        self.simulation = app.Simulation(self.topology, self.system, integrator)
+        plat = mm.Platform.getPlatformByName(inp_plat)
+        self.simulation = app.Simulation(self.topology, self.system, integrator, platform=plat)
 
         if rbv is None:
             #self.system.setDefaultPeriodicBoxVectors(*self.b0)
@@ -324,10 +324,14 @@ class SingleComponent:
 
     @staticmethod
     def initialise_from_save_(path_and_name:str, resume_simulation=True, verbose=True):
-
+        '''
+        method allows to resume everything later (on another machine)
+        '''
+        '''
+        TODO if needed: be able to do the same when lambda < 1
+        '''
         if type(path_and_name) is str:
             dataset = SingleComponent.load_simulation_data_(path_and_name=path_and_name)
-            print(f'initialising from saved dataset: {path_and_name}')
         else:
             dataset = path_and_name
 
@@ -560,6 +564,127 @@ class TIP4P(MM_system_helper):
 
 ##
 
+def change_charges_itp_top_(path_top_or_itp_file_in : str,
+                            path_top_or_itp_file_out : str,
+                            n_atoms_mol : int,
+                            replacement_charges : np.ndarray = None, #! correct permuation of atoms
+                            neutralise_charge : bool = True,
+                            ):
+    print('')
+    print('__ changing charges in top/itp: __________________________')
+    file_in_path = str(path_top_or_itp_file_in)
+    file_out_path = str(path_top_or_itp_file_out)
+    
+    file_in = open(file_in_path, 'r')
+    lines_in = []
+    for line in file_in:
+        lines_in.append(line)
+    file_in.close()
+    
+    indx_header = [i for i in range(len(lines_in)) if '[ atoms ]' in lines_in[i]][0]
+    
+    inds_lines_replace = []
+    charges_in_str = []
+    i = indx_header
+    while len(charges_in_str) < n_atoms_mol:
+        split = re.split('\s+',lines_in[i])
+
+        #if len(split) == 13 and split[0] != ';':
+        #    inds_lines_replace.append(i)
+        #    charges_in_str.append(split[7])
+        #else: pass
+        try:
+            if '.' in split[7] and '.' in split[8]: # charge (7), mass (8) parts have a dot..
+                inds_lines_replace.append(i)
+                charges_in_str.append(split[7])
+            else: pass
+        except: pass
+
+        i +=1
+        
+    charges_in = np.array([float(x) for x in charges_in_str])
+    if replacement_charges is None:
+        if neutralise_charge:
+            charges_out = charges_in - charges_in.mean()
+            print('average charge neutralised from',charges_in.mean(),'to',charges_out.mean())
+        else:
+            charges_out = charges_in
+            print('charges with average',charges_in.mean(),'were unchanged')
+    else:
+        assert len(replacement_charges) == n_atoms_mol
+        charges_out = replacement_charges
+        print('charges with average',charges_in.mean(),'were repalced with custom charges with average of',replacement_charges.mean())
+        
+    charges_out_str = [str(x) for x in charges_out]
+    
+    lines_out = dict(zip(np.arange(len(lines_in)), lines_in))
+    lines_replaced = []
+    for i, charge_in_str, charge_out_str in zip(inds_lines_replace, charges_in_str ,charges_out_str):
+        lines_out[i] = lines_out[i].replace(charge_in_str, charge_out_str)
+        lines_replaced.append(i)
+    
+    print('replaced',len(lines_replaced),'lines from',lines_replaced[0],'to',lines_replaced[-1],'in',file_in_path)
+
+    file_out = open(file_out_path, 'w')
+    for i in range(len(lines_out)):
+        file_out.write(lines_out[i])
+    file_out.close()
+
+    print('these changes were written into file:',file_out_path)
+
+    print('__________________________________________________________\n')
+    return charges_out
+
+def change_n_mol_top_(path_top_file_in : str,
+                      path_top_file_out : str,
+                      replace_n_mol : int,
+                      verbose = True,
+                     ):
+    if verbose: print_ = lambda *x : print(*x)
+    else: print_ = lambda *x : None
+    print_('')
+    print_('__ changing n_mol in top: ________________________________')
+    file_in_path = str(path_top_file_in)
+    file_out_path = str(path_top_file_out)
+
+    file_in = open(file_in_path, 'r')
+    lines_in = []
+    for line in file_in:
+        lines_in.append(line)
+    file_in.close()
+
+    indx_header = [i for i in range(len(lines_in)) if '[ molecules ]' in lines_in[i]][0]
+
+    inds_lines_replace = []
+    n_mol_in_str = []
+    i = indx_header
+    while len(n_mol_in_str) < 1:
+        split = re.split('\s+',lines_in[i])
+        if len(split) == 3 and split[0] != ';':
+            inds_lines_replace.append(i)
+            n_mol_in_str.append(split[1])
+        else: pass
+        i +=1
+    assert len(n_mol_in_str) == 1
+    assert len(inds_lines_replace) == 1
+
+    lines_out = dict(zip(np.arange(len(lines_in)), lines_in))
+    i = inds_lines_replace[0]
+    lines_out[i] = lines_out[i].replace(n_mol_in_str[0], str(replace_n_mol))
+
+    print_('in the',file_in_path)
+    print_('replaced 1 line (',i,') \n from: \n    ',lines_in[i] ,'to \n    ',lines_out[i][:-1])
+
+    file_out = open(file_out_path, 'w')
+    for i in range(len(lines_out)):
+        file_out.write(lines_out[i])
+    file_out.close()
+
+    print_('these changes were written into file:',file_out_path)
+    print_('__________________________________________________________\n')
+
+##
+
 class GAFF(MM_system_helper):
     ''' mixin class for SingleComponent. Methods relevant only for using GAFF are here.
 
@@ -777,7 +902,6 @@ class GAFF(MM_system_helper):
         if self.using_gmx_loader: self.set_FF_gmx_()
         else: self.set_FF_amber_()
 
-"""
 class OPLS(MM_system_helper):
     ''' mixin class for SingleComponent. Methods relevant only for using OPLS are here.
 
@@ -1385,6 +1509,5 @@ class COST_FIX_permute_xyz_after_a_trajectory:
         return U*self.beta
 
 ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
-"""
 
 

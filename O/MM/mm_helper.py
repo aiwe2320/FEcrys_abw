@@ -153,23 +153,20 @@ def update_CustomNonbondedForce_(_force, _lam, deepcopy=True):
     if deepcopy: force = copy.deepcopy(_force)
     else: force = _force
 
+    ''' only in OPLS and TIP4P, not in GAFF '''
+
     # epsilon_ij = (eps_i * eps_j)**0.5      # _lam * epsilon_ij = ((_lam*eps_i) * (_lam*eps_j))**0.5
 
     # [force.getPerParticleParameterName(0), force.getPerParticleParameterName(1)]
     # ['epsilon', 'sigma']
-    try:
-        assert force.getGlobalParameterName(0) == 'ecm_lambda'
-        force.setGlobalParameterDefaultValue(0, defaultValue=_lam)
+    assert force.getPerParticleParameterName(0) == 'epsilon'
 
-    except:
-        assert force.getPerParticleParameterName(0) == 'epsilon'
-
-        for i in range(force.getNumParticles()):
-            old_params = force.getParticleParameters(i)
-            epsilon_i, sigma_i = old_params
-            new_epsilon_i = epsilon_i*_lam
-            new_params = [new_epsilon_i, sigma_i]
-            force.setParticleParameters(i, new_params) # second arg : list (of two numbers)
+    for i in range(force.getNumParticles()):
+        old_params = force.getParticleParameters(i)
+        epsilon_i, sigma_i = old_params
+        new_epsilon_i = epsilon_i*_lam
+        new_params = [new_epsilon_i, sigma_i]
+        force.setParticleParameters(i, new_params) # second arg : list (of two numbers)
     return force
 
 def put_lambda_into_system_(system,
@@ -242,19 +239,22 @@ def put_lambda_into_system_(system,
 
 ## ## 
 
-#def inject_methods_from_another_class_(self, class_to_inject_methods_from):
-#    import types
-#    for name, method in class_to_inject_methods_from.__dict__.items():
-#        if callable(method) and not name.startswith("__"):
-#            setattr(self, name, types.MethodType(method, self))
+def inject_methods_from_another_class_(self, class_to_inject_methods_from):
+    import types
+    for name, method in class_to_inject_methods_from.__dict__.items():
+        if callable(method) and not name.startswith("__"):
+            setattr(self, name, types.MethodType(method, self))
 
 class MM_system_helper:
     def __init__(self,):
         self.reduce_drift = False
         self.NPT = False # switches to permanently True when barostat added, stays true if barostat removed.
 
-    def inject_methods_from_another_class_(self, class_to_inject_methods_from, **kwargs):
-        inject_methods_from_another_class_(self, class_to_inject_methods_from, **kwargs)
+    def inject_methods_from_another_class_(self, class_to_inject_methods_from):
+        '''
+        for superficial use only: careful not to override methods back to default that were already overridden
+        '''
+        inject_methods_from_another_class_(self, class_to_inject_methods_from)
 
     def corrections_to_ff_(self, verbose):
         if verbose: print('no corrections to self.system')

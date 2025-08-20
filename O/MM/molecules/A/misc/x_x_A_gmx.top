@@ -1,0 +1,7 @@
+#include "A.itp"
+
+[system]
+LJ
+
+[molecules]
+A  180
