@@ -1,0 +1,22 @@
+; binaryLJ.top created by Brittany S. Zimmerman Wed July 11 2013
+
+[ defaults ]
+; nbfunc comb-rule gen-pairs fudgeLJ fudgeQQ
+  1       2        no        1.0     1.0
+
+[ atomtypes ]
+; name bond_type mass(amu) charge ptype       sigma(nm)         epsilon (kJ/mol)
+  AR   AR    16.04300     0.0000     A     3.73000e-01     1.23040e+00 ; OPLSAA United Atom Methane parameters
+
+[ nonbond_params ]
+; i j func    sigma(nm) epsilon(kJ/mol)
+; A B    1  2.98400e-01    1.84560e+00  ; epsilon = 1.5, sigma = 0.8
+AR AR    1   3.7300e-01  1.230400e+00  ; epsilon = 1.5, sigma = 0.68
+
+[ moleculetype ]
+; name  nrexcl
+A           1
+
+[ atoms ]
+; nr type resnr res atom cgnr charge
+   1    AR    1   ARG  AR   1  0.000

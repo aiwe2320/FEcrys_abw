@@ -1,0 +1,179 @@
+class PGMcrys_v2(tf.keras.models.Model, model_helper_PGMcrys_v1, model_helper):
+    #""" !! : molecule should have >3 atoms (also true in ic_map) """
+    @staticmethod
+    def load_model(path_and_name : str, VERSION='NEW'):
+        return PGMcrys_v2._load_model_(path_and_name, PGMcrys_v2)
+
+    def __init__(self,
+                 ic_maps : list,
+                 n_layers : int = 4,
+                 optimiser_LR_decay = [0.001,0.0],
+                 DIM_connection = 10,
+                 n_att_heads = 4,
+                 initialise = True, # for debugging in eager mode
+                 ):
+        super().__init__()
+        self.init_args = {  'ic_maps' : ic_maps,
+                            'n_layers' : n_layers,
+                            'optimiser_LR_decay' : optimiser_LR_decay,
+                            'DIM_connection' : DIM_connection,
+                            'n_att_heads' : n_att_heads}
+        
+        ####
+        if str(type(ic_maps)) not in ["<class 'list'>","<class 'tensorflow.python.training.tracking.data_structures.ListWrapper'>"]: 
+            ic_maps = [ic_maps]
+        else: pass
+        self.ic_maps = ic_maps
+        self.n_mol = int(self.ic_maps[0].n_mol)
+        assert all([ic_map.n_mol == self.n_mol for ic_map  in self.ic_maps])
+        assert all([ic_map.n_atoms_mol == ic_maps[0].n_atoms_mol for ic_map in self.ic_maps])
+        self.n_maps = len(self.ic_maps)
+
+        if self.n_maps > 1:
+            print('matching ic_maps for the single model:')
+            [ic_map.match_topology_(ic_maps) for ic_map in self.ic_maps]
+            print('checking that ic_maps match the model:')
+            assert all(np.abs(ic_map.periodic_mask - ic_maps[0].periodic_mask).sum()==0 for ic_map in self.ic_maps)
+        else: pass
+        self.periodic_mask = np.array(self.ic_maps[0].periodic_mask)
+        assert all([np.abs(self.periodic_mask - ic_map.periodic_mask).sum() == 0 for ic_map in self.ic_maps])
+        # preparing how psi_{C->P} and psi_{P->C} are extended along last axis with crystal encoding:
+        if self.n_maps > 1:
+            self.dim_crystal_encoding = 1
+            self.crystal_encodings = np2tf_(np.linspace(-1.,1.,self.n_maps))
+            self.extension_shape = np2tf_(np.zeros([self.n_mol,1]))
+        else:
+            self.dim_crystal_encoding = 0
+            self.crystal_encodings = np2tf_(np.array([0]))
+            self.extension_shape = np2tf_(np.zeros([self.n_mol,0]))
+
+        ####
+        self.n_layers = n_layers
+        self.optimiser_LR_decay = optimiser_LR_decay
+        self.DIM_connection = DIM_connection
+        self.n_att_heads = n_att_heads
+
+        connector_type = C2P_connector_v2
+        #connector_type = C2P_connector_v2_PI # doesn't work well enough
+
+        n_hidden_kqv = [2,2,2] # n_hidden_main
+        n_hidden_decode = 1
+        embedding_dim = self.DIM_connection
+        n_hidden_connection = 1
+        hidden_activation = tf.nn.leaky_relu
+        n_bins = 5
+        ##
+        print('self.n_att_heads:', self.n_att_heads)
+        print('connector_type:',   connector_type)
+
+        self.layers_C = [ CONFORMER_FLOW_LAYER(
+                            periodic_mask = self.periodic_mask,
+                            layer_index = i,
+                            n_mol = self.n_mol,
+                            DIM_P2C_connection = self.DIM_connection + self.dim_crystal_encoding,
+                            DIM_C2P_connection = self.DIM_connection,
+                            n_hidden_connection = n_hidden_connection,
+                            half_layer_class = SPLINE_COUPLING_HALF_LAYER_AT,
+                            kwargs_for_given_half_layer_class = {
+                                        'flow_mask' : None,
+                                        'n_mol' : self.n_mol,
+                                        'n_heads' : self.n_att_heads,
+                                        'embedding_dim' : embedding_dim,
+                                        'n_hidden_kqv' : n_hidden_kqv,
+                                        'hidden_activation' : hidden_activation,
+                                        'one_hot_kqv' : [False]*3,
+                                        'n_hidden_decode' : n_hidden_decode,
+                                        },
+                            use_tfp = False,
+                            n_bins = n_bins,
+                            min_bin_width = 0.001,
+                            knot_slope_range = [0.001, 50.0],
+                            name = 'TRANSFERABLE_FLOW_LAYER',
+                            connector_type = connector_type
+                        ) for i in range(self.n_layers)]
+
+        self.layers_P = [ CONFORMER_FLOW_LAYER(
+                            periodic_mask = [0,0,0],
+                            layer_index = i,
+                            n_mol = self.n_mol,
+                            DIM_P2C_connection = self.DIM_connection + self.dim_crystal_encoding,
+                            DIM_C2P_connection = self.DIM_connection,
+                            n_hidden_connection = n_hidden_connection,
+                            half_layer_class = SPLINE_COUPLING_HALF_LAYER_AT,
+                            kwargs_for_given_half_layer_class = {
+                                        'flow_mask' : self.ic_maps[0].flow_mask_xO,
+                                        'n_mol' : self.n_mol,
+                                        'n_heads' : self.n_att_heads,
+                                        'embedding_dim' : embedding_dim,
+                                        'n_hidden_kqv' : n_hidden_kqv,
+                                        'hidden_activation' : hidden_activation,
+                                        'one_hot_kqv' : [False]*3,
+                                        'n_hidden_decode' : n_hidden_decode,
+                                        },
+                            use_tfp = False,
+                            n_bins = n_bins,
+                            min_bin_width = 0.001,
+                            knot_slope_range = [0.001, 50.0],
+                            name = 'TRANSFERABLE_FLOW_LAYER',
+                            connector_type = connector_type
+                        ) for i in range(self.n_layers)]
+
+        ## p_{0}:
+        self.ln_base_ = self.ic_maps[0].ln_base_
+        self.sample_base_ = self.ic_maps[0].sample_base_
+        
+        ## trainability:
+        self.all_parameters_trainable = True
+        if initialise: self.initialise()
+        else: pass
+
+    def get_extension_(self, m, crystal_index):
+        number = self.crystal_encodings[crystal_index]
+        extension = self.extension_shape + number   # (n_mol, 1)
+        extension = tf.stack([extension]*m, axis=0) # (m, n_mol, 1)
+        return extension # crystal embedding, zero dimensional if training on just 1 state
+
+    ##
+
+    def _forward_coupling_(self, X, crystal_index=0):
+        # trainable trasformation x -> z, conditioned on crystal_index
+        ladJ = 0.0
+        x_P, X_C = X
+        X_P = self.ic_maps[0].xO_reshape_(x_P, forward=True)
+        extension = self.get_extension_(m=x_P.shape[0], crystal_index=crystal_index)
+
+        for i in range(self.n_layers):
+
+            aux_C2P   = self.layers_C[i].convert_to_aux_(X_C)
+            aux_C2P   = tf.concat([aux_C2P, extension], axis=-1)
+            X_P, ladj = self.layers_P[i].forward_(X_P, aux=aux_C2P) ; ladJ += ladj
+
+            aux_P2C   = self.layers_P[i].convert_to_aux_(X_P)
+            aux_P2C   = tf.concat([aux_P2C, extension], axis=-1)
+            X_C, ladj = self.layers_C[i].forward_(X_C, aux=aux_P2C) ; ladJ += ladj
+
+        x_P = self.ic_maps[0].xO_reshape_(X_P, forward=False)
+        Z = [x_P, X_C]
+        return Z, ladJ
+    
+
+    def _inverse_coupling_(self, Z, crystal_index=0):
+         # trainable trasformation z -> x, conditioned on crystal_index
+        ladJ = 0.0
+        x_P, X_C = Z
+        X_P = self.ic_maps[0].xO_reshape_(x_P, forward=True)
+        extension = self.get_extension_(m=x_P.shape[0], crystal_index=crystal_index)
+
+        for i in reversed(range(self.n_layers)):
+
+            aux_P2C   = self.layers_P[i].convert_to_aux_(X_P)
+            aux_P2C   = tf.concat([aux_P2C, extension], axis=-1)
+            X_C, ladj = self.layers_C[i].inverse_(X_C, aux=aux_P2C) ; ladJ += ladj
+
+            aux_C2P   = self.layers_C[i].convert_to_aux_(X_C)
+            aux_C2P   = tf.concat([aux_C2P, extension], axis=-1)
+            X_P, ladj = self.layers_P[i].inverse_(X_P, aux=aux_C2P) ; ladJ += ladj
+
+        x_P = self.ic_maps[0].xO_reshape_(X_P, forward=False)
+        X = [x_P, X_C]
+        return X, ladJ

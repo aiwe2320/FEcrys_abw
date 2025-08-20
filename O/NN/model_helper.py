@@ -261,7 +261,7 @@ def pool_(x, ws=None):
 
 def tolBAR_(incuA, incuB,
             wsA=None, wsB=None,
-            f_window_grain = [-180000.,60000.,30000],
+            f_window_grain = [-60000.,60000.,10000],
             tol=0.00001,
             return_errs=False,
             ):

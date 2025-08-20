@@ -577,7 +577,7 @@ def merge_periodic_masks_(list_periodic_masks):
 
 ## focused rotations:
 
-# cell600 : a uniform grid on S3 (used for grid search in Static_Rotations_Layer)
+# cell600 : a uniform grid on S3 # 4D version of icosahedron (centres of black pentagons on a soccer ball)
 cell600 = [ [ 0.5       ,  0.5       ,  0.5       ,  0.5       ],
             [-0.5       ,  0.5       ,  0.5       ,  0.5       ],
             [ 0.5       , -0.5       ,  0.5       ,  0.5       ],
@@ -1042,6 +1042,16 @@ def quat2axisangle_(q):
     n = (1.0 - q0**2)**0.5
     axis = q123 / n
     return axis*angle
+
+'''
+def get_E_(x):
+    """ REF: https://github.com/noegroup/bgflow
+    Input:  x : (..., n)
+    Output: E : (..., n, n-1) : n-1 n-dimensional othonormal vectors on S(n-1) at x
+    """
+    E = tf.linalg.svd(tf.einsum('...i,...j->...ij',x,x))[-1][...,1:] # (..., d_extrisic, d_intrisic)
+    return E
+'''
 
 ## ##
 
