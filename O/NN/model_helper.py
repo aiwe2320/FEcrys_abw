@@ -152,7 +152,7 @@ class model_helper:
             return class_of_the_model.load_model_(path_and_name, class_of_the_model)
         '''
         init_args, ws = load_pickle_(path_and_name)
-        model = (lambda f, args : f(**args))(class_of_the_model, init_args)
+        model = (lambda f, args : f(**args))(class_of_the_model, init_args)  # ABW: Lambda unchanged (for now) since part of loading, not saving
         for i in range(len(ws)):
             model.trainable_variables[i].assign(ws[i])
         return model
@@ -259,6 +259,12 @@ def pool_(x, ws=None):
     if ws is None: return x.mean()
     else:          return (x*ws).sum() / ws.sum()
 
+def sigma_(x):
+    '''ABW
+    Define function to replace lambda functions
+    '''
+    return (1.0+np.exp(-x))**(-1)
+
 def tolBAR_(incuA, incuB,
             wsA=None, wsB=None,
             f_window_grain = [-60000.,60000.,10000],
@@ -297,7 +303,7 @@ def tolBAR_(incuA, incuB,
 
     '''
     def _BAR_(grid_f, incuA, incuB, wsA=None, wsB=None):
-        sigma_ = lambda x : (1.0+np.exp(-x))**(-1)
+        #sigma_ = lambda x : (1.0+np.exp(-x))**(-1)  # ABW
         errs = []
         for f in grid_f:
             A = pool_(sigma_( (f - incuA) ), ws=wsA)
@@ -308,8 +314,9 @@ def tolBAR_(incuA, incuB,
         f = grid_f[ind_min]
         if f in [grid_f[0], grid_f[-1]]: return f, False, ind_min, errs
         else:                            return f, True, ind_min, errs
-            
-    bar_ = lambda _grid : _BAR_(_grid, incuA=incuA, incuB=incuB, wsA=wsA, wsB=wsB)
+
+    def bar_(_grid): return _BAR_(_grid, incuA=incuA, incuB=incuB, wsA=wsA, wsB=wsB)
+    # bar_ = lambda _grid : _BAR_(_grid, incuA=incuA, incuB=incuB, wsA=wsA, wsB=wsB)
     
     log_grids = [] ; log_errs = []
     a, b, grain = f_window_grain
@@ -505,7 +512,7 @@ def get_FE_estimates_(
         else: pass
 
         ## miscellaneous info: reweighted average potential energy using BAR_V: [TODO: double check]
-        sigma_ = lambda x : (1.0+np.exp(-x))**(-1)
+        #sigma_ = lambda x : (1.0+np.exp(-x))**(-1)  # ABW
         AV_u_BAR_V = pool_(u_BG*sigma_(BAR_V - f_BG-offset), ws=None) + pool_(u_V*sigma_(BAR_V - f_V-offset), ws=w_V)
         ##
 

@@ -284,8 +284,14 @@ class SingleComponent_monatomic_map(SingleComponent_map):
         #r -= tf.reduce_mean(r, axis=-2, keepdims=True)
         
         return r, ladJ
-    
-get_pos_encoding_tf_ = lambda pos, C=6, dim_embedding=3 : cast_32_([tf.sin(pos/(C**(2*i/dim_embedding))) for i in range(1,dim_embedding+1)] + [tf.cos(pos/(C**(2*i/dim_embedding))) for i in range(1,dim_embedding+1)])
+
+def get_pos_encoding_tf_(pos, C=6, dim_embedding=3):
+    '''ABW
+    Lambda replacement
+    '''
+    return cast_32_([tf.sin(pos/(C**(2*i/dim_embedding))) for i in range(1,dim_embedding+1)] + [tf.cos(pos/(C**(2*i/dim_embedding))) for i in range(1,dim_embedding+1)])
+
+#get_pos_encoding_tf_ = lambda pos, C=6, dim_embedding=3 : cast_32_([tf.sin(pos/(C**(2*i/dim_embedding))) for i in range(1,dim_embedding+1)] + [tf.cos(pos/(C**(2*i/dim_embedding))) for i in range(1,dim_embedding+1)])
 
 class CUSTOM_LAYER_LJ(tf.keras.layers.Layer):
     def __init__(self,

@@ -53,7 +53,10 @@ class MLP(tf.keras.layers.Layer):
 
 ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
 
-get_pos_encoding_ = lambda pos, C=6, dim_embedding=3 : np.array([np.sin(pos/(C**(2*i/dim_embedding))) for i in range(1,dim_embedding+1)] + [np.cos(pos/(C**(2*i/dim_embedding))) for i in range(1,dim_embedding+1)])
+# ABW
+def get_pos_encoding_(pos, C=6, dim_embedding=3):
+        return np.array([np.sin(pos/(C**(2*i/dim_embedding))) for i in range(1,dim_embedding+1)] + [np.cos(pos/(C**(2*i/dim_embedding))) for i in range(1,dim_embedding+1)])
+#get_pos_encoding_ = lambda pos, C=6, dim_embedding=3 : np.array([np.sin(pos/(C**(2*i/dim_embedding))) for i in range(1,dim_embedding+1)] + [np.cos(pos/(C**(2*i/dim_embedding))) for i in range(1,dim_embedding+1)])
 
 class AT_MLP(tf.keras.layers.Layer):
     '''
@@ -119,14 +122,29 @@ class AT_MLP(tf.keras.layers.Layer):
 
         self.pos_emb = [cast_32_(get_pos_encoding_(i)) for i in range(self.n_mol)] # default [(6,), ..., (6,)]
 
-        if one_hot_kqv[0]: self.k_ = lambda x : self._k_(self.one_hot_extend_(x))[0]
-        else:              self.k_ = lambda x : self._k_(x)[0]
+        # ABW
+        def k_one_hot(x): return self._k_(self.one_hot_extend_(x))[0]
+        def k_not_hot(x): return self._k_(x)[0]
+        def q_one_hot(x): return self._q_(self.one_hot_extend_(x))[0]
+        def q_not_hot(x): return self._q_(x)[0]
+        def v_one_hot(x): return self._v_(self.one_hot_extend_(x))[0]
+        def v_not_hot(x): return self._v_(x)[0]
+        
+        if one_hot_kqv[0]: self.k_ = k_one_hot
+        else:              self.k_ = k_not_hot
+        if one_hot_kqv[1]: self.q_ = q_one_hot
+        else:              self.q_ = q_not_hot
+        if one_hot_kqv[2]: self.v_ = v_one_hot
+        else:              self.v_ = v_not_hot
 
-        if one_hot_kqv[1]: self.q_ = lambda x : self._q_(self.one_hot_extend_(x))[0]
-        else:              self.q_ = lambda x : self._q_(x)[0]
+        # if one_hot_kqv[0]: self.k_ = lambda x : self._k_(self.one_hot_extend_(x))[0]
+        # else:              self.k_ = lambda x : self._k_(x)[0]
 
-        if one_hot_kqv[2]: self.v_ = lambda x : self._v_(self.one_hot_extend_(x))[0]
-        else:              self.v_ = lambda x : self._v_(x)[0]
+        # if one_hot_kqv[1]: self.q_ = lambda x : self._q_(self.one_hot_extend_(x))[0]
+        # else:              self.q_ = lambda x : self._q_(x)[0]
+
+        # if one_hot_kqv[2]: self.v_ = lambda x : self._v_(self.one_hot_extend_(x))[0]
+        # else:              self.v_ = lambda x : self._v_(x)[0]
 
     def one_hot_extend_(self, x):
         return tf.stack([tf.concat([x[:,i,:],[self.pos_emb[i]]*x.shape[0]], axis=-1) for i in range(self.n_mol)],axis=-2)
@@ -223,10 +241,19 @@ class SPLINE_COUPLING_helper:
         self.dim_MLP_input = self.n_conditioning_Periodic*2 + self.n_conditioning_Ordinary
         
         ## 2
-    
-        self.ignore_sort_ladj_Periodic_ = lambda ladj : tf.reduce_sum(ladj, axis=(-1,-2))[...,tf.newaxis]
+
+        # ABW
+        def ignore_sort_ladj_Periodic_def_(ladj): return tf.reduce_sum(ladj, axis=(-1,-2))[...,tf.newaxis]
+        self.ignore_sort_ladj_Periodic_ = ignore_sort_ladj_Periodic_def_
+        #self.ignore_sort_ladj_Periodic_ = lambda ladj : tf.reduce_sum(ladj, axis=(-1,-2))[...,tf.newaxis]
+
         self.ignore_sort_ladj_Ordinary_ = self.ignore_sort_ladj_Periodic_
-        self.ignore_sort_variable_Periodic_ = lambda input, output : output
+
+        # ABW
+        def ignore_sort_variable_Periodic_def_(input, output): return output
+        self.ignore_sort_variable_Periodic_ = ignore_sort_variable_Periodic_def_
+        #self.ignore_sort_variable_Periodic_ = lambda input, output : output
+        
         self.ignore_sort_variable_Ordinary_ = self.ignore_sort_variable_Periodic_
     
         if flow_mask is not None:
@@ -237,11 +264,20 @@ class SPLINE_COUPLING_helper:
             self.mask_flowing_O  = tf.gather(self.mask_flowing,  self.inds_flowing_Ordinary, axis=-1) # (1, n_mol, self.n_flowing_Ordinary)
             self.mask_constant_P = tf.gather(self.mask_constant, self.inds_flowing_Periodic, axis=-1) # (1, n_mol, self.n_flowing_Periodic)
             self.mask_constant_O = tf.gather(self.mask_constant, self.inds_flowing_Ordinary, axis=-1) # (1, n_mol, self.n_flowing_Ordinary)
-
-            self.sort_ladj_Periodic_ = lambda ladj : tf.reduce_sum(ladj*self.mask_flowing_P, axis=(-1,-2))[...,tf.newaxis]
-            self.sort_ladj_Ordinary_ = lambda ladj : tf.reduce_sum(ladj*self.mask_flowing_O, axis=(-1,-2))[...,tf.newaxis]
-            self.sort_variable_Periodic_ = lambda input, output : output*self.mask_flowing_P + input*self.mask_constant_P
-            self.sort_variable_Ordinary_ = lambda input, output : output*self.mask_flowing_O + input*self.mask_constant_O
+            
+            # ABW
+            def sort_ladj_Periodic_def_(ladj): return tf.reduce_sum(ladj*self.mask_flowing_P, axis=(-1,-2))[...,tf.newaxis]
+            def sort_ladj_Ordinary_def_(ladj): return tf.reduce_sum(ladj*self.mask_flowing_O, axis=(-1,-2))[...,tf.newaxis]
+            def sort_variable_Periodic_def_(input, output): return output*self.mask_flowing_P + input*self.mask_constant_P
+            def sort_variable_Ordinary_def_(input, output): return output*self.mask_flowing_O + input*self.mask_constant_O
+            self.sort_ladj_Periodic_ = sort_ladj_Periodic_def_
+            self.sort_ladj_Ordinary_ = sort_ladj_Ordinary_def_
+            self.sort_variable_Periodic_ = sort_variable_Periodic_def_
+            self.sort_variable_Ordinary_ = sort_variable_Ordinary_def_
+            # self.sort_ladj_Periodic_ = lambda ladj : tf.reduce_sum(ladj*self.mask_flowing_P, axis=(-1,-2))[...,tf.newaxis]
+            # self.sort_ladj_Ordinary_ = lambda ladj : tf.reduce_sum(ladj*self.mask_flowing_O, axis=(-1,-2))[...,tf.newaxis]
+            # self.sort_variable_Periodic_ = lambda input, output : output*self.mask_flowing_P + input*self.mask_constant_P
+            # self.sort_variable_Ordinary_ = lambda input, output : output*self.mask_flowing_O + input*self.mask_constant_O
 
         else:
             self.sort_ladj_Periodic_ = self.ignore_sort_ladj_Periodic_
@@ -307,7 +343,9 @@ class SPLINE_COUPLING_helper:
         if self.nk_for_periodic_encoding == 1:
             self.cos_sin_ = cos_sin_1_
         else:
-            self.cos_sin_ = lambda x : cos_sin_(x, nk=self.nk_for_periodic_encoding)
+            def cos_sin_def_(x): return cos_sin_(x, nk=self.nk_for_periodic_encoding)  # ABW
+            self.cos_sin_ = cos_sin_def_
+            #self.cos_sin_ = lambda x : cos_sin_(x, nk=self.nk_for_periodic_encoding)
         
     def transform_(self, x, forward : bool, dont_mask=False):
         '''
@@ -501,9 +539,13 @@ class SPLINE_COUPLING_HALF_LAYER(tf.keras.layers.Layer,
                             name = self.custom_name,
                             )
             if np.where(np.array(self.dims_MLP_outputs)==0)[0][0] == 0:
-                self.MLP_ = lambda x : [None] + self._MLP_(x)
+                def MLP_def_(x): return [None] + self._MLP_(x)  # ABW
+                self.MLP_ = MLP_def_
+                #self.MLP_ = lambda x : [None] + self._MLP_(x)
             else:
-                self.MLP_ = lambda x : self._MLP_(x) + [None]
+                def MLP_def_(x): return self._MLP_(x) + [None]  # ABW
+                self.MLP_ = MLP_def_
+                #self.MLP_ = lambda x : self._MLP_(x) + [None]
         else:
             self.MLP_ = MLP(
                             dims_outputs = self.dims_MLP_outputs,
@@ -597,9 +639,13 @@ class SPLINE_COUPLING_HALF_LAYER_AT(tf.keras.layers.Layer,
                         name = self.custom_name,
                         )
             if np.where(np.array(self.dims_MLP_outputs)==0)[0][0] == 0:
-                self.MLP1_ = lambda x : [None] + self._MLP1_(x)
+                def MLP1_def_(x): return [None] + self._MLP1_(x)  # ABW
+                self.MLP1_ = MLP1_def_
+                #self.MLP1_ = lambda x : [None] + self._MLP1_(x)
             else:
-                self.MLP1_ = lambda x : self._MLP1_(x) + [None]
+                def MLP1_def_(x): return self._MLP1_(x) + [None]  # ABW
+                self.MLP1_ = MLP1_def_
+                # self.MLP1_ = lambda x : self._MLP1_(x) + [None]
         else:
             self.MLP1_ = MLP(
                         dims_outputs = self.dims_MLP_outputs,
@@ -623,11 +669,17 @@ class SPLINE_COUPLING_HALF_LAYER_AT(tf.keras.layers.Layer,
                         )
 
             if self.add_residual:
-                self.MLP_ = lambda x : self.MLP1_(self.MLP0_(x) + x)
+                def MLP_def_(x): return self.MLP1_(self.MLP0_(x) + x)  # ABW
+                self.MLP_ = MLP_def_
+                #self.MLP_ = lambda x : self.MLP1_(self.MLP0_(x) + x)
             else:
-                self.MLP_ = lambda x : self.MLP1_(tf.concat([self.MLP0_(x), x],axis=-1))
+                def MLP_def_(x): return self.MLP1_(tf.concat([self.MLP0_(x), x],axis=-1))  # ABW
+                self.MLP_ = MLP_def_
+                #self.MLP_ = lambda x : self.MLP1_(tf.concat([self.MLP0_(x), x],axis=-1))
         else:
-            self.MLP_ = lambda x : self.MLP1_(x) 
+            def MLP_def_(x): return self.MLP1_(x)  # ABW
+            self.MLP_ = MLP_def_
+            # self.MLP_ = lambda x : self.MLP1_(x) 
 
 class SPLINE_COUPLING_LAYER(tf.keras.layers.Layer):
     '''
