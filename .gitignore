@@ -9,3 +9,10 @@ O/NN/training_results/misc/*
 O/NN/training_results/samples/*
 
 ./*.gro
+
+scratch/mm_data/*.h5
+
+__pycache__/
+O/__pycache__/
+O/MM/__pycache__/
+O/NN/__pycache__/

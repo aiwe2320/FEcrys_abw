@@ -38,7 +38,8 @@ import scipy as sp
 from rdkit import Chem
 import mdtraj
 
-import pickle
+#import pickle
+import dill as pickle
 
 ## ## 
 
@@ -78,10 +79,11 @@ def reshape_to_flat_np_(r, n_molecules, n_atoms_in_molecule):
     return r.reshape([n_frames, n_molecules*n_atoms_in_molecule*3])
 
 ## ## 
+def cumulative_average_(x, axis=None): return np.cumsum(x,axis=axis) / np.cumsum(np.ones_like(x),axis=axis)  # ABW
+# cumulative_average_ = lambda x,axis=None : np.cumsum(x,axis=axis) / np.cumsum(np.ones_like(x),axis=axis)
 
-cumulative_average_ = lambda x,axis=None : np.cumsum(x,axis=axis) / np.cumsum(np.ones_like(x),axis=axis)
-
-sta_array_ = lambda x : (x-x.min())/(x.max()-x.min())
+def sta_array_(x): return (x-x.min())/(x.max()-x.min()) # ABW
+# sta_array_ = lambda x : (x-x.min())/(x.max()-x.min())
 
 cdist_ = sp.spatial.distance.cdist
 
@@ -229,6 +231,10 @@ def tidy_crystal_xyz_(r, b, n_atoms_mol, ind_rO, batch_size=1000):
     return r
 
 ## ## 
+# ABW
+def clip_positive_(x, _clip_low_at_=1e-8, _clip_high_at_=1e+18): return np.clip(x, _clip_low_at_, _clip_high_at_) 
+def norm_clipped_(x): return clip_positive_(np.linalg.norm(x,axis=-1,keepdims=True))
+def unit_clipped_(x): return x / norm_clipped_(x)
 
 def get_torsion_np_(r, inds_4_atoms):
     ''' REF: https://github.com/noegroup/bgflow '''
@@ -245,11 +251,12 @@ def get_torsion_np_(r, inds_4_atoms):
     vBC = rC - rB   # (...,3)
     vCD = rD - rC   # (...,3)
 
-    _clip_low_at_ = 1e-8
-    _clip_high_at_ = 1e+18
-    clip_positive_ = lambda x : np.clip(x, _clip_low_at_, _clip_high_at_) 
-    norm_clipped_ = lambda x : clip_positive_(np.linalg.norm(x,axis=-1,keepdims=True))
-    unit_clipped_ = lambda x : x / norm_clipped_(x)
+    # ABW
+    #_clip_low_at_ = 1e-8
+    #_clip_high_at_ = 1e+18
+    #clip_positive_ = lambda x : np.clip(x, _clip_low_at_, _clip_high_at_) 
+    #norm_clipped_ = lambda x : clip_positive_(np.linalg.norm(x,axis=-1,keepdims=True))
+    #unit_clipped_ = lambda x : x / norm_clipped_(x)
     
     uBC = unit_clipped_(vBC) # (...,3)
 
@@ -284,9 +291,9 @@ def get_angle_np_(R, inds_3_atoms):
 
     _clip_low_at_ = 1e-8
     _clip_high_at_ = 1e+18
-    clip_positive_ = lambda x : np.clip(x, _clip_low_at_, _clip_high_at_) 
-    norm_clipped_ = lambda x : clip_positive_(np.linalg.norm(x,axis=-1,keepdims=True))
-    unit_clipped_ = lambda x : x / norm_clipped_(x)
+    # clip_positive_ = lambda x : np.clip(x, _clip_low_at_, _clip_high_at_) 
+    # norm_clipped_ = lambda x : clip_positive_(np.linalg.norm(x,axis=-1,keepdims=True))
+    # unit_clipped_ = lambda x : x / norm_clipped_(x)
 
     uBA = unit_clipped_(rA - rB) # (...,3)
     uBC = unit_clipped_(rC - rB) # (...,3)
@@ -308,10 +315,11 @@ def get_distance_np_(R, inds_2_atoms):
     rB = R[...,B,:]  # (...,3)
     vBA = rA - rB    # (...,3)
 
-    _clip_low_at_ = 1e-8
-    _clip_high_at_ = 1e+18
-    clip_positive_ = lambda x : np.clip(x, _clip_low_at_, _clip_high_at_) 
-    norm_clipped_ = lambda x : clip_positive_(np.linalg.norm(x,axis=-1,keepdims=True))
+    # ABW
+    #_clip_low_at_ = 1e-8
+    #_clip_high_at_ = 1e+18
+    #clip_positive_ = lambda x : np.clip(x, _clip_low_at_, _clip_high_at_) 
+    #norm_clipped_ = lambda x : clip_positive_(np.linalg.norm(x,axis=-1,keepdims=True))
 
     return norm_clipped_(vBA) # (...,1)
 
