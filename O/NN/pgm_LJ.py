@@ -876,7 +876,7 @@ class NN_interface_sc_LJ_multimap(NN_interface_helper):
             nn.SDs = FE_of_model_curve_(nn.estimates[0,:,1], (nn.estimates[0,:,7]-nn.FEs)**2)**0.5
 
     def load_energies_during_training_(self):
-        [self.nns[k].load_energies_during_training_(index_of_state=k) for k in range(self.n_crystals)];
+        [self.nns[k].load_energies_during_training_(index_of_state=k) for k in range(self.n_crystals)]
 
     def plot_energies_during_training_(self, crystal_index=0, **kwargs):
         self.nns[crystal_index].plot_energies_during_training_(**kwargs)

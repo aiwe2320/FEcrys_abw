@@ -1,0 +1,7 @@
+#include "LJ.itp"
+
+[ system ]
+LJ ordered crystal
+
+[ molecules ]
+A       180
