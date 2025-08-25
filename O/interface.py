@@ -77,13 +77,13 @@ class NN_interface_helper:
             sys.modules['NN.representation_layers.SingleComponent_map'] = NN.representation_layers.SingleComponent_map
             self.model = self.model_class.load_model(self.name_save_model, VERSION='OLD')
 
-    def set_training_validation_split_(self, inds_rand=None):
+    def set_training_validation_split_(self, n_training, inds_rand=None):
         if self.inds_rand is None and inds_rand is None:
             inds_rand = None ; a=0
             while inds_rand is None:
                 a+=1
                 print('inds_rand attempt:',a)
-                inds_rand = find_split_indices_(self.u, split_where=self.n_training, tol=0.0001)
+                inds_rand = find_split_indices_(self.u, split_where=n_training, tol=0.0001)
             self.inds_rand = np.array(inds_rand)
 
         elif self.inds_rand is None and inds_rand is not None:
@@ -93,11 +93,11 @@ class NN_interface_helper:
         else:
             print('inds_rand, imported earlier, were used')
 
-        self.r_training = np.array(self.r[self.inds_rand][:self.n_training])
-        self.r_validation = np.array(self.r[self.inds_rand][self.n_training:])
+        self.r_training = np.array(self.r[self.inds_rand][:n_training])
+        self.r_validation = np.array(self.r[self.inds_rand][n_training:])
     
-        self.u_training = np.array(self.u[self.inds_rand][:self.n_training])
-        self.u_validation = np.array(self.u[self.inds_rand][self.n_training:])
+        self.u_training = np.array(self.u[self.inds_rand][:n_training])
+        self.u_validation = np.array(self.u[self.inds_rand][n_training:])
 
     def check_PES_matching_dataset_(self, m=1000):
         print('checking that PES matches the sampled dataset:')
@@ -385,9 +385,20 @@ class NN_interface_sc(NN_interface_helper):
                          check_PES = True,
                          ):
         self.r = self.ic_map.remove_COM_from_data_(self.r)
-        self.set_training_validation_split_(inds_rand=inds_rand)
+        self.set_training_validation_split_(n_training=self.n_training, inds_rand=inds_rand)
         if check_PES: self.check_PES_matching_dataset_()
         else: pass
+
+    def truncate_data_(self, m=None):
+        m_initial = len(self.u)
+        assert hasattr(self, 'r_training')
+        self.set_training_validation_split_(n_training=m)
+        self.r = self.r_training
+        self.u = self.u_training
+        assert len(self.r) == len(self.u) == m
+        self.n_training = int(m*self.fraction_training)
+        self.set_training_validation_split_(n_training=self.n_training)
+        print(f'{m} out of {m_initial} datapoints will be used from this dataset')
 
     def set_ic_map_step3(self,
                          n_mol_unitcell : int = 1, # !! important in this new version
@@ -493,7 +504,6 @@ class NN_interface_sc_multimap(NN_interface_helper):
             self.nns[i].set_ic_map_step3(n_mol_unitcell = self.n_mol_unitcells[i],
                                          COM_remover = COM_remover,
                                         )
-        # TODO: check that the later merging reaches back into each nns[i].ic_map
 
     def set_model(self,
                   learning_rate = 0.001,
@@ -723,3 +733,251 @@ class NN_interface_sc_multimap(NN_interface_helper):
             self.samples_from_model = load_pickle_(self.name_save_samples+'_crystal_index='+str(crystal_index))
 
 ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
+
+class NN_interface_sc_multimap_selective_evaluation:
+    
+    ''' this should allow the interface_T.py things to also work with this if needed, selecting parent_class = one of them '''
+    default_parent = NN_interface_sc_multimap
+    
+    def __new__(cls, *args, parent_class = default_parent, **kwargs):
+        cls = type(cls.__name__ + '+' + parent_class.__name__, (cls, parent_class), {})
+        return super().__new__(cls)
+
+    def __init__(self, *args, parent_class = default_parent, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+#class NN_interface_sc_multimap_selective_evaluation(NN_interface_sc_multimap):
+#    def __init__(self,*args,**kwargs):
+#        super().__init__(*args,**kwargs)
+
+    def train(self,
+              n_batches = 2000,
+              verbose = True,
+              verbose_divided_by_n_mol = True,
+              f_halfwindow_visualisation = 1.0, # int or list
+              test_inverse = False,
+              #
+              training_batch_size = 1000, # 1000 was always used
+              ):
+        save_BAR = True
+        save_mBAR = False
+        save_misc = True
+        
+        if save_BAR: name_save_BAR_inputs = str(self.name_save_BAR_inputs)
+        else: name_save_BAR_inputs = None
+
+        if save_mBAR: name_save_mBAR_inputs = str(self.name_save_mBAR_inputs)
+        else: name_save_mBAR_inputs = None
+
+        self.trainer.train(
+                        n_batches = n_batches,
+                        list_r_training   = [nn.r_training for nn in self.nns],
+                        list_r_validation = [nn.r_validation for nn in self.nns],
+                        list_u_training   = [nn.u_training for nn in self.nns],
+                        list_u_validation = [nn.u_validation for nn in self.nns],
+                        list_w_training = None,
+                        list_w_validation = None,
+                        list_potential_energy_functions = [None for k in range(self.n_crystals)],
+                        training_batch_size = training_batch_size,
+                        evaluation_batch_size = self.evaluation_batch_size,
+                        evaluate_main = True,
+                        name_save_BAR_inputs = name_save_BAR_inputs,
+                        name_save_mBAR_inputs = name_save_mBAR_inputs,
+                        shuffle = True,
+                        f_halfwindow_visualisation = f_halfwindow_visualisation,
+                        verbose = verbose,
+                        verbose_divided_by_n_mol = verbose_divided_by_n_mol,
+                        evaluate_on_training_data = False,
+                        test_inverse = test_inverse,
+                        save_generated_configurations_anyway = False, 
+                    )
+        print('training time so far:', np.round(self.trainer.training_time, 2), 'minutes')
+
+        if save_misc:
+            self.save_misc_()
+            print('misc training outputs were saved')
+        else: pass
+        if test_inverse:
+            self.save_inv_test_results_()
+            print('inv_test results were saved')
+        else: pass
+
+    def solve_BAR_using_pymbar_(self, rerun=False, n_selective_evalautions = 5):
+        self.n_selective_evalautions = n_selective_evalautions 
+        for k in range(self.n_crystals):
+            _nn = self.nns[k]
+            _nn.solve_BAR_using_pymbar_(rerun = True,
+                                        index_of_state = k, 
+                                        key = '_crystal_index=' + str(k), 
+                                        method_for_selective_evalaution_ = self.method_for_selective_evalaution_v1_)
+            self.reset_final_result_(_nn)
+
+    def reset_final_result_(self, obj):
+
+        AVMD_V = np.array(obj.estimates[0,:,1])
+
+        BAR_V_FEs_raw = np.array(obj.estimates_BAR[2,:,0])
+        BAR_V_SEs_raw = np.array(obj.estimates_BAR[3,:,0])
+
+        inds_solved = np.array(self.inds_solved_current)
+
+        BAR_V_FEs = FE_of_model_curve_(AVMD_V[inds_solved], BAR_V_FEs_raw[inds_solved])
+        obj.BAR_V_FE = BAR_V_FEs[-1]
+
+        BAR_V_SDs = FE_of_model_curve_(AVMD_V[inds_solved], (BAR_V_FEs_raw[inds_solved] - BAR_V_FEs)**2)**0.5
+        obj.BAR_V_SD =  BAR_V_SDs[-1]
+
+        BAR_V_SEs = FE_of_model_curve_(AVMD_V[inds_solved] - BAR_V_SEs_raw[inds_solved], BAR_V_SEs_raw[inds_solved])
+        BAR_V_SEs = np.max([BAR_V_SEs, BAR_V_SDs], axis=0)
+        obj.BAR_V_SE  = BAR_V_SEs[-1]
+
+        nan_for_plotting  = np.ones_like(BAR_V_FEs_raw) * np.nan
+        obj.BAR_V_FEs_raw = np.array(nan_for_plotting)
+        obj.BAR_V_SEs_raw = np.array(nan_for_plotting)
+        obj.BAR_V_FEs     = np.array(nan_for_plotting)
+        obj.BAR_V_SDs     = np.array(nan_for_plotting)
+        obj.BAR_V_SEs     = np.array(nan_for_plotting)
+
+        obj.BAR_V_FEs_raw[inds_solved] = np.array(BAR_V_FEs_raw[inds_solved])
+        obj.BAR_V_SEs_raw[inds_solved] = np.array(BAR_V_SEs_raw[inds_solved])
+        obj.BAR_V_FEs[inds_solved]     = np.array(BAR_V_FEs)
+        obj.BAR_V_SDs[inds_solved]     = np.array(BAR_V_SDs)
+        obj.BAR_V_SEs[inds_solved]     = np.array(BAR_V_SEs)
+
+    def method_for_selective_evalaution_v1_(self,
+                                            obj,
+                                            index_of_state,
+                                            AVMD_V,
+                                            ):
+        validation_loss_curve = np.array( - AVMD_V )
+        # chosing parts that come from model when it had the lowest validiation error
+        inds_best_validation_batches = np.argsort(validation_loss_curve)[:self.n_selective_evalautions]
+
+        offset = AVMD_V[np.where(AVMD_V>-1e19)[0]].mean()
+
+        obj.estimates_BAR = np.ma.array(obj.estimates_BAR, mask=True)
+        
+        print('')
+        print(f'two-state BAR evaluation in macrostate {index_of_state}:')
+        for i in inds_best_validation_batches:
+            path_and_name = obj.name_save_BAR_inputs+'_BAR_input_'+str(i)+'_state'+str(index_of_state) + '_'
+            name = path_and_name + '_r_&_ln(q(r))'
+            name_complete = path_and_name + '_V'
+            name_solved = path_and_name + '_r_&_ln(q(r))_solved'
+
+            try:
+                FE, SE = load_pickle_(name_solved) #; print('found ')
+            except:
+                print(f'evaluation batch {i}: evaluating potential energies on model samples. The estimate will be saved.')
+                r_BG, ln_q_BG, u_V, ln_q_V, w_V = load_pickle_(name)
+                # TODO (in general for biased data): add way to rewight pymbar solving 2state BAR when weights (w_V) not None
+
+                assert len(r_BG) == len(ln_q_BG)
+                assert len(u_V)  == len(ln_q_V)
+                n_V  = len(u_V)
+                n_BG = len(ln_q_BG) 
+
+                # the expensive step:
+                u_BG = self.nns[index_of_state].u_(r_BG) # = obj.u_(r_BG)
+
+                Q = np.stack([np.concatenate([u_V, u_BG])[...,0] - offset,
+                            - np.concatenate([ln_q_V, ln_q_BG])[...,0], # important: negative sign for positive energy
+                            ], axis=0)
+                Ns = np.array([n_V, n_BG])
+                mbar_res = MBAR(Q, Ns).compute_free_energy_differences()
+
+                FE = mbar_res['Delta_f'][1,0] + offset
+                SE = mbar_res['dDelta_f'][1,0]
+
+                save_pickle_([FE, SE], name=name_solved, verbose=False)
+                save_pickle_(np.stack([np.concatenate([u_V,       u_BG])[...,0],
+                                     - np.concatenate([ln_q_V, ln_q_BG])[...,0]], axis=0), 
+                             name=name_complete, verbose=False)
+            
+            # obj.estimates_BAR[0,i,0] = 0.0 # nothing here, not evalauting on training data
+            # obj.estimates_BAR[1,i,0] = 0.0 # nothing here, not evalauting on training data
+            obj.estimates_BAR[2,i,0] = FE    # FE on validation data
+            obj.estimates_BAR[3,i,0] = SE    # SE on validation data
+            # this turns masks to False for elements that are not zeros (batches that were done above)
+
+        self.inds_solved_current = np.where(obj.estimates_BAR[2,:,0].mask == False)[0]
+
+## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
+
+def NN_interface_sc_multimap_selective_evaluation_( 
+                                                    
+                                                    name,
+                                                    n_states = 1,
+
+                                                    # each state is an MD dataset with a certain n_MD_frames number of frames:
+                                                    # each dataset is single-component (with molecule X)
+                                                    list_r  = None, 
+                                                    # r : coordinates saved  during MD (NVT)
+                                                    # array shape  : (n_MD_frames, N, 3)
+                                                    # units        : nm
+                                                    # ergodic data : for each atom (all atoms are distinguishable in the model)
+                                                    # no PBC       : must have whole molecules that are not jumping in Cartesian space
+                                                    list_b0 = None, 
+                                                    # b0 : static box used during MD
+                                                    # array shape  : (3,3) 
+                                                    # units        : nm
+                                                    list_u  = None,
+                                                    # u : potential energies saved during MD
+                                                    # array shape  : (n_MD_frames, 1) 
+                                                    # unit         : kT
+                                                    # crystal      : not per molecule (not lattice energy)
+                                                    list_u_ = None,
+                                                    # u_ : potential energy function used during MD
+                                                    # function st. : u_(r) = u ; r shape (m,N,3) and u shape (m,1) 
+                                                    # unit         : kT
+                                                    # crystal      : not per molecule (not lattice energy)
+                                                    single_mol_pdb_file = None,
+                                                    # single_mol_pdb_files : .pdb file of simple molecule (X)
+
+                                                    training = False,
+
+                                                    fraction_training=  0.8,
+
+                                                    running_in_notebook = True,
+
+                                                    parent_class = NN_interface_sc_multimap,
+                                                    model_class = PGMcrys_v1,
+
+                                                    ):
+    " example shown in JN_4.5 "
+    nn = NN_interface_sc_multimap_selective_evaluation(parent_class=parent_class,
+                                                       name = name,
+                                                       paths_datasets = [0 for _ in range(n_states)],
+                                                       running_in_notebook = running_in_notebook,
+                                                       training = False,
+                                                       model_class = model_class,
+                                                       )
+    
+    if training:
+        assert all([len(x) == n_states for x in [list_r, list_b0, list_u, list_u_]]), 'all lists should be same length'
+
+        class pdb_for_rdkit:
+            def __init__(self, single_mol_pdb_file):
+                self._single_mol_pdb_file_ = single_mol_pdb_file
+
+        for k in range(n_states):
+            nn.nns[k].r          = np.array(list_r[k]).astype(np.float32)
+            nn.nns[k].b0         = np.array(list_b0[k])
+            nn.nns[k].u          = np.array(list_u[k])
+            nn.nns[k].u_mean     = list_u[k].mean()
+            nn.nns[k].n_training = int(list_u[k].shape[0]*fraction_training)
+            nn.nns[k].u_         = list_u_[k]
+            nn.nns[k].sc         = pdb_for_rdkit(single_mol_pdb_file)
+            nn.nns[k].training   = True
+
+        nn.training = True
+    else:
+        if list_u_ is not None: 
+            for k in range(n_states):
+                nn.nns[k].u_     = list_u_[k]
+        else: pass
+
+    return nn
+
+## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
+
